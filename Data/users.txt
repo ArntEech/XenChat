@@ -1,0 +1,106 @@
+[
+  {
+    "Id": 1,
+    "Username": "caleb",
+    "Email": "caleb@gmail.com",
+    "Password": "password123",
+    "ProfileInfo": "caleb",
+    "Avatar": "caleb.png"
+  },
+  {
+    "Id": 2,
+    "Username": "arnold",
+    "Email": "arnold@gmail.com",
+    "Password": "password123",
+    "ProfileInfo": "arnold",
+    "Avatar": "arnold.png"
+  },
+  {
+    "Id": 3,
+    "Username": "francis",
+    "Email": "francis@gmail.com",
+    "Password": "password123",
+    "ProfileInfo": "francis",
+    "Avatar": "francis.png"
+  },
+  {
+    "Id": 4,
+    "Username": "joana",
+    "Email": "joana@gmail.com",
+    "Password": "password123",
+    "ProfileInfo": "joana",
+    "Avatar": "joana.png"
+  },
+  {
+    "Id": 5,
+    "Username": "armanullah",
+    "Email": "armanullah@gmail.com",
+    "Password": "password123",
+    "ProfileInfo": "armanullah",
+    "Avatar": "armanullah.png"
+  },
+  {
+    "Id": 6,
+    "Username": "afia",
+    "Email": "afia@gmail.com",
+    "Password": "password123",
+    "ProfileInfo": "afia",
+    "Avatar": "afia.png"
+  },
+  {
+    "Id": 7,
+    "Username": "amoako",
+    "Email": "amoako@gmail.com",
+    "Password": "password123",
+    "ProfileInfo": "amoako",
+    "Avatar": "amoako.png"
+  },
+  {
+    "Id": 8,
+    "Username": "benedict",
+    "Email": "benedict@gmail.com",
+    "Password": "password123",
+    "ProfileInfo": "benedict",
+    "Avatar": "benedict.png"
+  },
+  {
+    "Id": 9,
+    "Username": "philemon",
+    "Email": "philemon@gmail.com",
+    "Password": "password123",
+    "ProfileInfo": "philemon",
+    "Avatar": "philemon.png"
+  },
+  {
+    "Id": 10,
+    "Username": "akan",
+    "Email": "akan@gmail.com",
+    "Password": "password123",
+    "ProfileInfo": "akan",
+    "Avatar": "akan.png"
+  },
+  {
+    "Id": 11,
+    "Username": "panford",
+    "Email": "panford@gmail.com",
+    "Password": "password123",
+    "ProfileInfo": "panford",
+    "Avatar": "panford.png"
+  },
+  {
+    "Id": 12,
+    "Username": "drey",
+    "Email": "drey@gmail.com",
+    "Password": "password123",
+    "ProfileInfo": "drey",
+    "Avatar": "drey.png"
+  },
+  {
+    "Id": 13,
+    "Username": "guest",
+    "Email": "guest@gmail.com",
+    "Password": "password123",
+    "ProfileInfo": "guest",
+    "Avatar": "user.png"
+  }
+]

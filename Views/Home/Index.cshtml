@@ -1,0 +1,130 @@
+﻿@model List<XenChat.Models.User>
+@{
+    ViewData["Title"] = "Chats";
+    var currentUserId = Context.Session.GetInt32("UserId");
+    var currentUser = ViewBag.CurrentUser;
+    var unreadCounts = ViewBag.UnreadCounts as Dictionary<int, int>;
+    var lastMessages = ViewBag.LastMessages as Dictionary<int, string>;
+    var lastMessageTimes = ViewBag.LastMessageTimes as Dictionary<int, string>;
+}
+
+<div class="chat-list-panel">
+    <div class="chat-list-header">
+        <div class="brand-container">
+            <img src="~/images/logo.png" alt="XenChat Logo" class="brand-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="brand-logo-fallback" style="display: none;">X</div>
+            <h1 class="brand-title">XenChat</h1>
+        </div>
+        <div class="header-actions">
+            <button class="icon-btn" title="Search">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+            </button>
+            <button class="icon-btn" title="Menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="1" />
+                    <circle cx="19" cy="12" r="1" />
+                    <circle cx="5" cy="12" r="1" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="updates-section">
+        <div class="updates-header">
+            <img src="~/images/logo.png" alt="Updates" class="updates-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="updates-logo-fallback" style="display: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v8M8 12h8" />
+                </svg>
+            </div>
+            <h2 class="section-title">Updates</h2>
+        </div>
+        <div class="updates-carousel">
+            <div class="update-item">
+                <div class="add-avatar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                </div>
+                <span class="update-name">Add</span>
+            </div>
+            @foreach (var user in Model.Take(6))
+            {
+                <div class="update-item">
+                    <img src="@user.AvatarPath" alt="@user.Username" class="avatar-image update-carousel-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                    <div class="avatar-circle update-carousel-avatar" style="display: none;">@user.Initial</div>
+                    <span class="update-name">@user.Username</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="filter-tabs">
+        <button class="filter-pill active">
+            Chats
+            @if (Model != null)
+            {
+                <span class="badge">@Model.Count</span>
+            }
+        </button>
+        <button class="filter-pill">Groups</button>
+        <button class="filter-pill">Unread</button>
+        <button class="filter-pill">Favorites</button>
+    </div>
+
+    <div class="chat-list" id="chatList">
+        @foreach (var user in Model)
+        {
+            <a href="@Url.Action("Index", "Chat", new { userId = user.Id })" class="chat-item" data-username="@user.Username.ToLower()">
+                <img src="@user.AvatarPath" alt="@user.Username" class="avatar-image chat-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                <div class="avatar-circle chat-avatar-fallback" style="display: none;">@user.Initial</div>
+                <div class="chat-info">
+                    <div class="chat-info-top">
+                        <h3>@user.Username</h3>
+                        <span class="chat-time">
+                            @if (lastMessageTimes != null && lastMessageTimes.ContainsKey(user.Id))
+                            {
+                                @lastMessageTimes[user.Id]
+                            }
+                        </span>
+                    </div>
+                    <div class="chat-info-bottom">
+                        <p class="last-message-preview">
+                            @if (lastMessages != null && lastMessages.ContainsKey(user.Id))
+                            {
+                                @lastMessages[user.Id]
+                            }
+                            else
+                            {
+                                @:No messages yet
+                            }
+                        </p>
+                        @if (unreadCounts != null && unreadCounts.ContainsKey(user.Id) && unreadCounts[user.Id] > 0)
+                        {
+                            <span class="unread-count-badge">@unreadCounts[user.Id]</span>
+                        }
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+</div>
+
+<div class="conversation-panel" id="conversationPanel">
+    <div class="empty-conversation">
+        <div class="empty-state">
+            <div class="empty-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+            </div>
+            <h3>Select a chat to start messaging</h3>
+            <p>Choose a user from the list to begin a conversation</p>
+        </div>
+    </div>
+</div>

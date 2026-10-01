@@ -1,0 +1,73 @@
+﻿using XenChat.Models;
+
+namespace XenChat.Services
+{
+    public class AuthService
+    {
+        private static User? _currentUser;
+        private static List<User>? _users;
+
+        public async Task<bool> LoginAsync(string email, string password)
+        {
+            if (_users == null)
+            {
+                LoadUsers();
+            }
+
+            _currentUser = _users?.FirstOrDefault(u =>
+                u.Email.Equals(email, StringComparison.OrdinalIgnoreCase) &&
+                u.Password == password);
+
+            return _currentUser != null;
+        }
+
+        private static void LoadUsers()
+        {
+            _users = new List<User>
+            {
+                new User { Id = 1, Username = "caleb", Email = "caleb@xenchat.local", Password = "1234", ProfileInfo = "caleb", Avatar = "caleb.png" },
+                new User { Id = 2, Username = "arnold", Email = "arnold@xenchat.local", Password = "1234", ProfileInfo = "arnold", Avatar = "arnold.png" },
+                new User { Id = 3, Username = "francis", Email = "francis@xenchat.local", Password = "1234", ProfileInfo = "francis", Avatar = "francis.png" },
+                new User { Id = 4, Username = "joana", Email = "joana@xenchat.local", Password = "1234", ProfileInfo = "joana", Avatar = "joana.png" },
+                new User { Id = 5, Username = "armanullah", Email = "armanullah@xenchat.local", Password = "1234", ProfileInfo = "armanullah", Avatar = "armanullah.png" },
+                new User { Id = 6, Username = "afia", Email = "afia@xenchat.local", Password = "1234", ProfileInfo = "afia", Avatar = "afia.png" },
+                new User { Id = 7, Username = "amoako", Email = "amoako@xenchat.local", Password = "1234", ProfileInfo = "amoako", Avatar = "amoako.png" },
+                new User { Id = 8, Username = "benedict", Email = "benedict@xenchat.local", Password = "1234", ProfileInfo = "benedict", Avatar = "benedict.png" },
+                new User { Id = 9, Username = "philemon", Email = "philemon@xenchat.local", Password = "1234", ProfileInfo = "philemon", Avatar = "philemon.png" },
+                new User { Id = 10, Username = "akan", Email = "akan@xenchat.local", Password = "1234", ProfileInfo = "akan", Avatar = "akan.png" },
+                new User { Id = 11, Username = "panford", Email = "panford@xenchat.local", Password = "1234", ProfileInfo = "panford", Avatar = "panford.png" },
+                new User { Id = 12, Username = "drey", Email = "drey@xenchat.local", Password = "1234", ProfileInfo = "drey", Avatar = "drey.png" },
+                new User { Id = 13, Username = "guest", Email = "guest@xenchat.local", Password = "1234", ProfileInfo = "guest", Avatar = "guest.png" }
+            };
+        }
+
+        public static User? GetCurrentUser()
+        {
+            if (_users == null)
+            {
+                LoadUsers();
+            }
+            return _currentUser;
+        }
+
+        public async Task<List<User>> GetOtherUsersAsync()
+        {
+            if (_users == null)
+            {
+                LoadUsers();
+            }
+
+            if (_currentUser == null || _users == null)
+            {
+                return new List<User>();
+            }
+
+            return _users.Where(u => u.Id != _currentUser.Id).ToList();
+        }
+
+        public static void Logout()
+        {
+            _currentUser = null;
+        }
+    }
+}

@@ -1,0 +1,158 @@
+﻿@{
+    ViewData["Title"] = "Verify";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify — XenChat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Manrope:wght@400;500&family=Montserrat:wght@600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="auth-body">
+    <main class="auth-shell">
+        <!-- LEFT ART PANEL -->
+        <aside class="auth-art" aria-hidden="true">
+            <img src="~/images/sn_bg.png" alt="" />
+        </aside>
+
+        <!-- RIGHT FORM PANEL -->
+        <section class="auth-main">
+            <form class="verify-card" method="post" asp-action="Verify" asp-controller="Account" id="verifyForm">
+
+                <!-- BRAND -->
+                <div class="brand">
+                    <img src="~/images/logo.png" alt="XenChat" onerror="this.style.display='none';" />
+                    <span>XenChat</span>
+                </div>
+
+                <!-- ICON -->
+                <div class="verify-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                </div>
+
+                <!-- HEADING -->
+                <h1>Enter Code</h1>
+                <p>
+                    We sent a verification code to your email
+                    <br />
+                    <strong>@ViewBag.Email</strong>
+                </p>
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="auth-error" style="margin-top:16px;">@ViewBag.Error</div>
+                }
+                @if (TempData["VerifyError"] != null)
+                {
+                    <div class="auth-error" style="margin-top:16px;">@TempData["VerifyError"]</div>
+                }
+
+                <!-- CODE INPUTS -->
+                <div class="code-inputs" aria-label="Verification code">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required placeholder="–" />
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required placeholder="–" />
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required placeholder="–" />
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required placeholder="–" />
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required placeholder="–" />
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required placeholder="–" />
+                </div>
+
+                <input type="hidden" name="code" id="codeHidden" />
+
+                <button class="primary-button" type="submit">Verify</button>
+
+                <div class="resend">
+                    <p>
+                        Didn’t receive code?
+                        <button type="button" id="resendBtn">Resend Code</button>
+                    </p>
+                    <p>You can resend code in <span id="timer">59</span>S</p>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <!-- ============================================================
+         LOADING OVERLAY (hidden by default, shown on submit)
+         ============================================================ -->
+    <div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const inputs = document.querySelectorAll('.code-inputs input');
+                const form = document.getElementById('verifyForm');
+                const overlay = document.getElementById('loadingOverlay');
+                const codeHidden = document.getElementById('codeHidden');
+
+                if (inputs.length > 0) inputs[0].focus();
+
+                // Auto-advance + backspace
+                inputs.forEach(function (input, index) {
+                    input.addEventListener('input', function (e) {
+                        const val = e.target.value.replace(/\D/g, '').slice(-1);
+                        e.target.value = val;
+                        if (val && index < inputs.length - 1) {
+                            inputs[index + 1].focus();
+                        }
+                    });
+
+                    input.addEventListener('keydown', function (e) {
+                        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                            inputs[index - 1].focus();
+                        }
+                    });
+                });
+
+                // On submit → combine digits, show overlay, then navigate
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+
+                    const digits = Array.from(inputs).map(i => i.value).join('');
+                    if (digits.length < 6) {
+                        const firstEmpty = Array.from(inputs).findIndex(i => !i.value);
+                        if (firstEmpty !== -1) inputs[firstEmpty].focus();
+                        return;
+                    }
+
+                    codeHidden.value = digits;
+
+                    // Show loading overlay
+                    overlay.classList.add('show');
+
+                    // Simulate processing, then go to Account Created screen
+                    setTimeout(function () {
+                        window.location.href = '@Url.Action("AccountCreated", "Account")';
+                    }, 1800);
+                });
+
+                // Countdown timer
+                let seconds = 59;
+                const timerEl = document.getElementById('timer');
+                const interval = setInterval(function () {
+                    seconds = Math.max(0, seconds - 1);
+                    timerEl.textContent = seconds;
+                    if (seconds === 0) clearInterval(interval);
+                }, 1000);
+
+                // Resend
+                document.getElementById('resendBtn').addEventListener('click', function () {
+                    inputs.forEach(i => i.value = '');
+                    inputs[0].focus();
+                    seconds = 59;
+                    timerEl.textContent = seconds;
+                });
+            });
+    </script>
+</body>
+</html>

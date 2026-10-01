@@ -1,0 +1,97 @@
+﻿@{
+    ViewData["Title"] = "Sign Up";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up — XenChat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Manrope:wght@400;500&family=Montserrat:wght@600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="auth-body">
+    <main class="auth-shell">
+        <aside class="auth-art" aria-hidden="true">
+            <img src="~/images/sn_bg.png" alt="" />
+        </aside>
+
+        <section class="auth-main">
+            <form class="auth-form" method="post" asp-action="Signup" asp-controller="Account" autocomplete="off">
+
+                <div class="brand">
+                    <img src="~/images/logo.png" alt="XenChat" onerror="this.style.display='none';" />
+                    <span>XenChat</span>
+                </div>
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="auth-error">@ViewBag.Error</div>
+                }
+
+                <label>
+                    <span>UserName</span>
+                    <input type="text"
+                           name="username"
+                           required
+                           autocomplete="off"
+                           placeholder="Enter your username" />
+                </label>
+
+                <label>
+                    <span>Email</span>
+                    <input type="email"
+                           name="email"
+                           required
+                           autocomplete="off"
+                           placeholder="Enter email" />
+                </label>
+
+                <label>
+                    <span>password</span>
+                    <input type="password"
+                           name="password"
+                           required
+                           minlength="6"
+                           autocomplete="new-password"
+                           placeholder="Enter password" />
+                </label>
+
+                <label>
+                    <span>confirm password</span>
+                    <input type="password"
+                           name="confirmPassword"
+                           required
+                           minlength="6"
+                           autocomplete="new-password"
+                           placeholder="confirm password" />
+                </label>
+
+                <button class="primary-button" type="submit">Sign UP</button>
+
+                <div class="or">
+                    <span></span>
+                    OR
+                    <span></span>
+                </div>
+
+                <button class="google-button" type="button">
+                    <span class="google-icon">
+                        <img src="~/images/google.png" alt="" onerror="this.style.display='none';" />
+                    </span>
+                    Continue with Google
+                </button>
+
+                <p class="auth-switch">
+                    Already have an account?
+                    <a href="@Url.Action("Login", "Account")">LogIn</a>
+                </p>
+            </form>
+        </section>
+    </main>
+</body>
+</html>
