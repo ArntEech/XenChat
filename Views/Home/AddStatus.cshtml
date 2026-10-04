@@ -2,60 +2,60 @@
     ViewData["Title"] = "Add Status";
 }
 
-<div class="add-status-page" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100%; padding: 40px 20px; color: #fff; background: #16171b; width: 100%;">
-    <div style="width: 100%; max-width: 580px;">
+<div class="add-status-page" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100%; padding: 20px 16px; color: #fff; background: #121214; width: 100%; box-sizing: border-box;">
+    <div style="width: 100%; max-width: 500px;">
         
         <!-- Header -->
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <a href="@Url.Action("Index", "Home")" class="icon-btn" style="text-decoration: none; color: #fff; background: #232428; border: 1px solid #333; border-radius: 50%; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Back to chats">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <a href="@Url.Action("Index", "Home")" class="icon-btn" style="text-decoration: none; color: #fff; background: #1f1f23; border: 1px solid #2e2e34; border-radius: 50%; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Back to chats">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
                         <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
                 </a>
                 <div>
-                    <h2 style="font-size: 22px; font-weight: 600; margin: 0; color: #fff;">Add New Status</h2>
-                    <span style="font-size: 13px; color: #888;">Share a photo with your contacts</span>
+                    <h2 style="font-size: 18px; font-weight: 600; margin: 0; color: #fff; line-height: 1.2;">Add New Status</h2>
+                    <span style="font-size: 12px; color: #888;">Share a photo with your contacts</span>
                 </div>
             </div>
-            <a href="@Url.Action("Updates", "Home")" style="color: #ee4c49; font-size: 14px; text-decoration: none; font-weight: 500;">View All</a>
+            <a href="@Url.Action("Updates", "Home")" style="color: #f43f5e; font-size: 13px; text-decoration: none; font-weight: 500;">View All</a>
         </div>
 
         @if (TempData["Error"] != null)
         {
-            <div style="background: rgba(238, 76, 73, 0.15); border: 1px solid #ee4c49; color: #ff6b68; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 14px;">
+            <div style="background: rgba(244, 63, 94, 0.12); border: 1px solid rgba(244, 63, 94, 0.3); color: #f43f5e; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 13px;">
                 @TempData["Error"]
             </div>
         }
 
         <!-- Status Card Form -->
-        <div style="background: #232428; border: 1px solid #333; border-radius: 16px; padding: 28px; box-shadow: 0 8px 30px rgba(0,0,0,0.35);">
+        <div style="background: #18181b; border: 1px solid #27272a; border-radius: 16px; padding: 18px 20px; box-shadow: 0 12px 36px rgba(0,0,0,0.5);">
             <form method="post" asp-action="AddStatus" asp-controller="Home" enctype="multipart/form-data" id="addStatusForm">
                 
-                <!-- Media Upload / Drop Zone -->
-                <div id="dropZone" style="position: relative; width: 100%; aspect-ratio: 4/3; max-height: 380px; background: #1a1b1e; border: 2px dashed #444; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;">
+                <!-- Compact Media Upload / Drop Zone -->
+                <div id="dropZone" style="position: relative; width: 100%; height: 200px; background: #121214; border: 1.5px dashed #3a3a42; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;">
                     
                     <!-- Empty State Prompt -->
-                    <div id="uploadPrompt" style="display: flex; flex-direction: column; align-items: center; gap: 12px; color: #888; text-align: center; padding: 20px;">
-                        <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(238, 76, 73, 0.12); display: flex; align-items: center; justify-content: center; color: #ee4c49;">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <div id="uploadPrompt" style="display: flex; flex-direction: column; align-items: center; gap: 8px; color: #888; text-align: center; padding: 12px;">
+                        <div style="width: 46px; height: 46px; border-radius: 50%; background: rgba(244, 63, 94, 0.12); display: flex; align-items: center; justify-content: center; color: #f43f5e;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                                 <circle cx="8.5" cy="8.5" r="1.5" />
                                 <polyline points="21 15 16 10 5 21" />
                             </svg>
                         </div>
                         <div>
-                            <p style="margin: 0; font-size: 15px; font-weight: 500; color: #eee;">Click to select a photo</p>
-                            <span style="font-size: 12px; color: #777;">or drag and drop here (JPG, PNG, GIF, WebP)</span>
+                            <p style="margin: 0; font-size: 13.5px; font-weight: 500; color: #eee;">Click to select a photo</p>
+                            <span style="font-size: 11px; color: #777;">or drag & drop (JPG, PNG, GIF, WebP)</span>
                         </div>
                     </div>
 
                     <!-- Selected Image Preview -->
-                    <img id="imagePreview" src="" alt="Status Preview" style="display: none; width: 100%; height: 100%; object-fit: contain; background: #111;" />
+                    <img id="imagePreview" src="" alt="Status Preview" style="display: none; width: 100%; height: 100%; object-fit: contain; background: #0c0c0e;" />
 
                     <!-- Remove Button overlay when image chosen -->
-                    <button type="button" id="removeImgBtn" style="display: none; position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); border: 1px solid #555; color: #fff; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; cursor: pointer; z-index: 10;" title="Remove image">
+                    <button type="button" id="removeImgBtn" style="display: none; position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.75); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 28px; height: 28px; border-radius: 50%; align-items: center; justify-content: center; cursor: pointer; z-index: 10;" title="Remove image">
                         &times;
                     </button>
                 </div>
@@ -63,25 +63,25 @@
                 <input type="file" id="statusImageInput" name="statusImage" accept="image/*" required style="display: none;" />
 
                 <!-- Caption Input -->
-                <div style="margin-top: 20px;">
-                    <label for="captionInput" style="display: block; font-size: 13px; font-weight: 500; color: #aaa; margin-bottom: 8px;">Caption (optional)</label>
+                <div style="margin-top: 14px;">
+                    <label for="captionInput" style="display: block; font-size: 12px; font-weight: 500; color: #a1a1aa; margin-bottom: 6px;">Caption (optional)</label>
                     <div style="position: relative;">
-                        <input type="text" id="captionInput" name="caption" placeholder="Add a caption to your status..." maxlength="150" autocomplete="off" style="width: 100%; padding: 12px 16px; padding-right: 40px; background: #1e1f22; border: 1px solid #3c3e44; border-radius: 10px; color: #fff; font-size: 14px; outline: none; box-sizing: border-box; transition: border-color 0.2s;" />
+                        <input type="text" id="captionInput" name="caption" placeholder="Add a caption to your status..." maxlength="150" autocomplete="off" style="width: 100%; height: 38px; padding: 0 12px; background: #121214; border: 1px solid #27272a; border-radius: 8px; color: #fff; font-size: 13px; outline: none; box-sizing: border-box; transition: border-color 0.2s;" />
                     </div>
                 </div>
 
                 <!-- Quick Emojis -->
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
-                    <span style="font-size: 12px; color: #777;">Quick emojis:</span>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+                    <span style="font-size: 11px; color: #71717a;">Quick emojis:</span>
                     @foreach (var emoji in new[] { "🔥", "❤️", "😊", "✨", "🎉", "👍", "🚀", "☕", "💯" })
                     {
-                        <button type="button" class="quick-emoji-btn" data-emoji="@emoji" style="background: #1e1f22; border: 1px solid #333; border-radius: 6px; padding: 3px 8px; font-size: 14px; cursor: pointer; transition: transform 0.1s;">@emoji</button>
+                        <button type="button" class="quick-emoji-btn" data-emoji="@emoji" style="background: #121214; border: 1px solid #27272a; border-radius: 6px; padding: 2px 7px; font-size: 13px; cursor: pointer; transition: transform 0.1s; color: #fff;">@emoji</button>
                     }
                 </div>
 
                 <!-- Expiry Note -->
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: 20px; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 12px; color: #888;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 8px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); border-radius: 8px; font-size: 11.5px; color: #888;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; color: #71717a;">
                         <circle cx="12" cy="12" r="10" />
                         <polyline points="12 6 12 12 16 14" />
                     </svg>
@@ -89,11 +89,11 @@
                 </div>
 
                 <!-- Submit / Cancel actions -->
-                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 24px;">
-                    <a href="@Url.Action("Index", "Home")" style="padding: 10px 20px; border-radius: 20px; color: #aaa; text-decoration: none; font-size: 14px; font-weight: 500; background: transparent; border: 1px solid #444; transition: background 0.2s;">
+                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+                    <a href="@Url.Action("Index", "Home")" style="padding: 7px 18px; border-radius: 8px; color: #a1a1aa; text-decoration: none; font-size: 13px; font-weight: 500; background: transparent; border: 1px solid #333; transition: all 0.2s;">
                         Cancel
                     </a>
-                    <button type="submit" id="submitStatusBtn" class="primary-button" style="width: auto; padding: 10px 28px; font-size: 14px; border-radius: 20px;">
+                    <button type="submit" id="submitStatusBtn" class="primary-button" style="width: auto; height: 38px; padding: 0 22px; font-size: 13px; border-radius: 8px; background: #f43f5e; color: #fff; font-weight: 600; border: none; cursor: pointer; transition: background 0.2s;">
                         Post Status
                     </button>
                 </div>

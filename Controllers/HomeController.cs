@@ -10,12 +10,14 @@ namespace XenChat.Controllers
         private readonly UserService _userService;
         private readonly MessageService _messageService;
         private readonly XenChatDbContext _db;
+        private readonly CloudinaryService _cloudinary;
 
-        public HomeController(UserService userService, MessageService messageService, XenChatDbContext db)
+        public HomeController(UserService userService, MessageService messageService, XenChatDbContext db, CloudinaryService cloudinary)
         {
             _userService = userService;
             _messageService = messageService;
             _db = db;
+            _cloudinary = cloudinary;
         }
 
         public IActionResult Index()
@@ -263,20 +265,15 @@ namespace XenChat.Controllers
                     return RedirectToAction("Profile");
                 }
 
-                var avatarFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "avatars");
-                if (!Directory.Exists(avatarFolder))
+                try
                 {
-                    Directory.CreateDirectory(avatarFolder);
+                    user.Avatar = await _cloudinary.UploadImageAsync(avatarFile, "xenchat/avatars");
                 }
-
-                var fileName = $"{Guid.NewGuid()}{ext}";
-                var filePath = Path.Combine(avatarFolder, fileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                catch (Exception ex)
                 {
-                    await avatarFile.CopyToAsync(stream);
+                    TempData["Error"] = $"Image upload failed: {ex.Message}";
+                    return RedirectToAction("Profile");
                 }
-
-                user.Avatar = $"/images/avatars/{fileName}";
             }
 
             user.Username = trimmedUsername;
@@ -339,17 +336,16 @@ namespace XenChat.Controllers
                 var allowed = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
                 if (allowed.Contains(ext))
                 {
-                    var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "status");
-                    if (!Directory.Exists(folder))
+                    string mediaUrl;
+                    try
                     {
-                        Directory.CreateDirectory(folder);
+                        mediaUrl = await _cloudinary.UploadImageAsync(statusImage, "xenchat/status");
                     }
-
-                    var fileName = $"{Guid.NewGuid()}{ext}";
-                    var filePath = Path.Combine(folder, fileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    catch (Exception ex)
                     {
-                        await statusImage.CopyToAsync(stream);
+                        if (isJson) return Json(new { success = false, error = $"Image upload failed: {ex.Message}" });
+                        TempData["Error"] = $"Image upload failed: {ex.Message}";
+                        return RedirectToAction("AddStatus");
                     }
 
                     var status = new Status
@@ -357,7 +353,7 @@ namespace XenChat.Controllers
                         UserId = user.Id,
                         Username = user.Username,
                         UserAvatar = user.Avatar,
-                        MediaUrl = $"/images/status/{fileName}",
+                        MediaUrl = mediaUrl,
                         Caption = caption?.Trim(),
                         CreatedAt = DateTime.Now
                     };

@@ -84,6 +84,7 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<MessageService>();
 builder.Services.AddSingleton<PendingSignupStore>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddSingleton<CloudinaryService>();
 
 // MVC + SignalR + Session
 builder.Services.AddControllersWithViews();
@@ -103,7 +104,62 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<XenChatDbContext>();
     try
     {
-        db.Database.EnsureCreated(); // Creates tables and seeds initial users in PostgreSQL if missing
+        // Explicitly create all required PostgreSQL tables if they don't already exist
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS ""Users"" (
+                ""Id"" SERIAL PRIMARY KEY,
+                ""Username"" TEXT NOT NULL,
+                ""Email"" TEXT NOT NULL,
+                ""Password"" TEXT NOT NULL,
+                ""ProfileInfo"" TEXT NULL,
+                ""Avatar"" TEXT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS ""Messages"" (
+                ""MessageId"" SERIAL PRIMARY KEY,
+                ""SenderId"" INTEGER NOT NULL,
+                ""ReceiverId"" INTEGER NOT NULL,
+                ""Content"" TEXT NOT NULL,
+                ""Timestamp"" TIMESTAMP WITH TIME ZONE NOT NULL,
+                ""IsRead"" BOOLEAN NOT NULL DEFAULT FALSE
+            );
+
+            CREATE TABLE IF NOT EXISTS ""Statuses"" (
+                ""Id"" SERIAL PRIMARY KEY,
+                ""UserId"" INTEGER NOT NULL,
+                ""Username"" TEXT NOT NULL,
+                ""UserAvatar"" TEXT NULL,
+                ""MediaUrl"" TEXT NOT NULL,
+                ""Caption"" TEXT NULL,
+                ""CreatedAt"" TIMESTAMP WITH TIME ZONE NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS ""Favorites"" (
+                ""Id"" SERIAL PRIMARY KEY,
+                ""UserId"" INTEGER NOT NULL,
+                ""FavoriteUserId"" INTEGER NOT NULL
+            );
+        ");
+
+        if (!db.Users.Any())
+        {
+            db.Users.AddRange(
+                new XenChat.Models.User { Username = "caleb",      Email = "caleb@gmail.com",      Password = "password123", ProfileInfo = "caleb",      Avatar = "caleb.png" },
+                new XenChat.Models.User { Username = "arnold",     Email = "arnold@gmail.com",     Password = "password123", ProfileInfo = "arnold",     Avatar = "arnold.png" },
+                new XenChat.Models.User { Username = "francis",    Email = "francis@gmail.com",    Password = "password123", ProfileInfo = "francis",    Avatar = "francis.png" },
+                new XenChat.Models.User { Username = "joana",      Email = "joana@gmail.com",      Password = "password123", ProfileInfo = "joana",      Avatar = "joana.png" },
+                new XenChat.Models.User { Username = "armanullah", Email = "armanullah@gmail.com", Password = "password123", ProfileInfo = "armanullah", Avatar = "armanullah.png" },
+                new XenChat.Models.User { Username = "afia",       Email = "afia@gmail.com",       Password = "password123", ProfileInfo = "afia",       Avatar = "afia.png" },
+                new XenChat.Models.User { Username = "amoako",     Email = "amoako@gmail.com",     Password = "password123", ProfileInfo = "amoako",     Avatar = "amoako.png" },
+                new XenChat.Models.User { Username = "benedict",   Email = "benedict@gmail.com",   Password = "password123", ProfileInfo = "benedict",   Avatar = "benedict.png" },
+                new XenChat.Models.User { Username = "philemon",   Email = "philemon@gmail.com",   Password = "password123", ProfileInfo = "philemon",   Avatar = "philemon.png" },
+                new XenChat.Models.User { Username = "akan",       Email = "akan@gmail.com",       Password = "password123", ProfileInfo = "akan",       Avatar = "akan.png" },
+                new XenChat.Models.User { Username = "panford",    Email = "panford@gmail.com",    Password = "password123", ProfileInfo = "panford",    Avatar = "panford.png" },
+                new XenChat.Models.User { Username = "drey",       Email = "drey@gmail.com",       Password = "password123", ProfileInfo = "drey",       Avatar = "drey.png" },
+                new XenChat.Models.User { Username = "guest",      Email = "guest@gmail.com",      Password = "password123", ProfileInfo = "guest",      Avatar = "user.png" }
+            );
+            db.SaveChanges();
+        }
 
         Console.WriteLine($"[Database] Successfully connected: {db.Database.ProviderName}");
         Console.WriteLine($"[Database] Users in DB: {db.Users.Count()}");
