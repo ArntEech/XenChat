@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using XenChat.Models;
 
 namespace XenChat.Data
@@ -17,8 +17,11 @@ namespace XenChat.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Message>()
-                .HasKey(m => m.MessageId);
+            modelBuilder.Entity<Message>(entity =>
+            {
+                entity.HasKey(m => m.MessageId);
+                entity.Property(m => m.MessageId).ValueGeneratedOnAdd();
+            });
 
             modelBuilder.Entity<User>().HasData(
                 new User { Id = 1,  Username = "caleb",      Email = "caleb@gmail.com",      Password = "password123", ProfileInfo = "caleb",      Avatar = "caleb.png" },

@@ -117,7 +117,7 @@
                                     @:No messages yet
                                 }
                             </p>
-                            @if (unreadCounts != null && unreadCounts.ContainsKey(user.Id) && unreadCounts[user.Id] > 0 && user.Id != otherUser.Id)
+                            @if (unreadCounts != null && unreadCounts.ContainsKey(user.Id) && unreadCounts[user.Id] > 0 && user.Id != otherUser?.Id)
                             {
                                 <span class="unread-count-badge">@unreadCounts[user.Id]</span>
                             }

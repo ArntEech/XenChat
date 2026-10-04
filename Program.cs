@@ -48,6 +48,30 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<XenChatDbContext>();
     db.Database.EnsureCreated();   // Creates xenchat.db + seeds 13 users if missing
+
+    // Ensure Messages table has SQLite autoincrement primary key
+    try
+    {
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS ""Messages_Fix"" (
+                ""MessageId"" INTEGER PRIMARY KEY AUTOINCREMENT,
+                ""SenderId"" INTEGER NOT NULL,
+                ""ReceiverId"" INTEGER NOT NULL,
+                ""Content"" TEXT NOT NULL,
+                ""Timestamp"" TEXT NOT NULL,
+                ""IsRead"" INTEGER NOT NULL DEFAULT 0
+            );
+            INSERT OR IGNORE INTO ""Messages_Fix"" (""MessageId"", ""SenderId"", ""ReceiverId"", ""Content"", ""Timestamp"", ""IsRead"")
+            SELECT ""MessageId"", ""SenderId"", ""ReceiverId"", ""Content"", ""Timestamp"", ""IsRead"" FROM ""Messages"";
+            DROP TABLE ""Messages"";
+            ALTER TABLE ""Messages_Fix"" RENAME TO ""Messages"";
+        ");
+    }
+    catch (Exception ex)
+    {
+        System.Diagnostics.Debug.WriteLine($"[Startup] Messages table check: {ex.Message}");
+    }
+
     System.Diagnostics.Debug.WriteLine($"[Startup] Database ready.");
     System.Diagnostics.Debug.WriteLine($"[Startup] Users in DB: {db.Users.Count()}");
 }
