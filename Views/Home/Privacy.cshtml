@@ -35,8 +35,9 @@
             </p>
         </section>
 
-        <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #414247;">
-            <a href="@Url.Action("Profile", "Home")" class="primary-button" style="display: inline-block; padding: 10px 24px; border-radius: 20px; background: #ee4c49; color: #FFFFFF; text-decoration: none; font-size: 14px;">Back to Profile</a>
+        <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #414247; display: flex; gap: 12px;">
+            <a href="/Settings?tab=privacy" class="primary-button" style="display: inline-block; padding: 10px 24px; border-radius: 20px; background: #ee4c49; color: #FFFFFF; text-decoration: none; font-size: 14px;">Back to Settings</a>
+            <a href="@Url.Action("Index", "Home")" style="display: inline-block; padding: 10px 24px; border-radius: 20px; background: #414247; color: #FFFFFF; text-decoration: none; font-size: 14px;">Back to Chats</a>
         </div>
     </div>
 </div>

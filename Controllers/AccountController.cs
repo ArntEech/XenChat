@@ -21,9 +21,19 @@ namespace XenChat.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string? logout)
         {
-            HttpContext.Session.Clear();
+            if (logout == "true")
+            {
+                HttpContext.Session.Clear();
+                return View();
+            }
+
+            if (HttpContext.Session.GetInt32("UserId") != null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             return View();
         }
 

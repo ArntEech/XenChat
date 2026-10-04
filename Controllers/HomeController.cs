@@ -111,24 +111,33 @@ namespace XenChat.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddStatus(IFormFile statusImage, string? caption)
+        public async Task<IActionResult> AddStatus(IFormFile statusImage, string? caption, string? returnUrl)
         {
-            return await CreateStatus(statusImage, caption, "/Home/Index");
+            var target = !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : "/Home/Updates";
+            return await CreateStatus(statusImage, caption, target);
         }
 
+        [HttpGet("/Privacy")]
+        [HttpGet("/Home/Privacy")]
         public IActionResult Privacy()
         {
             return View();
         }
 
-        public IActionResult Settings()
+        [HttpGet("/Settings")]
+        [HttpGet("/Home/Settings")]
+        public IActionResult Settings(string? tab)
         {
             if (HttpContext.Session.GetInt32("UserId") == null)
                 return RedirectToAction("Login", "Account");
+            if (!string.IsNullOrEmpty(tab))
+                return RedirectToAction("Profile", new { tab });
             return RedirectToAction("Profile");
         }
 
-        public IActionResult Profile()
+        [HttpGet("/Profile")]
+        [HttpGet("/Home/Profile")]
+        public IActionResult Profile(string? tab)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null)
@@ -141,6 +150,7 @@ namespace XenChat.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
+            ViewBag.ActiveTab = string.IsNullOrWhiteSpace(tab) ? "profile" : tab.ToLower();
             return View(user);
         }
 
@@ -196,7 +206,7 @@ namespace XenChat.Controllers
                     await avatarFile.CopyToAsync(stream);
                 }
 
-                user.Avatar = fileName;
+                user.Avatar = $"/images/avatars/{fileName}";
             }
 
             user.Username = trimmedUsername;
@@ -290,14 +300,18 @@ namespace XenChat.Controllers
                         return Json(new { success = true, mediaUrl = status.MediaUrl, caption = status.Caption, username = status.Username, time = status.CreatedAt.ToString("HH:mm") });
                     }
                 }
-                else if (isJson)
+                else
                 {
-                    return Json(new { success = false, error = "Invalid image format. Allowed: JPG, PNG, GIF, WebP." });
+                    if (isJson) return Json(new { success = false, error = "Invalid image format. Allowed: JPG, PNG, GIF, WebP." });
+                    TempData["Error"] = "Invalid image format. Allowed: JPG, PNG, GIF, WebP.";
+                    return RedirectToAction("AddStatus");
                 }
             }
-            else if (isJson)
+            else
             {
-                return Json(new { success = false, error = "No image file provided." });
+                if (isJson) return Json(new { success = false, error = "No image file provided." });
+                TempData["Error"] = "Please select an image file to share in your status.";
+                return RedirectToAction("AddStatus");
             }
 
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -305,7 +319,7 @@ namespace XenChat.Controllers
                 return Redirect(returnUrl);
             }
 
-            return RedirectToAction("Index");
+            return RedirectToAction("Updates");
         }
     }
 }

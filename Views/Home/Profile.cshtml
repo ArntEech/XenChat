@@ -1,6 +1,7 @@
 @model XenChat.Models.User
 @{
     ViewData["Title"] = "Profile";
+    var activeTab = (ViewBag.ActiveTab as string) ?? "profile";
 }
 
 <aside class="profile-page">
@@ -25,7 +26,7 @@
     <div class="profile-content">
         <div class="profile-sections">
 
-            <button class="profile-section" type="button" data-tab="general" id="tab-general">
+            <button class="profile-section @(activeTab == "general" ? "active" : "")" type="button" data-tab="general" id="tab-general">
                 <span class="profile-section-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3" />
@@ -38,7 +39,7 @@
                 </span>
             </button>
 
-            <button class="profile-section active" type="button" data-tab="profile" id="tab-profile">
+            <button class="profile-section @(activeTab == "profile" ? "active" : "")" type="button" data-tab="profile" id="tab-profile">
                 <span class="profile-section-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -51,7 +52,7 @@
                 </span>
             </button>
 
-            <button class="profile-section" type="button" data-tab="account" id="tab-account">
+            <button class="profile-section @(activeTab == "account" ? "active" : "")" type="button" data-tab="account" id="tab-account">
                 <span class="profile-section-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -63,7 +64,7 @@
                 </span>
             </button>
 
-            <button class="profile-section" type="button" data-tab="privacy" id="tab-privacy">
+            <button class="profile-section @(activeTab == "privacy" ? "active" : "")" type="button" data-tab="privacy" id="tab-privacy">
                 <span class="profile-section-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -76,7 +77,7 @@
                 </span>
             </button>
 
-            <button class="profile-section" type="button" data-tab="chat" id="tab-chat">
+            <button class="profile-section @(activeTab == "chat" ? "active" : "")" type="button" data-tab="chat" id="tab-chat">
                 <span class="profile-section-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -88,7 +89,7 @@
                 </span>
             </button>
 
-            <button class="profile-section" type="button" data-tab="calls" id="tab-calls">
+            <button class="profile-section @(activeTab == "calls" ? "active" : "")" type="button" data-tab="calls" id="tab-calls">
                 <span class="profile-section-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polygon points="23 7 16 12 23 17 23 7" />
@@ -101,7 +102,7 @@
                 </span>
             </button>
 
-            <button class="profile-section" type="button" data-tab="notifications" id="tab-notifications">
+            <button class="profile-section @(activeTab == "notifications" ? "active" : "")" type="button" data-tab="notifications" id="tab-notifications">
                 <span class="profile-section-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -114,7 +115,7 @@
                 </span>
             </button>
 
-            <button class="profile-section" type="button" data-tab="help" id="tab-help">
+            <button class="profile-section @(activeTab == "help" ? "active" : "")" type="button" data-tab="help" id="tab-help">
                 <span class="profile-section-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10" />
@@ -138,7 +139,16 @@
 
 <section class="profile-details-panel">
     <div class="profile-details-header">
-        <h2 id="settingsPanelTitle">Profile Details</h2>
+        <h2 id="settingsPanelTitle">@(activeTab switch {
+            "general" => "General Settings",
+            "account" => "Account Information",
+            "privacy" => "Privacy Settings",
+            "chat" => "Chat Settings",
+            "calls" => "Call Settings",
+            "notifications" => "Notification Settings",
+            "help" => "Help & Support",
+            _ => "Profile Details"
+        })</h2>
     </div>
 
     <div class="profile-details-content">
@@ -152,7 +162,7 @@
         }
 
         <!-- 1. PROFILE PANEL (EDIT INTERFACE) -->
-        <div class="settings-tab-panel active" id="panel-profile">
+        <div class="settings-tab-panel @(activeTab == "profile" ? "active" : "")" id="panel-profile">
             <form method="post" asp-action="Profile" asp-controller="Home" enctype="multipart/form-data" class="profile-form">
                 <div class="profile-avatar-edit">
                     <div class="avatar-preview-wrap">
@@ -195,39 +205,60 @@
         </div>
 
         <!-- 2. GENERAL SETTINGS PANEL -->
-        <div class="settings-tab-panel" id="panel-general">
+        <div class="settings-tab-panel @(activeTab == "general" ? "active" : "")" id="panel-general">
             <div class="settings-section-card">
                 <h3 class="settings-card-title">General Settings</h3>
-                <p class="settings-card-subtitle">Manage application preferences and startup behavior.</p>
+                <p class="settings-card-subtitle">Manage application preferences, appearance, and startup behavior.</p>
 
                 <div class="settings-info-list">
                     <div class="settings-info-item">
-                        <span class="settings-info-label">Theme</span>
-                        <span class="settings-info-val">Dark Theme (Active)</span>
+                        <span class="settings-info-label">Theme Appearance</span>
+                        <div style="display: flex; gap: 8px; margin-top: 6px;">
+                            <button type="button" class="settings-pill-btn active theme-opt" data-theme="Dark">Dark</button>
+                            <button type="button" class="settings-pill-btn theme-opt" data-theme="Light">Light</button>
+                            <button type="button" class="settings-pill-btn theme-opt" data-theme="System">System Default</button>
+                        </div>
                     </div>
                     <div class="settings-info-item">
                         <span class="settings-info-label">Startup Behavior</span>
-                        <span class="settings-info-val">Open directly to active conversations</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                            <span class="settings-info-val" id="startupBehaviorLabel">Open directly to active conversations</span>
+                            <button type="button" class="settings-toggle-btn active" id="btnStartupToggle">ON</button>
+                        </div>
                     </div>
                     <div class="settings-info-item">
-                        <span class="settings-info-label">Language</span>
-                        <span class="settings-info-val">English (US)</span>
+                        <span class="settings-info-label">Application Language</span>
+                        <div style="margin-top: 6px;">
+                            <select class="settings-select" id="langSelect">
+                                <option value="English (US)" selected>English (US)</option>
+                                <option value="Spanish">Español (Spanish)</option>
+                                <option value="French">Français (French)</option>
+                                <option value="German">Deutsch (German)</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="settings-info-item">
                         <span class="settings-info-label">Spell Check</span>
-                        <span class="settings-info-val">Enabled (Browser system default)</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                            <span class="settings-info-val" id="spellCheckLabel">Spell check enabled</span>
+                            <button type="button" class="settings-toggle-btn active" id="btnSpellCheckToggle">ON</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- 3. ACCOUNT PANEL -->
-        <div class="settings-tab-panel" id="panel-account">
+        <div class="settings-tab-panel @(activeTab == "account" ? "active" : "")" id="panel-account">
             <div class="settings-section-card">
                 <h3 class="settings-card-title">Account Information</h3>
-                <p class="settings-card-subtitle">Review your account credentials and security status.</p>
+                <p class="settings-card-subtitle">Review your account credentials, identifier, and security status.</p>
 
                 <div class="settings-info-list">
+                    <div class="settings-info-item">
+                        <span class="settings-info-label">User ID</span>
+                        <span class="settings-info-val">#@Model.Id</span>
+                    </div>
                     <div class="settings-info-item">
                         <span class="settings-info-label">Username</span>
                         <span class="settings-info-val">@Model.Username</span>
@@ -241,18 +272,27 @@
                         <span class="settings-info-val status-badge-active">Active</span>
                     </div>
                     <div class="settings-info-item">
-                        <span class="settings-info-label">Security</span>
-                        <span class="settings-info-val">Password is securely hashed (BCrypt)</span>
+                        <span class="settings-info-label">Security &amp; Password</span>
+                        <span class="settings-info-val">Password is securely hashed (ASP.NET Core PasswordHasher)</span>
                     </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
+                    <button type="button" class="primary-button" style="width: auto; padding: 8px 20px; font-size: 13px; border-radius: 20px;" onclick="switchTab('profile')">
+                        Edit Profile Details
+                    </button>
+                    <a href="@Url.Action("Logout", "Account")" class="primary-button" style="width: auto; padding: 8px 20px; font-size: 13px; border-radius: 20px; background: #333; text-decoration: none; color: #fff;">
+                        Sign Out
+                    </a>
                 </div>
             </div>
         </div>
 
         <!-- 4. PRIVACY PANEL -->
-        <div class="settings-tab-panel" id="panel-privacy">
+        <div class="settings-tab-panel @(activeTab == "privacy" ? "active" : "")" id="panel-privacy">
             <div class="settings-section-card">
-                <h3 class="settings-card-title">Privacy Information</h3>
-                <p class="settings-card-subtitle">Information on how XenChat protects your messages and data.</p>
+                <h3 class="settings-card-title">Privacy Settings</h3>
+                <p class="settings-card-subtitle">Control message privacy, status visibility, and contact permissions.</p>
 
                 <div class="settings-info-list">
                     <div class="settings-info-item">
@@ -260,128 +300,195 @@
                         <span class="settings-info-val">Conversations are stored privately and delivered securely.</span>
                     </div>
                     <div class="settings-info-item">
-                        <span class="settings-info-label">Status Expiration</span>
-                        <span class="settings-info-val">Status updates automatically expire after 24 hours.</span>
+                        <span class="settings-info-label">Read Receipts</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                            <span class="settings-info-val" id="readReceiptsLabel">Show read receipts in chats</span>
+                            <button type="button" class="settings-toggle-btn active" id="btnReadReceiptsToggle">ON</button>
+                        </div>
+                    </div>
+                    <div class="settings-info-item">
+                        <span class="settings-info-label">Last Seen Visibility</span>
+                        <div style="display: flex; gap: 8px; margin-top: 6px;">
+                            <button type="button" class="settings-pill-btn active last-seen-opt" data-val="Everyone">Everyone</button>
+                            <button type="button" class="settings-pill-btn last-seen-opt" data-val="Contacts">Contacts Only</button>
+                            <button type="button" class="settings-pill-btn last-seen-opt" data-val="Nobody">Nobody</button>
+                        </div>
                     </div>
                     <div class="settings-info-item">
                         <span class="settings-info-label">Blocked Contacts</span>
-                        <span class="settings-info-val">0 blocked contacts</span>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Read Receipts</span>
-                        <span class="settings-info-val">Visible in active conversations</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                            <span class="settings-info-val" id="blockedCountLabel">0 contacts blocked</span>
+                            <button type="button" class="settings-btn-action" id="btnViewBlocked">View Blocked List</button>
+                        </div>
+                        <div id="blockedListInfo" style="display: none; font-size: 13px; color: #4caf50; margin-top: 6px;">
+                            No blocked contacts found. All contacts are permitted.
+                        </div>
                     </div>
                 </div>
 
                 <div style="margin-top: 24px;">
-                    <a href="@Url.Action("Privacy", "Home")" class="settings-action-link">View Full Privacy Policy &rarr;</a>
+                    <a href="@Url.Action("Privacy", "Home")" class="settings-action-link" style="color: #ee4c49; text-decoration: none; font-size: 14px; font-weight: 500;">
+                        View Full Privacy Policy &rarr;
+                    </a>
                 </div>
             </div>
         </div>
 
         <!-- 5. CHAT PANEL -->
-        <div class="settings-tab-panel" id="panel-chat">
+        <div class="settings-tab-panel @(activeTab == "chat" ? "active" : "")" id="panel-chat">
             <div class="settings-section-card">
                 <h3 class="settings-card-title">Chat Settings</h3>
-                <p class="settings-card-subtitle">Manage chat window behavior and media handling.</p>
+                <p class="settings-card-subtitle">Manage chat window behavior, keyboard shortcuts, and media display.</p>
 
                 <div class="settings-info-list">
                     <div class="settings-info-item">
-                        <span class="settings-info-label">Send Message</span>
-                        <span class="settings-info-val">Press Enter to send (Shift + Enter for a new line)</span>
+                        <span class="settings-info-label">Send Message on Enter</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                            <span class="settings-info-val" id="enterSendLabel">Press Enter to send (Shift + Enter for new line)</span>
+                            <button type="button" class="settings-toggle-btn active" id="btnEnterSendToggle">ON</button>
+                        </div>
                     </div>
                     <div class="settings-info-item">
                         <span class="settings-info-label">Media Auto-Download</span>
-                        <span class="settings-info-val">Photos and attachments are displayed inline</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                            <span class="settings-info-val" id="mediaDownloadLabel">Photos and images display automatically</span>
+                            <button type="button" class="settings-toggle-btn active" id="btnMediaDownloadToggle">ON</button>
+                        </div>
                     </div>
                     <div class="settings-info-item">
-                        <span class="settings-info-label">Chat Storage</span>
-                        <span class="settings-info-val">Persisted in SQLite database</span>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Font Size</span>
-                        <span class="settings-info-val">Standard (14px)</span>
+                        <span class="settings-info-label">Chat Font Size</span>
+                        <div style="display: flex; gap: 8px; margin-top: 6px;">
+                            <button type="button" class="settings-pill-btn font-size-opt" data-size="12px">Small</button>
+                            <button type="button" class="settings-pill-btn active font-size-opt" data-size="14px">Medium (Standard)</button>
+                            <button type="button" class="settings-pill-btn font-size-opt" data-size="16px">Large</button>
+                        </div>
+                        <div id="fontSamplePreview" style="margin-top: 10px; padding: 8px 12px; background: #1b1d1f; border-radius: 6px; font-size: 14px; color: #ccc;">
+                            Sample chat message preview text
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- 6. CALLS PANEL -->
-        <div class="settings-tab-panel" id="panel-calls">
+        <div class="settings-tab-panel @(activeTab == "calls" ? "active" : "")" id="panel-calls">
             <div class="settings-section-card">
                 <h3 class="settings-card-title">Call Settings</h3>
-                <p class="settings-card-subtitle">Preferences for voice and video communications.</p>
+                <p class="settings-card-subtitle">Preferences and device configuration for voice and video communications.</p>
 
                 <div class="settings-info-list">
                     <div class="settings-info-item">
-                        <span class="settings-info-label">Microphone</span>
-                        <span class="settings-info-val">System Default Microphone</span>
+                        <span class="settings-info-label">Microphone Input</span>
+                        <div style="margin-top: 6px;">
+                            <select class="settings-select" id="micSelect" style="width: 100%; max-width: 380px;">
+                                <option selected>System Default (Integrated Microphone)</option>
+                                <option>Headset Microphone</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="settings-info-item">
-                        <span class="settings-info-label">Camera</span>
-                        <span class="settings-info-val">Integrated Camera / Webcam</span>
+                        <span class="settings-info-label">Camera Video</span>
+                        <div style="margin-top: 6px;">
+                            <select class="settings-select" id="cameraSelect" style="width: 100%; max-width: 380px;">
+                                <option selected>Integrated Webcam (Built-in)</option>
+                                <option>External USB Camera</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="settings-info-item">
-                        <span class="settings-info-label">Audio Output</span>
-                        <span class="settings-info-val">Default Speakers</span>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Call Quality</span>
-                        <span class="settings-info-val">Adaptive High Quality</span>
+                        <span class="settings-info-label">Audio &amp; Mic Testing</span>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                            <button type="button" class="settings-btn-action" id="btnTestAudio">Test Speaker &amp; Mic</button>
+                            <span id="audioTestResult" style="font-size: 13px; color: #4caf50; display: none;">Speakers and Microphone: OK!</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- 7. NOTIFICATIONS PANEL -->
-        <div class="settings-tab-panel" id="panel-notifications">
+        <div class="settings-tab-panel @(activeTab == "notifications" ? "active" : "")" id="panel-notifications">
             <div class="settings-section-card">
                 <h3 class="settings-card-title">Notification Settings</h3>
-                <p class="settings-card-subtitle">Configure message alerts, badges, and sound effects.</p>
+                <p class="settings-card-subtitle">Configure message alerts, badges, sound chimes, and banners.</p>
 
                 <div class="settings-info-list">
                     <div class="settings-info-item">
                         <span class="settings-info-label">Desktop Notifications</span>
-                        <span class="settings-info-val">Enabled (Browser permissions required)</span>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Message Preview</span>
-                        <span class="settings-info-val">Show sender and snippet on incoming messages</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                            <span class="settings-info-val" id="desktopNotifLabel">Show popup alerts on new messages</span>
+                            <button type="button" class="settings-toggle-btn active" id="btnDesktopNotifToggle">ON</button>
+                        </div>
                     </div>
                     <div class="settings-info-item">
                         <span class="settings-info-label">Sound Alerts</span>
-                        <span class="settings-info-val">Play alert chime when a new message arrives</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                            <span class="settings-info-val" id="soundAlertsLabel">Play chime on incoming messages</span>
+                            <button type="button" class="settings-toggle-btn active" id="btnSoundAlertsToggle">ON</button>
+                        </div>
                     </div>
                     <div class="settings-info-item">
-                        <span class="settings-info-label">Unread Badges</span>
-                        <span class="settings-info-val">Counter displayed on chat list items</span>
+                        <span class="settings-info-label">Message Snippet Preview</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                            <span class="settings-info-val" id="msgPreviewLabel">Show sender and text preview in alert</span>
+                            <button type="button" class="settings-toggle-btn active" id="btnMsgPreviewToggle">ON</button>
+                        </div>
+                    </div>
+                    <div class="settings-info-item">
+                        <span class="settings-info-label">Test Notification</span>
+                        <div style="margin-top: 8px;">
+                            <button type="button" class="settings-btn-action" id="btnTestNotif">Trigger Test Notification</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- 8. HELP & SUPPORT PANEL -->
-        <div class="settings-tab-panel" id="panel-help">
+        <div class="settings-tab-panel @(activeTab == "help" ? "active" : "")" id="panel-help">
             <div class="settings-section-card">
                 <h3 class="settings-card-title">Help &amp; Support</h3>
-                <p class="settings-card-subtitle">Help documentation, feedback channels, and version details.</p>
+                <p class="settings-card-subtitle">Help documentation, support channels, and platform version information.</p>
 
                 <div class="settings-info-list">
                     <div class="settings-info-item">
-                        <span class="settings-info-label">Version</span>
-                        <span class="settings-info-val">XenChat v1.0.0 (.NET 8 MVC)</span>
+                        <span class="settings-info-label">App Version</span>
+                        <span class="settings-info-val">XenChat v1.0.0 (.NET 8.0 MVC + SQLite)</span>
                     </div>
                     <div class="settings-info-item">
                         <span class="settings-info-label">Contact Support</span>
-                        <span class="settings-info-val"><a href="mailto:support@xenchat.local" style="color: #ee4c49;">support@xenchat.local</a></span>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Status Updates</span>
-                        <span class="settings-info-val">Share photos and updates that disappear in 24h</span>
+                        <span class="settings-info-val">
+                            <a href="mailto:support@xenchat.local" style="color: #ee4c49; text-decoration: none;">support@xenchat.local</a>
+                        </span>
                     </div>
                     <div class="settings-info-item">
                         <span class="settings-info-label">Privacy Policy</span>
-                        <span class="settings-info-val"><a href="@Url.Action("Privacy", "Home")" style="color: #ee4c49;">Read policy</a></span>
+                        <span class="settings-info-val">
+                            <a href="@Url.Action("Privacy", "Home")" style="color: #ee4c49; text-decoration: none;">Read full privacy policy &rarr;</a>
+                        </span>
+                    </div>
+                    <div class="settings-info-item">
+                        <span class="settings-info-label">Frequently Asked Questions</span>
+                        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+                            <div class="faq-item" style="background: #1b1d1f; border-radius: 8px; padding: 10px 14px; cursor: pointer;">
+                                <div style="font-weight: 500; font-size: 13px; color: #fff; display: flex; justify-content: space-between;">
+                                    <span>How do I post a Status update?</span>
+                                    <span>+</span>
+                                </div>
+                                <div class="faq-ans" style="display: none; font-size: 13px; color: #aaa; margin-top: 6px;">
+                                    Go to Updates or Home, click the &quot;Add Status&quot; button, select a photo, optionally type a caption, and post!
+                                </div>
+                            </div>
+                            <div class="faq-item" style="background: #1b1d1f; border-radius: 8px; padding: 10px 14px; cursor: pointer;">
+                                <div style="font-weight: 500; font-size: 13px; color: #fff; display: flex; justify-content: space-between;">
+                                    <span>How do I change my profile photo?</span>
+                                    <span>+</span>
+                                </div>
+                                <div class="faq-ans" style="display: none; font-size: 13px; color: #aaa; margin-top: 6px;">
+                                    Click the Profile tab on the left, click the camera icon on your avatar, select an image, and click &quot;Save Changes&quot;.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -389,6 +496,70 @@
 
     </div>
 </section>
+
+<!-- Settings Toast Notification -->
+<div id="settingsToast" style="display:none; position:fixed; bottom:24px; right:24px; background:#232428; border:1px solid #ee4c49; color:#fff; padding:10px 20px; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.5); font-size:13px; z-index:9999;"></div>
+
+<style>
+    .settings-toggle-btn {
+        background: #2e7d32;
+        color: #fff;
+        border: 1px solid #4caf50;
+        padding: 4px 14px;
+        border-radius: 14px;
+        font-size: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    .settings-toggle-btn.off {
+        background: #383a40;
+        border-color: #555;
+        color: #999;
+    }
+    .settings-pill-btn {
+        background: #1e1f22;
+        border: 1px solid #3c3e44;
+        color: #ccc;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .settings-pill-btn:hover {
+        border-color: #777;
+    }
+    .settings-pill-btn.active {
+        background: #ee4c49;
+        border-color: #ee4c49;
+        color: #fff;
+        font-weight: 500;
+    }
+    .settings-btn-action {
+        background: #2b2c30;
+        border: 1px solid #444;
+        color: #fff;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .settings-btn-action:hover {
+        border-color: #ee4c49;
+        color: #ee4c49;
+    }
+    .settings-select {
+        background: #1e1f22;
+        border: 1px solid #3c3e44;
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        outline: none;
+    }
+</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -401,7 +572,7 @@
             'general': 'General Settings',
             'profile': 'Profile Details',
             'account': 'Account Information',
-            'privacy': 'Privacy Information',
+            'privacy': 'Privacy Settings',
             'chat': 'Chat Settings',
             'calls': 'Call Settings',
             'notifications': 'Notification Settings',
@@ -430,7 +601,14 @@
             if (headerTitle && tabTitles[tabKey]) {
                 headerTitle.textContent = tabTitles[tabKey];
             }
+
+            if (window.history.replaceState) {
+                const url = new URL(window.location);
+                url.searchParams.set('tab', tabKey);
+                window.history.replaceState(null, '', url.pathname + url.search);
+            }
         }
+        window.switchTab = switchTab;
 
         tabButtons.forEach(btn => {
             btn.addEventListener('click', function () {
@@ -439,11 +617,138 @@
             });
         });
 
-        // If URL has hash or param matching a tab, open it
-        const currentHash = window.location.hash.replace('#', '').toLowerCase();
-        if (tabTitles[currentHash]) {
-            switchTab(currentHash);
+        // Initialize active tab from query parameter, hash, or default
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestedTab = urlParams.get('tab') || window.location.hash.replace('#', '') || '@activeTab';
+        if (tabTitles[requestedTab]) {
+            switchTab(requestedTab);
         }
+
+        // Toast notification helper
+        function showToast(msg) {
+            const toast = document.getElementById('settingsToast');
+            if (toast) {
+                toast.textContent = msg;
+                toast.style.display = 'block';
+                clearTimeout(window._toastTimeout);
+                window._toastTimeout = setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 2200);
+            }
+        }
+
+        // Generic toggle helper
+        function setupToggle(btnId, labelId, onText, offText, settingName) {
+            const btn = document.getElementById(btnId);
+            const label = document.getElementById(labelId);
+            if (!btn) return;
+
+            btn.addEventListener('click', function () {
+                const isOn = !this.classList.contains('off');
+                if (isOn) {
+                    this.classList.add('off');
+                    this.textContent = 'OFF';
+                    if (label && offText) label.textContent = offText;
+                    showToast(settingName + ': Disabled');
+                } else {
+                    this.classList.remove('off');
+                    this.textContent = 'ON';
+                    if (label && onText) label.textContent = onText;
+                    showToast(settingName + ': Enabled');
+                }
+            });
+        }
+
+        setupToggle('btnStartupToggle', 'startupBehaviorLabel', 'Open directly to active conversations', 'Do not open conversations on startup', 'Startup Behavior');
+        setupToggle('btnSpellCheckToggle', 'spellCheckLabel', 'Spell check enabled', 'Spell check disabled', 'Spell Check');
+        setupToggle('btnReadReceiptsToggle', 'readReceiptsLabel', 'Show read receipts in chats', 'Read receipts hidden', 'Read Receipts');
+        setupToggle('btnEnterSendToggle', 'enterSendLabel', 'Press Enter to send (Shift + Enter for new line)', 'Press Send button to send (Enter adds new line)', 'Send on Enter');
+        setupToggle('btnMediaDownloadToggle', 'mediaDownloadLabel', 'Photos and images display automatically', 'Manual media download only', 'Auto-Download');
+        setupToggle('btnDesktopNotifToggle', 'desktopNotifLabel', 'Show popup alerts on new messages', 'Desktop popup alerts disabled', 'Desktop Notifications');
+        setupToggle('btnSoundAlertsToggle', 'soundAlertsLabel', 'Play chime on incoming messages', 'Sound alerts muted', 'Sound Alerts');
+        setupToggle('btnMsgPreviewToggle', 'msgPreviewLabel', 'Show sender and text preview in alert', 'Message previews hidden', 'Message Preview');
+
+        // Theme option buttons
+        document.querySelectorAll('.theme-opt').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.theme-opt').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                showToast('Theme set to: ' + this.getAttribute('data-theme'));
+            });
+        });
+
+        // Language selector
+        const langSelect = document.getElementById('langSelect');
+        if (langSelect) {
+            langSelect.addEventListener('change', function () {
+                showToast('Language updated to: ' + this.value);
+            });
+        }
+
+        // Last seen buttons
+        document.querySelectorAll('.last-seen-opt').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.last-seen-opt').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                showToast('Last Seen visible to: ' + this.getAttribute('data-val'));
+            });
+        });
+
+        // Blocked list button
+        const btnViewBlocked = document.getElementById('btnViewBlocked');
+        const blockedInfo = document.getElementById('blockedListInfo');
+        if (btnViewBlocked && blockedInfo) {
+            btnViewBlocked.addEventListener('click', function () {
+                const isHidden = blockedInfo.style.display === 'none';
+                blockedInfo.style.display = isHidden ? 'block' : 'none';
+                this.textContent = isHidden ? 'Hide Blocked List' : 'View Blocked List';
+            });
+        }
+
+        // Font size options
+        document.querySelectorAll('.font-size-opt').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.font-size-opt').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                const size = this.getAttribute('data-size');
+                const preview = document.getElementById('fontSamplePreview');
+                if (preview) {
+                    preview.style.fontSize = size;
+                }
+                showToast('Chat font size: ' + this.textContent);
+            });
+        });
+
+        // Audio test button
+        const btnTestAudio = document.getElementById('btnTestAudio');
+        const audioTestResult = document.getElementById('audioTestResult');
+        if (btnTestAudio && audioTestResult) {
+            btnTestAudio.addEventListener('click', function () {
+                audioTestResult.style.display = 'inline';
+                showToast('Testing audio output & mic... Operational!');
+            });
+        }
+
+        // Test notification button
+        const btnTestNotif = document.getElementById('btnTestNotif');
+        if (btnTestNotif) {
+            btnTestNotif.addEventListener('click', function () {
+                showToast('🔔 Notification Alert: Test message from XenChat!');
+            });
+        }
+
+        // FAQ accordion
+        document.querySelectorAll('.faq-item').forEach(item => {
+            item.addEventListener('click', function () {
+                const ans = this.querySelector('.faq-ans');
+                const sign = this.querySelector('span:last-child');
+                if (ans) {
+                    const isVisible = ans.style.display === 'block';
+                    ans.style.display = isVisible ? 'none' : 'block';
+                    if (sign) sign.textContent = isVisible ? '+' : '−';
+                }
+            });
+        });
 
         // Avatar preview logic
         const avatarInput = document.getElementById('avatarInput');

@@ -80,18 +80,23 @@
         </section>
     </main>
 
-    @if (ViewBag.Token != null)
-    {
-        <script>
-            localStorage.setItem('xenchat_token', '@ViewBag.Token');
-            window.location.href = '@Url.Action("Index", "Home")';
-        </script>
-    }
-
     <script>
         (function () {
             const urlParams = new URLSearchParams(window.location.search);
             const isLogout = urlParams.get('logout') === 'true';
+            const returnUrl = urlParams.get('ReturnUrl') || urlParams.get('returnUrl');
+            const targetUrl = (returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//'))
+                ? returnUrl
+                : '@Url.Action("Index", "Home")';
+
+            @if (ViewBag.Token != null)
+            {
+                <text>
+                localStorage.setItem('xenchat_token', '@ViewBag.Token');
+                window.location.href = targetUrl;
+                return;
+                </text>
+            }
 
             if (isLogout) {
                 localStorage.removeItem('xenchat_token');
@@ -112,7 +117,7 @@
                         if (res.ok) {
                             return res.json().then(data => {
                                 if (data && data.success) {
-                                    window.location.href = '@Url.Action("Index", "Home")';
+                                    window.location.href = targetUrl;
                                 } else {
                                     localStorage.removeItem('xenchat_token');
                                 }
@@ -153,7 +158,7 @@
                         const data = await response.json();
                         if (data && data.success && data.token) {
                             localStorage.setItem('xenchat_token', data.token);
-                            window.location.href = '@Url.Action("Index", "Home")';
+                            window.location.href = targetUrl;
                         } else {
                             let errorDiv = document.querySelector('.auth-error');
                             if (!errorDiv) {

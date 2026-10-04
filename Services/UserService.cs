@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using XenChat.Data;
@@ -12,6 +13,7 @@ namespace XenChat.Services
     {
         private readonly XenChatDbContext _db;
         private readonly IConfiguration? _configuration;
+        private readonly PasswordHasher<User> _passwordHasher = new();
 
         public UserService(XenChatDbContext db, IConfiguration? configuration = null)
         {
@@ -24,21 +26,52 @@ namespace XenChat.Services
             return _db.Users.ToList();
         }
 
-        public User GetUserById(int id)
+        public User? GetUserById(int id)
         {
             return _db.Users.FirstOrDefault(u => u.Id == id);
         }
 
-        public User Authenticate(string email, string password)
+        public User? Authenticate(string email, string password)
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
                 return null;
 
             var normalizedEmail = email.Trim().ToLower();
-            return _db.Users.FirstOrDefault(u =>
+            var user = _db.Users.FirstOrDefault(u =>
                 u.Email != null &&
-                u.Email.ToLower() == normalizedEmail &&
-                u.Password == password);
+                u.Email.ToLower() == normalizedEmail);
+
+            if (user == null || string.IsNullOrEmpty(user.Password))
+                return null;
+
+            // Verify with PasswordHasher<User>
+            try
+            {
+                var result = _passwordHasher.VerifyHashedPassword(user, user.Password, password);
+                if (result == PasswordVerificationResult.Success || result == PasswordVerificationResult.SuccessRehashNeeded)
+                {
+                    if (result == PasswordVerificationResult.SuccessRehashNeeded)
+                    {
+                        user.Password = _passwordHasher.HashPassword(user, password);
+                        _db.SaveChanges();
+                    }
+                    return user;
+                }
+            }
+            catch
+            {
+                // FormatException occurs if stored password is an existing plaintext password
+            }
+
+            // Fallback for existing plaintext passwords: verify and auto-upgrade to hash
+            if (user.Password == password)
+            {
+                user.Password = _passwordHasher.HashPassword(user, password);
+                _db.SaveChanges();
+                return user;
+            }
+
+            return null;
         }
 
         public void CreateUser(User user)
@@ -54,6 +87,8 @@ namespace XenChat.Services
                 System.Diagnostics.Debug.WriteLine($"[CreateUser] DUPLICATE. Existing Id={existing.Id}, Email={existing.Email}");
                 return;
             }
+
+            user.Password = _passwordHasher.HashPassword(user, user.Password);
 
             _db.Users.Add(user);
             _db.SaveChanges();

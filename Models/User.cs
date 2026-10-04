@@ -9,7 +9,11 @@ namespace XenChat.Models
         public string ProfileInfo { get; set; }
         public string Avatar { get; set; }
 
-        public string AvatarPath => $"/images/avatars/{(string.IsNullOrEmpty(Avatar) ? "user.png" : Avatar)}";
+        public string AvatarPath => string.IsNullOrWhiteSpace(Avatar)
+            ? "/images/avatars/user.png"
+            : (Avatar.StartsWith("/")
+                ? Avatar
+                : (Avatar.StartsWith("images/") ? "/" + Avatar : $"/images/avatars/{Avatar}"));
         public string Initial => string.IsNullOrEmpty(Username) ? "?" : Username.Substring(0, 1).ToUpper();
     }
 }
