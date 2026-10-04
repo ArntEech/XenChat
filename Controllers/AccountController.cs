@@ -30,8 +30,11 @@ namespace XenChat.Controllers
         [HttpPost]
         public IActionResult Login(string email, string password)
         {
-            System.Diagnostics.Debug.WriteLine("====================================================");
-            System.Diagnostics.Debug.WriteLine($"[Login] email='{email}' password='{password}'");
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            {
+                ViewBag.Error = "Please enter both email and password";
+                return View();
+            }
 
             var allUsers = _userService.GetAllUsers();
             System.Diagnostics.Debug.WriteLine($"[Login] Loaded {allUsers.Count} users:");

@@ -1,4 +1,4 @@
-﻿using XenChat.Data;
+using XenChat.Data;
 using XenChat.Models;
 
 namespace XenChat.Services
@@ -24,9 +24,13 @@ namespace XenChat.Services
 
         public User Authenticate(string email, string password)
         {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+                return null;
+
+            var normalizedEmail = email.Trim().ToLower();
             return _db.Users.FirstOrDefault(u =>
                 u.Email != null &&
-                u.Email.ToLower() == email.ToLower() &&
+                u.Email.ToLower() == normalizedEmail &&
                 u.Password == password);
         }
 
