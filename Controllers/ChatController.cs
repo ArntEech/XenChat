@@ -130,5 +130,83 @@ namespace XenChat.Controllers
 
             return Json(new { success = true, timestamp = newMessage.Timestamp.ToString("HH:mm") });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> SendImage(int receiverId, IFormFile imageFile, string? caption)
+        {
+            var senderId = HttpContext.Session.GetInt32("UserId");
+
+            var authHeader = Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                var principal = _userService.ValidateToken(token);
+                if (principal != null)
+                {
+                    var idClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                                  ?? principal.FindFirst("id")?.Value;
+                    if (int.TryParse(idClaim, out int tokenUserId))
+                    {
+                        var tokenUser = _userService.GetUserById(tokenUserId);
+                        if (tokenUser != null)
+                        {
+                            senderId = tokenUserId;
+                            HttpContext.Session.SetInt32("UserId", tokenUser.Id);
+                            HttpContext.Session.SetString("Username", tokenUser.Username);
+                        }
+                    }
+                }
+            }
+
+            if (senderId == null)
+                return Unauthorized(new { success = false, error = "Not logged in" });
+
+            if (receiverId == senderId.Value)
+                return Json(new { success = false, error = "Cannot message yourself" });
+
+            if (imageFile == null || imageFile.Length == 0)
+                return Json(new { success = false, error = "No image provided" });
+
+            var ext = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+            if (!allowed.Contains(ext))
+                return Json(new { success = false, error = "Only JPG, PNG, GIF, and WebP images are allowed" });
+
+            var recipient = _userService.GetUserById(receiverId);
+            if (recipient == null)
+                return Json(new { success = false, error = "Recipient not found" });
+
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "chat");
+            if (!Directory.Exists(folder))
+            {
+                Directory.CreateDirectory(folder);
+            }
+
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var filePath = Path.Combine(folder, fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(stream);
+            }
+
+            var messageContent = $"[img]/images/chat/{fileName}[/img]{(string.IsNullOrWhiteSpace(caption) ? "" : caption.Trim())}";
+            var newMessage = new Message
+            {
+                SenderId = senderId.Value,
+                ReceiverId = receiverId,
+                Content = messageContent
+            };
+
+            _messageService.SendMessage(newMessage);
+
+            return Json(new
+            {
+                success = true,
+                content = newMessage.Content,
+                imageUrl = $"/images/chat/{fileName}",
+                caption = caption?.Trim(),
+                timestamp = newMessage.Timestamp.ToString("HH:mm")
+            });
+        }
     }
 }

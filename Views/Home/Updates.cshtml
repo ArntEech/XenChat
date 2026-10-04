@@ -1,33 +1,236 @@
 @{
     ViewData["Title"] = "Updates";
+    var statuses = ViewBag.Statuses as List<XenChat.Models.Status>;
 }
 
-<div class="updates-container" style="padding: 32px 40px; max-width: 800px; margin: 0 auto; color: #fff;">
-    <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">Status &amp; Updates</h2>
+<div class="updates-container" style="padding: 24px 32px; max-width: 900px; margin: 0 auto; color: #fff;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <h2 style="font-size: 24px; font-weight: 600; margin: 0;">Status &amp; Updates</h2>
+        <button type="button" id="updatesAddStatusBtn" class="primary-button" style="width: auto; padding: 8px 18px; font-size: 14px; border-radius: 20px;">
+            + Add Status
+        </button>
+    </div>
 
+    <!-- Statuses Carousel -->
+    <div class="updates-section" style="margin-bottom: 32px; background: #232428; padding: 20px; border-radius: 12px; border: 1px solid #333;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ee4c49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v8M8 12h8" />
+            </svg>
+            <h3 style="font-size: 16px; font-weight: 600; margin: 0; color: #fff;">Recent Statuses</h3>
+            <span style="font-size: 12px; color: #888;">(Disappear after 24h)</span>
+        </div>
+
+        <div class="updates-carousel" style="padding: 4px 0 12px 0;">
+            <div class="update-item" id="addStatusCardBtn" style="cursor: pointer;" title="Add Status">
+                <div class="add-avatar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                </div>
+                <span class="update-name">Add</span>
+            </div>
+
+            @if (statuses != null && statuses.Any())
+            {
+                foreach (var status in statuses)
+                {
+                    <div class="update-item status-item" data-media="@status.MediaUrl" data-user="@status.Username" data-caption="@(status.Caption ?? "")" data-time="@status.CreatedAt.ToString("HH:mm")" style="cursor: pointer;" title="@status.Username">
+                        <img src="@status.MediaUrl" alt="@status.Username" class="avatar-image update-carousel-avatar" style="border: 2px solid #ee4c49;" onerror="this.src='/images/logo.png';" />
+                        <span class="update-name">@status.Username</span>
+                    </div>
+                }
+            }
+            else
+            {
+                <div style="display: flex; align-items: center; padding: 0 16px; color: #777; font-size: 13px;">
+                    No recent statuses. Click &quot;Add&quot; to share an update!
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- System Channels & News -->
+    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Channels &amp; Announcements</h3>
     <div style="display: flex; flex-direction: column; gap: 16px;">
         <div class="update-card" style="background: #232428; border: 1px solid #333; border-radius: 12px; padding: 20px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                <h3 style="font-size: 16px; font-weight: 600; color: #ee4c49;">Welcome to XenChat</h3>
+                <h3 style="font-size: 16px; font-weight: 600; color: #ee4c49; margin: 0;">Welcome to XenChat</h3>
                 <span style="font-size: 12px; color: #888;">Just now</span>
             </div>
-            <p style="font-size: 14px; color: #ccc; line-height: 1.5;">Connect with your team instantly. Send direct messages, view online updates, and collaborate seamlessly.</p>
+            <p style="font-size: 14px; color: #ccc; line-height: 1.5; margin: 0;">Connect with your team instantly. Send direct messages, share statuses, view online updates, and collaborate seamlessly.</p>
         </div>
 
         <div class="update-card" style="background: #232428; border: 1px solid #333; border-radius: 12px; padding: 20px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                <h3 style="font-size: 16px; font-weight: 600; color: #4CAF50;">System Status: Operational</h3>
+                <h3 style="font-size: 16px; font-weight: 600; color: #4CAF50; margin: 0;">System Status: Operational</h3>
                 <span style="font-size: 12px; color: #888;">Today</span>
             </div>
-            <p style="font-size: 14px; color: #ccc; line-height: 1.5;">Real-time messaging with SignalR and local SQLite database persistence are active and fully operational.</p>
+            <p style="font-size: 14px; color: #ccc; line-height: 1.5; margin: 0;">Real-time messaging with SignalR, status updates, and local SQLite persistence are active and fully operational.</p>
         </div>
 
         <div class="update-card" style="background: #232428; border: 1px solid #333; border-radius: 12px; padding: 20px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                <h3 style="font-size: 16px; font-weight: 600; color: #fff;">Upcoming: Channels &amp; Voice Rooms</h3>
+                <h3 style="font-size: 16px; font-weight: 600; color: #fff; margin: 0;">Upcoming: Channels &amp; Voice Rooms</h3>
                 <span style="font-size: 12px; color: #888;">Yesterday</span>
             </div>
-            <p style="font-size: 14px; color: #ccc; line-height: 1.5;">Group chats and channel voice rooms are currently in progress. Stay tuned for further updates!</p>
+            <p style="font-size: 14px; color: #ccc; line-height: 1.5; margin: 0;">Group chats and channel voice rooms are currently in progress. Stay tuned for further updates!</p>
         </div>
     </div>
 </div>
+
+<!-- Hidden File Input for Status -->
+<input type="file" id="updatesStatusFileInput" accept="image/*" style="display: none;" />
+
+<!-- Status Upload Modal -->
+<div id="updatesStatusUploadModal" class="status-modal" style="display: none;">
+    <div class="status-modal-content">
+        <div class="status-modal-header">
+            <h3>New Status</h3>
+            <button type="button" id="closeUpdatesUploadModalBtn" class="status-close-btn">&times;</button>
+        </div>
+        <form method="post" asp-action="CreateStatus" asp-controller="Home" enctype="multipart/form-data" id="updatesStatusUploadForm">
+            <input type="hidden" name="returnUrl" value="/Home/Updates" />
+            <div class="status-preview-box" id="updatesStatusDropZone" style="cursor: pointer;" title="Click to choose a different photo">
+                <img id="updatesUploadPreviewImg" src="" alt="Preview" style="display: none;" />
+                <div id="updatesUploadPrompt" style="display: flex; flex-direction: column; align-items: center; gap: 8px; color: #888;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span style="font-size: 13px;">Click to select photo</span>
+                </div>
+            </div>
+            <input type="file" id="updatesModalFileInput" name="statusImage" accept="image/*" required style="display: none;" />
+            <div class="status-caption-row">
+                <input type="text" name="caption" id="updatesStatusCaptionInput" placeholder="Add a caption..." autocomplete="off" />
+                <button type="submit" class="primary-button" style="width: auto; padding: 0 20px; height: 40px;">Send</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Status Viewer Modal -->
+<div id="updatesStatusViewerModal" class="status-modal" style="display: none;">
+    <div class="status-modal-content viewer">
+        <div class="status-modal-header">
+            <div class="status-user-info">
+                <strong id="updatesViewerUsername" style="color: #fff; font-size: 15px;"></strong>
+                <span id="updatesViewerTime" style="font-size: 12px; color: #888; margin-left: 8px;"></span>
+            </div>
+            <button type="button" id="closeUpdatesViewerModalBtn" class="status-close-btn">&times;</button>
+        </div>
+        <div class="status-viewer-media">
+            <img id="updatesViewerImage" src="" alt="Status" />
+        </div>
+        <p id="updatesViewerCaption" class="status-viewer-caption" style="display: none;"></p>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const addBtn1 = document.getElementById('updatesAddStatusBtn');
+        const addBtn2 = document.getElementById('addStatusCardBtn');
+        const modal = document.getElementById('updatesStatusUploadModal');
+        const fileInput = document.getElementById('updatesModalFileInput');
+        const previewImg = document.getElementById('updatesUploadPreviewImg');
+        const uploadPrompt = document.getElementById('updatesUploadPrompt');
+        const dropZone = document.getElementById('updatesStatusDropZone');
+        const closeBtn = document.getElementById('closeUpdatesUploadModalBtn');
+        const captionInput = document.getElementById('updatesStatusCaptionInput');
+
+        function openModalWithFile(file) {
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    previewImg.src = e.target.result;
+                    previewImg.style.display = 'block';
+                    if (uploadPrompt) uploadPrompt.style.display = 'none';
+                    modal.style.display = 'flex';
+                    if (captionInput) captionInput.focus();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function triggerFileInput() {
+            fileInput.click();
+        }
+
+        if (addBtn1) addBtn1.addEventListener('click', triggerFileInput);
+        if (addBtn2) addBtn2.addEventListener('click', triggerFileInput);
+        if (dropZone) dropZone.addEventListener('click', triggerFileInput);
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function () {
+                if (this.files && this.files[0]) {
+                    openModalWithFile(this.files[0]);
+                }
+            });
+        }
+
+        if (closeBtn && modal) {
+            closeBtn.addEventListener('click', function () {
+                modal.style.display = 'none';
+                fileInput.value = '';
+                previewImg.src = '';
+                previewImg.style.display = 'none';
+                if (uploadPrompt) uploadPrompt.style.display = 'flex';
+            });
+
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    fileInput.value = '';
+                    previewImg.src = '';
+                    previewImg.style.display = 'none';
+                    if (uploadPrompt) uploadPrompt.style.display = 'flex';
+                }
+            });
+        }
+
+        // Viewer handlers
+        const viewerModal = document.getElementById('updatesStatusViewerModal');
+        const viewerImg = document.getElementById('updatesViewerImage');
+        const viewerUser = document.getElementById('updatesViewerUsername');
+        const viewerTime = document.getElementById('updatesViewerTime');
+        const viewerCaption = document.getElementById('updatesViewerCaption');
+        const closeViewerBtn = document.getElementById('closeUpdatesViewerModalBtn');
+
+        document.querySelectorAll('.status-item').forEach(item => {
+            item.addEventListener('click', function () {
+                const media = this.getAttribute('data-media');
+                const user = this.getAttribute('data-user');
+                const caption = this.getAttribute('data-caption');
+                const time = this.getAttribute('data-time');
+
+                if (viewerImg) viewerImg.src = media;
+                if (viewerUser) viewerUser.textContent = user;
+                if (viewerTime) viewerTime.textContent = time;
+
+                if (viewerCaption) {
+                    if (caption && caption.trim().length > 0) {
+                        viewerCaption.textContent = caption;
+                        viewerCaption.style.display = 'block';
+                    } else {
+                        viewerCaption.style.display = 'none';
+                    }
+                }
+
+                if (viewerModal) viewerModal.style.display = 'flex';
+            });
+        });
+
+        if (closeViewerBtn && viewerModal) {
+            closeViewerBtn.addEventListener('click', () => { viewerModal.style.display = 'none'; });
+            viewerModal.addEventListener('click', (e) => {
+                if (e.target === viewerModal) viewerModal.style.display = 'none';
+            });
+        }
+    });
+</script>
+}

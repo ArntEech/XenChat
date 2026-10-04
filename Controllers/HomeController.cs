@@ -69,14 +69,39 @@ namespace XenChat.Controllers
 
         public IActionResult Updates()
         {
-            if (HttpContext.Session.GetInt32("UserId") == null)
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
                 return RedirectToAction("Login", "Account");
+
+            var currentUser = _userService.GetUserById(userId.Value);
+            if (currentUser == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Account");
+            }
+
+            var cutoff = DateTime.Now.AddHours(-24);
+            var activeStatuses = _db.Statuses
+                .Where(s => s.CreatedAt >= cutoff)
+                .OrderByDescending(s => s.CreatedAt)
+                .ToList();
+
+            ViewBag.CurrentUser = currentUser;
+            ViewBag.Statuses = activeStatuses;
+
             return View();
         }
 
         public IActionResult Privacy()
         {
             return View();
+        }
+
+        public IActionResult Settings()
+        {
+            if (HttpContext.Session.GetInt32("UserId") == null)
+                return RedirectToAction("Login", "Account");
+            return RedirectToAction("Profile");
         }
 
         public IActionResult Profile()
@@ -162,15 +187,47 @@ namespace XenChat.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateStatus(IFormFile statusImage, string? caption)
+        public async Task<IActionResult> CreateStatus(IFormFile statusImage, string? caption, string? returnUrl)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
+
+            var authHeader = Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                var principal = _userService.ValidateToken(token);
+                if (principal != null)
+                {
+                    var idClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                                  ?? principal.FindFirst("id")?.Value;
+                    if (int.TryParse(idClaim, out int tokenUserId))
+                    {
+                        var tokenUser = _userService.GetUserById(tokenUserId);
+                        if (tokenUser != null)
+                        {
+                            userId = tokenUserId;
+                            HttpContext.Session.SetInt32("UserId", tokenUser.Id);
+                            HttpContext.Session.SetString("Username", tokenUser.Username);
+                        }
+                    }
+                }
+            }
+
+            var isJson = Request.Headers["Accept"].ToString().Contains("application/json") ||
+                         Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
             if (userId == null)
+            {
+                if (isJson) return Unauthorized(new { success = false, error = "Not logged in" });
                 return RedirectToAction("Login", "Account");
+            }
 
             var user = _userService.GetUserById(userId.Value);
             if (user == null)
+            {
+                if (isJson) return Unauthorized(new { success = false, error = "User not found" });
                 return RedirectToAction("Login", "Account");
+            }
 
             if (statusImage != null && statusImage.Length > 0)
             {
@@ -203,7 +260,25 @@ namespace XenChat.Controllers
 
                     _db.Statuses.Add(status);
                     _db.SaveChanges();
+
+                    if (isJson)
+                    {
+                        return Json(new { success = true, mediaUrl = status.MediaUrl, caption = status.Caption, username = status.Username, time = status.CreatedAt.ToString("HH:mm") });
+                    }
                 }
+                else if (isJson)
+                {
+                    return Json(new { success = false, error = "Invalid image format. Allowed: JPG, PNG, GIF, WebP." });
+                }
+            }
+            else if (isJson)
+            {
+                return Json(new { success = false, error = "No image file provided." });
+            }
+
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
             }
 
             return RedirectToAction("Index");

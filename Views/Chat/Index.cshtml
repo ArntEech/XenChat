@@ -10,13 +10,13 @@
     var unreadCounts = ViewBag.UnreadCounts as Dictionary<int, int>;
 }
 
-<div class="chat-list-panel">
+<div class="chat-list-panel chat-conversation-view">
     <div class="chat-list-header">
-        <div class="brand-container">
+        <a href="@Url.Action("Index", "Home")" class="brand-container" style="text-decoration: none; color: inherit;" title="XenChat">
             <img src="~/images/logo.png" alt="XenChat Logo" class="brand-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
             <div class="brand-logo-fallback" style="display: none;">X</div>
             <h1 class="brand-title">XenChat</h1>
-        </div>
+        </a>
         <div class="header-actions">
             <button class="icon-btn" id="searchToggleBtn" title="Search">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -24,13 +24,13 @@
                     <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
             </button>
-            <button class="icon-btn" title="Menu">
+            <a href="@Url.Action("Profile", "Home")" class="icon-btn" title="Settings">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="1" />
                     <circle cx="19" cy="12" r="1" />
                     <circle cx="5" cy="12" r="1" />
                 </svg>
-            </button>
+            </a>
         </div>
     </div>
 
@@ -39,7 +39,7 @@
     </div>
 
     <div class="updates-section">
-        <div class="updates-header">
+        <a href="@Url.Action("Updates", "Home")" class="updates-header" style="text-decoration: none; color: inherit;" title="View Updates">
             <img src="~/images/logo.png" alt="Updates" class="updates-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
             <div class="updates-logo-fallback" style="display: none;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -48,9 +48,9 @@
                 </svg>
             </div>
             <h2 class="section-title">Updates</h2>
-        </div>
+        </a>
         <div class="updates-carousel">
-            <div class="update-item">
+            <a href="@Url.Action("Index", "Home")" class="update-item" style="text-decoration:none; color:inherit;" title="Add Status">
                 <div class="add-avatar">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19" />
@@ -58,7 +58,7 @@
                     </svg>
                 </div>
                 <span class="update-name">Add</span>
-            </div>
+            </a>
             @if (allUsers != null)
             {
                 foreach (var user in allUsers.Take(6))
@@ -81,9 +81,9 @@
                 <span class="badge">@allUsers.Count</span>
             }
         </button>
-        <button class="filter-pill" data-filter="groups">Groups</button>
+        <button class="filter-pill" data-filter="groups" disabled title="Groups (Unavailable)" style="opacity: 0.45; cursor: not-allowed;">Groups</button>
         <button class="filter-pill" data-filter="unread">Unread</button>
-        <button class="filter-pill" data-filter="favorites">Favorites</button>
+        <button class="filter-pill" data-filter="favorites" disabled title="Favorites (Unavailable)" style="opacity: 0.45; cursor: not-allowed;">Favorites</button>
     </div>
 
     <div class="chat-list" id="chatList">
@@ -110,7 +110,15 @@
                             <p class="last-message-preview">
                                 @if (lastMessages != null && lastMessages.ContainsKey(user.Id))
                                 {
-                                    @lastMessages[user.Id]
+                                    var previewText = lastMessages[user.Id];
+                                    if (previewText != null && previewText.Contains("[img]"))
+                                    {
+                                        @:📷 Photo
+                                    }
+                                    else
+                                    {
+                                        @previewText
+                                    }
                                 }
                                 else
                                 {
@@ -138,9 +146,15 @@
     </div>
 </div>
 
-<div class="conversation-panel">
+<div class="conversation-panel chat-conversation-view">
     <div class="conversation-header">
         <div class="conversation-user">
+            <a href="@Url.Action("Index", "Home")" class="chat-back-btn" id="chatBackBtn" title="Back to chats">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </a>
             <img src="@otherUser.AvatarPath" alt="@otherUser.Username" class="avatar-image avatar-large" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
             <div class="avatar-circle large" style="display: none;">@otherUser.Initial</div>
             <div class="conversation-user-info">
@@ -149,24 +163,24 @@
             </div>
         </div>
         <div class="conversation-actions">
-            <button class="icon-btn" title="Call">
+            <button class="icon-btn" title="Voice call (Unavailable)" disabled style="opacity: 0.4; cursor: not-allowed;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                 </svg>
             </button>
-            <button class="icon-btn" title="Video">
+            <button class="icon-btn" title="Video call (Unavailable)" disabled style="opacity: 0.4; cursor: not-allowed;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="23 7 16 12 23 17 23 7" />
                     <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                 </svg>
             </button>
-            <button class="icon-btn" title="More">
+            <a href="@Url.Action("Profile", "Home")" class="icon-btn" title="Settings &amp; Options">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="1" />
                     <circle cx="19" cy="12" r="1" />
                     <circle cx="5" cy="12" r="1" />
                 </svg>
-            </button>
+            </a>
         </div>
     </div>
 
@@ -183,7 +197,25 @@
             {
                 <div class="message @(message.SenderId == currentUserId ? "sent" : "received")">
                     <div class="message-bubble">
-                        <p>@message.Content</p>
+                        @if (message.Content.StartsWith("[img]") && message.Content.Contains("[/img]"))
+                        {
+                            var endIdx = message.Content.IndexOf("[/img]");
+                            var imgUrl = message.Content.Substring(5, endIdx - 5);
+                            var caption = message.Content.Substring(endIdx + 6);
+                            <div class="chat-image-wrap">
+                                <a href="@imgUrl" target="_blank" rel="noopener noreferrer">
+                                    <img src="@imgUrl" alt="Photo" class="chat-bubble-image" />
+                                </a>
+                                @if (!string.IsNullOrWhiteSpace(caption))
+                                {
+                                    <p class="chat-image-caption">@caption</p>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p>@message.Content</p>
+                        }
                         <span class="timestamp">@message.Timestamp.ToString("HH:mm")</span>
                     </div>
                 </div>
@@ -191,9 +223,9 @@
         }
     </div>
 
-    <form id="messageForm" class="message-input-form">
+    <form id="messageForm" class="message-input-form" style="position: relative;">
         <input type="hidden" id="receiverId" value="@otherUser.Id" />
-        <button type="button" class="emoji-btn" title="Emoji">
+        <button type="button" class="emoji-btn" id="emojiToggleBtn" title="Insert Emoji">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M8 14s1.5 2 4 2 4-2 4-2" />
@@ -202,18 +234,47 @@
             </svg>
         </button>
         <input type="text" id="messageInput" placeholder="Type a message..." required autocomplete="off" />
-        <button type="button" class="attach-btn" title="Attach">
+        <button type="button" class="attach-btn" id="attachImageBtn" title="Send Photo">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
             </svg>
         </button>
+        <input type="file" id="chatImageInput" accept="image/*" style="display: none;" />
         <button type="submit" class="send-btn" title="Send">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13" />
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
         </button>
+
+        <!-- Emoji Picker Popup -->
+        <div id="emojiPickerPopup" class="emoji-picker-popup">
+            <div class="emoji-picker-header">
+                <span style="font-weight: 500; color: #fff;">Smileys &amp; Emojis</span>
+                <span id="closeEmojiPickerBtn" style="cursor: pointer; font-size: 18px; line-height: 1;">&times;</span>
+            </div>
+            <div class="emoji-grid" id="emojiGrid"></div>
+        </div>
     </form>
+</div>
+
+<!-- Chat Image Send Modal -->
+<div id="chatImageModal" class="chat-image-modal" style="display: none;">
+    <div class="chat-image-modal-content">
+        <div class="status-modal-header">
+            <h3>Send Photo</h3>
+            <button type="button" id="closeChatImageModalBtn" class="status-close-btn">&times;</button>
+        </div>
+        <div class="chat-image-preview-area">
+            <img id="chatImagePreview" src="" alt="Selected Photo" />
+        </div>
+        <div class="status-caption-row">
+            <input type="text" id="chatImageCaptionInput" placeholder="Add a caption..." autocomplete="off" />
+            <button type="button" id="sendChatImageBtn" class="primary-button" style="width: auto; padding: 0 20px; height: 40px;">Send</button>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
@@ -308,14 +369,43 @@
             const bubble = document.createElement("div");
             bubble.className = "message-bubble";
 
-            const p = document.createElement("p");
-            p.textContent = message; // Safe against XSS
+            if (message.startsWith("[img]") && message.includes("[/img]")) {
+                const endIdx = message.indexOf("[/img]");
+                const imgUrl = message.substring(5, endIdx);
+                const caption = message.substring(endIdx + 6);
+
+                const wrap = document.createElement("div");
+                wrap.className = "chat-image-wrap";
+
+                const link = document.createElement("a");
+                link.href = imgUrl;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+
+                const img = document.createElement("img");
+                img.src = imgUrl;
+                img.alt = "Photo";
+                img.className = "chat-bubble-image";
+                link.appendChild(img);
+                wrap.appendChild(link);
+
+                if (caption && caption.trim().length > 0) {
+                    const capP = document.createElement("p");
+                    capP.className = "chat-image-caption";
+                    capP.textContent = caption;
+                    wrap.appendChild(capP);
+                }
+                bubble.appendChild(wrap);
+            } else {
+                const p = document.createElement("p");
+                p.textContent = message;
+                bubble.appendChild(p);
+            }
 
             const span = document.createElement("span");
             span.className = "timestamp";
             span.textContent = timestamp;
 
-            bubble.appendChild(p);
             bubble.appendChild(span);
             messageDiv.appendChild(bubble);
 
@@ -330,7 +420,7 @@
             if (item.getAttribute('href').includes('userId=' + targetUserId)) {
                 const preview = item.querySelector('.last-message-preview');
                 const time = item.querySelector('.chat-time');
-                if (preview) preview.textContent = message;
+                if (preview) preview.textContent = message.includes('[img]') ? '📷 Photo' : message;
                 if (time) time.textContent = timestamp;
 
                 if (receiverId === currentUserId && senderId !== otherUserId) {
@@ -351,6 +441,7 @@
 
     connection.start().catch(err => console.error("SignalR connection error:", err));
 
+    // Message Form Submit
     document.getElementById("messageForm").addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -400,6 +491,157 @@
             document.getElementById("messageForm").dispatchEvent(new Event("submit"));
         }
     });
+
+    // Emoji Picker Implementation
+    const emojis = [
+        "😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "🥹", "😊", "😇", "🙂", "🙃", "😉", "😌", "😍",
+        "🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😝", "😜", "🤪", "🤨", "🧐", "🤓", "😎", "🤩", "🥳",
+        "😏", "😒", "😞", "😔", "😟", "😕", "🙁", "😣", "😖", "😫", "😩", "🥺", "😢", "😭", "😤", "😠",
+        "😡", "🤬", "🤯", "😳", "🥵", "🥶", "😱", "😨", "😰", "😥", "😓", "🤗", "🤔", "🤭", "🤫", "🤥",
+        "😶", "😐", "😑", "😬", "🙄", "😯", "😦", "😧", "😮", "😲", "🥱", "😴", "🤤", "😪", "😵", "🤐",
+        "👍", "👎", "👏", "🙌", "🤝", "👊", "✊", "🤛", "🤜", "🤞", "✌️", "🤟", "🤘", "👌", "🤏", "👈",
+        "👉", "👆", "👇", "☝️", "✋", "🤚", "🖐️", "🖖", "👋", "🤙", "💪", "🙏", "❤️", "🧡", "💛", "💚",
+        "💙", "💜", "🖤", "🤍", "🤎", "💔", "❣️", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "✨", "🔥",
+        "💥", "💯", "🎉", "🎊", "🎈", "🚀", "☕", "🍕", "🍻", "🥂", "🍰", "🍩", "🎯", "🎮", "🎵", "🎧"
+    ];
+
+    const emojiGrid = document.getElementById("emojiGrid");
+    const emojiToggleBtn = document.getElementById("emojiToggleBtn");
+    const emojiPickerPopup = document.getElementById("emojiPickerPopup");
+    const closeEmojiPickerBtn = document.getElementById("closeEmojiPickerBtn");
+    const messageInput = document.getElementById("messageInput");
+
+    if (emojiGrid) {
+        emojis.forEach(emoji => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "emoji-item";
+            btn.textContent = emoji;
+            btn.addEventListener("click", () => {
+                const start = messageInput.selectionStart || messageInput.value.length;
+                const end = messageInput.selectionEnd || messageInput.value.length;
+                const text = messageInput.value;
+                messageInput.value = text.substring(0, start) + emoji + text.substring(end);
+                messageInput.selectionStart = messageInput.selectionEnd = start + emoji.length;
+                messageInput.focus();
+            });
+            emojiGrid.appendChild(btn);
+        });
+    }
+
+    if (emojiToggleBtn && emojiPickerPopup) {
+        emojiToggleBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const isOpen = emojiPickerPopup.style.display === "flex";
+            emojiPickerPopup.style.display = isOpen ? "none" : "flex";
+        });
+    }
+
+    if (closeEmojiPickerBtn && emojiPickerPopup) {
+        closeEmojiPickerBtn.addEventListener("click", () => {
+            emojiPickerPopup.style.display = "none";
+        });
+    }
+
+    document.addEventListener("click", (e) => {
+        if (emojiPickerPopup && !emojiPickerPopup.contains(e.target) && e.target !== emojiToggleBtn) {
+            emojiPickerPopup.style.display = "none";
+        }
+    });
+
+    // Chat Image Upload Implementation
+    const attachImageBtn = document.getElementById("attachImageBtn");
+    const chatImageInput = document.getElementById("chatImageInput");
+    const chatImageModal = document.getElementById("chatImageModal");
+    const chatImagePreview = document.getElementById("chatImagePreview");
+    const chatImageCaptionInput = document.getElementById("chatImageCaptionInput");
+    const sendChatImageBtn = document.getElementById("sendChatImageBtn");
+    const closeChatImageModalBtn = document.getElementById("closeChatImageModalBtn");
+    let selectedChatFile = null;
+
+    if (attachImageBtn && chatImageInput) {
+        attachImageBtn.addEventListener("click", () => {
+            chatImageInput.click();
+        });
+
+        chatImageInput.addEventListener("change", function () {
+            if (this.files && this.files[0]) {
+                selectedChatFile = this.files[0];
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    chatImagePreview.src = e.target.result;
+                    chatImageModal.style.display = "flex";
+                    if (chatImageCaptionInput) {
+                        chatImageCaptionInput.value = "";
+                        chatImageCaptionInput.focus();
+                    }
+                };
+                reader.readAsDataURL(selectedChatFile);
+            }
+        });
+    }
+
+    function closeChatImageModal() {
+        if (chatImageModal) chatImageModal.style.display = "none";
+        if (chatImageInput) chatImageInput.value = "";
+        if (chatImagePreview) chatImagePreview.src = "";
+        selectedChatFile = null;
+    }
+
+    if (closeChatImageModalBtn) closeChatImageModalBtn.addEventListener("click", closeChatImageModal);
+    if (chatImageModal) {
+        chatImageModal.addEventListener("click", (e) => {
+            if (e.target === chatImageModal) closeChatImageModal();
+        });
+    }
+
+    if (sendChatImageBtn) {
+        sendChatImageBtn.addEventListener("click", async () => {
+            if (!selectedChatFile) return;
+
+            sendChatImageBtn.disabled = true;
+            sendChatImageBtn.textContent = "Sending...";
+
+            try {
+                const formData = new FormData();
+                formData.append("receiverId", otherUserId);
+                formData.append("imageFile", selectedChatFile);
+                if (chatImageCaptionInput && chatImageCaptionInput.value.trim()) {
+                    formData.append("caption", chatImageCaptionInput.value.trim());
+                }
+
+                const token = localStorage.getItem("xenchat_token");
+                const headers = {};
+                if (token) headers["Authorization"] = "Bearer " + token;
+
+                const res = await fetch("/Chat/SendImage", {
+                    method: "POST",
+                    headers: headers,
+                    body: formData
+                });
+
+                if (res.status === 401) {
+                    localStorage.removeItem("xenchat_token");
+                    window.location.href = "/Account/Login";
+                    return;
+                }
+
+                const data = await res.json();
+                if (data.success) {
+                    await connection.invoke("SendMessage", currentUserId, otherUserId, data.content, "@currentUser.Username");
+                    closeChatImageModal();
+                } else {
+                    alert(data.error || "Failed to send photo");
+                }
+            } catch (err) {
+                console.error("Error sending photo:", err);
+                alert("Failed to send photo. Please try again.");
+            } finally {
+                sendChatImageBtn.disabled = false;
+                sendChatImageBtn.textContent = "Send";
+            }
+        });
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         const messagesContainer = document.getElementById('messagesContainer');
