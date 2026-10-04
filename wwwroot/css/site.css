@@ -769,6 +769,329 @@ body {
 }
 
 /* ============================================================
+   GROUP CHATS FEATURE
+   ============================================================ */
+.group-list-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.group-list-header {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #2a2a2a;
+    background-color: rgba(27, 29, 31, 0.4);
+}
+
+.group-list-header span {
+    font-size: 12px;
+    font-weight: 600;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-new-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(238, 76, 73, 0.15);
+    color: #EE4C49;
+    border: 1px solid rgba(238, 76, 73, 0.35);
+    border-radius: 18px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.btn-new-group:hover {
+    background: #EE4C49;
+    color: #ffffff;
+    border-color: #EE4C49;
+    box-shadow: 0 2px 10px rgba(238, 76, 73, 0.4);
+}
+
+.group-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: white;
+    border-bottom: 1px solid #2a2a2a;
+    transition: background-color 0.2s;
+    min-height: 68px;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.group-item:hover {
+    background-color: #3a3a3a;
+}
+
+.group-item.active {
+    background-color: #3a3a3a;
+    border-left: 3px solid #EE4C49;
+}
+
+.group-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    flex-shrink: 0;
+    user-select: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.group-info {
+    flex: 1;
+    margin-left: 12px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.group-info-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 3px;
+}
+
+.group-info-top h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.group-member-count {
+    font-size: 11px;
+    color: #9CA3AF;
+    font-weight: 400;
+    margin-left: 6px;
+}
+
+.group-time {
+    font-size: 11px;
+    color: #858585;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.message-sender-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #38bdf8;
+    margin-bottom: 3px;
+    display: block;
+}
+
+/* Create Group Modal */
+.group-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+.group-modal-card {
+    background-color: #232529;
+    border: 1px solid #3c3e44;
+    border-radius: 16px;
+    width: 440px;
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    animation: modalScaleIn 0.2s ease-out;
+}
+
+@keyframes modalScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.group-modal-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #32353b;
+}
+
+.group-modal-header h3 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0;
+}
+
+.group-modal-close {
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    transition: color 0.15s;
+}
+
+.group-modal-close:hover {
+    color: #ffffff;
+}
+
+.group-modal-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.group-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.group-form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #B5B5B5;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.group-form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #3c3e44;
+    background: #1e1f22;
+    color: #ffffff;
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.group-form-input:focus {
+    border-color: #EE4C49;
+}
+
+.contacts-checklist-wrap {
+    max-height: 170px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-right: 4px;
+}
+
+.contact-check-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #2b2d31;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+    font-size: 13px;
+    color: #E5E7EB;
+}
+
+.contact-check-item:hover {
+    background: #35373d;
+}
+
+.contact-check-item input[type="checkbox"] {
+    accent-color: #EE4C49;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.group-modal-footer {
+    padding: 14px 20px;
+    border-top: 1px solid #32353b;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    background: #1c1e22;
+}
+
+.btn-modal-cancel {
+    background: transparent;
+    border: 1px solid #414247;
+    color: #B5B5B5;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.btn-modal-cancel:hover {
+    background: #32353b;
+    color: #ffffff;
+}
+
+.btn-modal-create {
+    background: #EE4C49;
+    border: none;
+    color: #ffffff;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.btn-modal-create:hover {
+    background: #d63f3c;
+    box-shadow: 0 4px 12px rgba(238, 76, 73, 0.4);
+}
+
+/* ============================================================
    MESSAGES
    ============================================================ */
 .messages-container {

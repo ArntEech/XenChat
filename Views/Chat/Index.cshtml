@@ -80,7 +80,7 @@
                 <span class="badge">@allUsers.Count</span>
             }
         </button>
-        <button class="filter-pill" data-filter="groups" disabled title="Groups (Unavailable)" style="opacity: 0.45; cursor: not-allowed;">Groups</button>
+        <button class="filter-pill" data-filter="groups" id="filterGroupsBtn">Groups <span class="badge" id="groupsBadge">3</span></button>
         <button class="filter-pill" data-filter="unread">Unread</button>
         <button class="filter-pill" data-filter="favorites" id="favFilterBtn">
             Favorites
@@ -164,6 +164,21 @@
             <p>No matching conversations found.</p>
         </div>
     </div>
+
+    <!-- Dedicated Group Chats List -->
+    <div class="group-list-container" id="groupListContainer" style="display: none;">
+        <div class="group-list-header">
+            <span>Groups</span>
+            <button type="button" class="btn-new-group" id="btnOpenNewGroupModal">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                + New Group
+            </button>
+        </div>
+        <div id="groupList"></div>
+    </div>
 </div>
 
 <div class="conversation-panel chat-conversation-view">
@@ -175,11 +190,11 @@
                     <polyline points="12 19 5 12 12 5"></polyline>
                 </svg>
             </a>
-            <img src="@otherUser.AvatarPath" alt="@otherUser.Username" class="avatar-image avatar-large" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-            <div class="avatar-circle large" style="display: none;">@otherUser.Initial</div>
+            <img src="@otherUser.AvatarPath" alt="@otherUser.Username" class="avatar-image avatar-large" id="chatHeaderAvatarImg" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="avatar-circle large" id="chatHeaderAvatarFallback" style="display: none;">@otherUser.Initial</div>
             <div class="conversation-user-info">
-                <h3>@otherUser.Username</h3>
-                <span class="typing-status">Online</span>
+                <h3 id="chatHeaderTitle">@otherUser.Username</h3>
+                <span class="typing-status" id="chatHeaderStatus">Online</span>
             </div>
         </div>
         <div class="conversation-actions">
@@ -368,6 +383,34 @@
     </div>
 </div>
 
+<!-- Create Group Modal -->
+<div id="createGroupModal" class="group-modal-overlay" style="display: none;">
+    <div class="group-modal-card">
+        <div class="group-modal-header">
+            <h3>Create New Group</h3>
+            <button type="button" class="group-modal-close" id="closeCreateGroupBtn">&times;</button>
+        </div>
+        <form id="createGroupForm">
+            <div class="group-modal-body">
+                <div class="group-form-group">
+                    <label for="newGroupNameInput">Group Name</label>
+                    <input type="text" id="newGroupNameInput" class="group-form-input" placeholder="e.g. Design Team" required autocomplete="off" />
+                </div>
+                <div class="group-form-group">
+                    <label>Add Members</label>
+                    <div class="contacts-checklist-wrap" id="contactsChecklist">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+            <div class="group-modal-footer">
+                <button type="button" class="btn-modal-cancel" id="cancelCreateGroupBtn">Cancel</button>
+                <button type="submit" class="btn-modal-create" id="submitCreateGroupBtn">Create Group</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script>
     const currentUserId = @currentUserId;
@@ -404,15 +447,388 @@
         });
     }
 
+    // ============================================================
+    // Group Chats Implementation (Client-side Prototype)
+    // ============================================================
+    const sampleGroups = [
+        {
+            id: 'group-1',
+            name: 'Design Team',
+            members: ['You', 'Alice', 'francis', 'joana', 'caleb_qa_5136', 'arnold_new'],
+            avatarGradient: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
+            initials: 'DT',
+            lastMessage: 'Alice: The new mockups and dark theme specs are ready for review!',
+            lastTime: '14:25',
+            messages: [
+                { sender: 'Alice', content: 'Hey team, please review the latest sprint designs.', time: '14:10', isSelf: false },
+                { sender: 'francis', content: 'Looks super clean! Love the new coral accent.', time: '14:18', isSelf: false },
+                { sender: 'You', content: 'Checking it out right now, great work everyone.', time: '14:22', isSelf: true },
+                { sender: 'Alice', content: 'The new mockups and dark theme specs are ready for review!', time: '14:25', isSelf: false }
+            ]
+        },
+        {
+            id: 'group-2',
+            name: 'Product Launch Sprint',
+            members: ['You', 'David', 'Sarah', 'arnold_new', 'armanullah'],
+            avatarGradient: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+            initials: 'PL',
+            lastMessage: 'David: All QA checklists cleared for deployment.',
+            lastTime: '13:05',
+            messages: [
+                { sender: 'David', content: 'Staging environment is updated with the latest build.', time: '12:45', isSelf: false },
+                { sender: 'Sarah', content: 'Testing authentication persistence across reloads.', time: '12:58', isSelf: false },
+                { sender: 'David', content: 'All QA checklists cleared for deployment.', time: '13:05', isSelf: false }
+            ]
+        },
+        {
+            id: 'group-3',
+            name: 'Weekend Gamers',
+            members: ['You', 'Sam', 'joana', 'benedict', 'francis'],
+            avatarGradient: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+            initials: 'WG',
+            lastMessage: 'Sam: Anyone up for a raid this Saturday night?',
+            lastTime: 'Yesterday',
+            messages: [
+                { sender: 'Sam', content: 'Who is free this weekend for some matches?', time: 'Yesterday', isSelf: false },
+                { sender: 'joana', content: 'Count me in for Saturday evening!', time: 'Yesterday', isSelf: false },
+                { sender: 'Sam', content: 'Anyone up for a raid this Saturday night?', time: 'Yesterday', isSelf: false }
+            ]
+        }
+    ];
+
+    let activeGroupChatId = null;
+    const initialDirectChatState = {
+        avatarSrc: "@otherUser.AvatarPath",
+        initial: "@otherUser.Initial",
+        username: "@otherUser.Username",
+        html: ""
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const mc = document.getElementById("messagesContainer");
+        if (mc) initialDirectChatState.html = mc.innerHTML;
+        renderGroupsList();
+    });
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return text.toString().replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function renderGroupsList() {
+        const list = document.getElementById('groupList');
+        if (!list) return;
+        list.innerHTML = '';
+
+        const badge = document.getElementById('groupsBadge');
+        if (badge) {
+            badge.textContent = sampleGroups.length;
+            badge.style.display = sampleGroups.length > 0 ? 'inline-flex' : 'none';
+        }
+
+        sampleGroups.forEach(group => {
+            const item = document.createElement('div');
+            item.className = `group-item ${activeGroupChatId === group.id ? 'active' : ''}`;
+            item.setAttribute('data-group-id', group.id);
+            item.innerHTML = `
+                <div class="group-avatar" style="background: ${group.avatarGradient};">
+                    ${escapeHtml(group.initials)}
+                </div>
+                <div class="group-info">
+                    <div class="group-info-top">
+                        <h3>${escapeHtml(group.name)} <span class="group-member-count">(${group.members.length})</span></h3>
+                        <span class="group-time">${escapeHtml(group.lastTime)}</span>
+                    </div>
+                    <div class="chat-info-bottom">
+                        <p class="last-message-preview">${escapeHtml(group.lastMessage)}</p>
+                    </div>
+                </div>
+            `;
+            item.addEventListener('click', () => {
+                selectGroup(group.id);
+            });
+            list.appendChild(item);
+        });
+    }
+
+    function selectGroup(groupId) {
+        activeGroupChatId = groupId;
+        const group = sampleGroups.find(g => g.id === groupId);
+        if (!group) return;
+
+        // Highlight active group
+        document.querySelectorAll('.group-item').forEach(el => {
+            el.classList.toggle('active', el.getAttribute('data-group-id') === groupId);
+        });
+
+        // Update Workspace Header
+        const avatarImg = document.getElementById('chatHeaderAvatarImg');
+        const avatarFallback = document.getElementById('chatHeaderAvatarFallback');
+        const title = document.getElementById('chatHeaderTitle');
+        const status = document.getElementById('chatHeaderStatus');
+        const favBtn = document.getElementById('toggleFavoriteBtn');
+
+        if (avatarImg) avatarImg.style.display = 'none';
+        if (avatarFallback) {
+            avatarFallback.style.display = 'flex';
+            avatarFallback.style.background = group.avatarGradient;
+            avatarFallback.style.borderRadius = '14px';
+            avatarFallback.textContent = group.initials;
+        }
+        if (title) title.textContent = group.name;
+        if (status) status.textContent = `${group.members.length} members • ${group.members.slice(0, 3).join(', ')}${group.members.length > 3 ? '...' : ''}`;
+        if (favBtn) favBtn.style.display = 'none';
+
+        renderGroupMessages(group);
+    }
+
+    function renderGroupMessages(group) {
+        const container = document.getElementById("messagesContainer");
+        if (!container) return;
+        container.innerHTML = "";
+
+        if (!group.messages || group.messages.length === 0) {
+            container.innerHTML = `<div class="empty-conversation-notice" style="text-align: center; margin: auto; color: #888;"><p>No messages in ${escapeHtml(group.name)} yet. Say hello to everyone!</p></div>`;
+            return;
+        }
+
+        group.messages.forEach(msg => {
+            const div = document.createElement("div");
+            div.className = `message ${msg.isSelf ? 'sent' : 'received'}`;
+            div.innerHTML = `
+                <div class="message-bubble">
+                    ${!msg.isSelf ? `<span class="message-sender-name">${escapeHtml(msg.sender)}</span>` : ''}
+                    <p>${escapeHtml(msg.content)}</p>
+                    <div class="message-meta">
+                        <span class="timestamp">${escapeHtml(msg.time)}</span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function sendGroupMessage(groupId, text) {
+        const group = sampleGroups.find(g => g.id === groupId);
+        if (!group) return;
+
+        const now = new Date();
+        const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        group.messages.push({
+            sender: 'You',
+            content: text,
+            time: timeStr,
+            isSelf: true
+        });
+        group.lastMessage = `You: ${text}`;
+        group.lastTime = timeStr;
+
+        renderGroupMessages(group);
+        renderGroupsList();
+    }
+
+    function switchToGroupsView() {
+        const railChats = document.getElementById('railChatsBtn');
+        const railGroups = document.getElementById('railGroupsBtn');
+        if (railChats) railChats.classList.remove('active');
+        if (railGroups) railGroups.classList.add('active');
+
+        document.querySelectorAll('.filter-pill').forEach(p => {
+            p.classList.toggle('active', p.getAttribute('data-filter') === 'groups');
+        });
+
+        const chatList = document.getElementById('chatList');
+        const groupListContainer = document.getElementById('groupListContainer');
+        const updatesSection = document.querySelector('.updates-section');
+        if (chatList) chatList.style.display = 'none';
+        if (updatesSection) updatesSection.style.display = 'none';
+        if (groupListContainer) groupListContainer.style.display = 'flex';
+
+        renderGroupsList();
+        if (!activeGroupChatId && sampleGroups.length > 0) {
+            selectGroup(sampleGroups[0].id);
+        } else if (activeGroupChatId) {
+            selectGroup(activeGroupChatId);
+        }
+    }
+
+    function switchToChatsView() {
+        const railChats = document.getElementById('railChatsBtn');
+        const railGroups = document.getElementById('railGroupsBtn');
+        if (railChats) railChats.classList.add('active');
+        if (railGroups) railGroups.classList.remove('active');
+
+        document.querySelectorAll('.filter-pill').forEach(p => {
+            p.classList.toggle('active', p.getAttribute('data-filter') === 'chats');
+        });
+
+        const chatList = document.getElementById('chatList');
+        const groupListContainer = document.getElementById('groupListContainer');
+        const updatesSection = document.querySelector('.updates-section');
+        if (chatList) chatList.style.display = 'block';
+        if (updatesSection) updatesSection.style.display = 'flex';
+        if (groupListContainer) groupListContainer.style.display = 'none';
+
+        restoreDirectChat();
+        applyFilters();
+    }
+
+    function restoreDirectChat() {
+        activeGroupChatId = null;
+        const avatarImg = document.getElementById('chatHeaderAvatarImg');
+        const avatarFallback = document.getElementById('chatHeaderAvatarFallback');
+        const title = document.getElementById('chatHeaderTitle');
+        const status = document.getElementById('chatHeaderStatus');
+        const favBtn = document.getElementById('toggleFavoriteBtn');
+        const container = document.getElementById('messagesContainer');
+
+        if (avatarImg) {
+            avatarImg.src = initialDirectChatState.avatarSrc;
+            avatarImg.style.display = 'block';
+        }
+        if (avatarFallback) {
+            avatarFallback.style.display = 'none';
+            avatarFallback.style.borderRadius = '50%';
+        }
+        if (title) title.textContent = initialDirectChatState.username;
+        if (status) status.textContent = 'Online';
+        if (favBtn) favBtn.style.display = 'inline-flex';
+        if (container && initialDirectChatState.html) {
+            container.innerHTML = initialDirectChatState.html;
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+
+    // Modal logic
+    const createGroupModal = document.getElementById('createGroupModal');
+    const btnOpenNewGroupModal = document.getElementById('btnOpenNewGroupModal');
+    const closeCreateGroupBtn = document.getElementById('closeCreateGroupBtn');
+    const cancelCreateGroupBtn = document.getElementById('cancelCreateGroupBtn');
+    const createGroupForm = document.getElementById('createGroupForm');
+    const newGroupNameInput = document.getElementById('newGroupNameInput');
+    const contactsChecklist = document.getElementById('contactsChecklist');
+
+    function openCreateGroupModal() {
+        if (!createGroupModal) return;
+        if (contactsChecklist) {
+            contactsChecklist.innerHTML = '';
+            const contactItems = document.querySelectorAll('.chat-item');
+            const addedNames = new Set();
+            contactItems.forEach(item => {
+                const nameEl = item.querySelector('h3');
+                const name = nameEl ? nameEl.textContent.trim() : null;
+                if (name && !addedNames.has(name)) {
+                    addedNames.add(name);
+                    const label = document.createElement('label');
+                    label.className = 'contact-check-item';
+                    label.innerHTML = `
+                        <input type="checkbox" value="${escapeHtml(name)}" checked />
+                        <span>${escapeHtml(name)}</span>
+                    `;
+                    contactsChecklist.appendChild(label);
+                }
+            });
+        }
+        if (newGroupNameInput) {
+            newGroupNameInput.value = '';
+        }
+        createGroupModal.style.display = 'flex';
+        if (newGroupNameInput) newGroupNameInput.focus();
+    }
+
+    function closeCreateGroupModal() {
+        if (createGroupModal) createGroupModal.style.display = 'none';
+    }
+
+    if (btnOpenNewGroupModal) btnOpenNewGroupModal.addEventListener('click', openCreateGroupModal);
+    if (closeCreateGroupBtn) closeCreateGroupBtn.addEventListener('click', closeCreateGroupModal);
+    if (cancelCreateGroupBtn) cancelCreateGroupBtn.addEventListener('click', closeCreateGroupModal);
+    if (createGroupModal) {
+        createGroupModal.addEventListener('click', (e) => {
+            if (e.target === createGroupModal) closeCreateGroupModal();
+        });
+    }
+
+    if (createGroupForm) {
+        createGroupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = newGroupNameInput ? newGroupNameInput.value.trim() : '';
+            if (!name) return;
+
+            const checkedBoxes = contactsChecklist ? contactsChecklist.querySelectorAll('input:checked') : [];
+            const selectedMembers = ['You', ...Array.from(checkedBoxes).map(cb => cb.value)];
+
+            const words = name.split(' ').filter(w => w.length > 0);
+            const initials = words.length > 1
+                ? (words[0][0] + words[1][0]).toUpperCase()
+                : name.substring(0, 2).toUpperCase();
+
+            const palette = [
+                'linear-gradient(135deg, #6366f1, #a855f7)',
+                'linear-gradient(135deg, #10b981, #06b6d4)',
+                'linear-gradient(135deg, #f43f5e, #fb923c)',
+                'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                'linear-gradient(135deg, #8b5cf6, #ec4899)'
+            ];
+            const gradient = palette[sampleGroups.length % palette.length];
+
+            const newGroup = {
+                id: 'group-' + Date.now(),
+                name: name,
+                members: selectedMembers,
+                avatarGradient: gradient,
+                initials: initials,
+                lastMessage: 'Group created. Start messaging!',
+                lastTime: 'Just now',
+                messages: [
+                    { sender: 'System', content: `Group "${name}" created with ${selectedMembers.length} members.`, time: 'Just now', isSelf: false }
+                ]
+            };
+
+            sampleGroups.unshift(newGroup);
+            closeCreateGroupModal();
+            renderGroupsList();
+            selectGroup(newGroup.id);
+        });
+    }
+
+    // Rail Navigation click handlers
+    const railChats = document.getElementById('railChatsBtn');
+    const railGroups = document.getElementById('railGroupsBtn');
+
+    if (railChats) {
+        railChats.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchToChatsView();
+        });
+    }
+
+    if (railGroups) {
+        railGroups.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchToGroupsView();
+        });
+    }
+
     // Filter pills
     let currentFilter = 'chats';
     const filterPills = document.querySelectorAll('.filter-pill');
     filterPills.forEach(pill => {
         pill.addEventListener('click', function () {
-            filterPills.forEach(p => p.classList.remove('active'));
-            this.classList.add('active');
-            currentFilter = this.getAttribute('data-filter') || 'chats';
-            applyFilters();
+            const filter = this.getAttribute('data-filter') || 'chats';
+            if (filter === 'groups') {
+                switchToGroupsView();
+            } else {
+                if (activeGroupChatId) {
+                    switchToChatsView();
+                }
+                filterPills.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = filter;
+                applyFilters();
+            }
         });
     });
 
@@ -594,6 +1010,15 @@
 
         const messageInput = document.getElementById("messageInput");
         const message = messageInput.value.trim();
+
+        if (activeGroupChatId) {
+            if (!message) return;
+            sendGroupMessage(activeGroupChatId, message);
+            messageInput.value = '';
+            messageInput.focus();
+            return;
+        }
+
         const receiverId = document.getElementById("receiverId").value;
 
         if (message) {
