@@ -221,7 +221,7 @@ namespace XenChat.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Profile(string username, string? profileInfo, IFormFile? avatarFile)
+        public async Task<IActionResult> Profile(string username, string? profileInfo, IFormFile? avatarFile, bool removeAvatar = false)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (userId == null)
@@ -249,7 +249,11 @@ namespace XenChat.Controllers
                 return RedirectToAction("Profile");
             }
 
-            if (avatarFile != null && avatarFile.Length > 0)
+            if (removeAvatar)
+            {
+                user.Avatar = "";
+            }
+            else if (avatarFile != null && avatarFile.Length > 0)
             {
                 var ext = Path.GetExtension(avatarFile.FileName).ToLowerInvariant();
                 var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };

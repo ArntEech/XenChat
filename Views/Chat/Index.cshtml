@@ -18,7 +18,13 @@
             <h1 class="brand-title">Chats</h1>
         </a>
         <div class="header-actions">
-            <button class="icon-btn" id="searchToggleBtn" title="Search">
+            <button type="button" class="icon-btn" id="headerNewGroupBtn" title="New Group">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            <button type="button" class="icon-btn" id="searchToggleBtn" title="Search">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8" />
                     <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -35,41 +41,7 @@
     </div>
 
     <div class="search-bar-container" id="searchBarContainer" style="display:none; padding: 10px 16px;">
-        <input type="text" id="contactSearchInput" placeholder="Search contacts... (⌘K)" style="width:100%; padding:8px 14px; border-radius:8px; border:1px solid #3c3e44; background:#1e1f22; color:#fff; font-size:14px; outline:none;" />
-    </div>
-
-    <div class="updates-section">
-        <a href="@Url.Action("Updates", "Home")" class="updates-header" style="text-decoration: none; color: inherit;" title="View Updates">
-            <div class="updates-header-icon" style="color: #EE4C49; display: flex; align-items: center;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 8v8M8 12h8" />
-                </svg>
-            </div>
-            <h2 class="section-title">Updates</h2>
-        </a>
-        <div class="updates-carousel">
-            <a href="@Url.Action("AddStatus", "Home")" class="update-item" style="text-decoration:none; color:inherit;" title="Add Status">
-                <div class="add-avatar">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                </div>
-                <span class="update-name">Add</span>
-            </a>
-            @if (allUsers != null)
-            {
-                foreach (var user in allUsers.Take(6))
-                {
-                    <a href="@Url.Action("Index", "Chat", new { userId = user.Id })" class="update-item" style="text-decoration:none; color:inherit;">
-                        <img src="@user.AvatarPath" alt="@user.Username" class="avatar-image update-carousel-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                        <div class="avatar-circle update-carousel-avatar" style="display: none;">@user.Initial</div>
-                        <span class="update-name">@user.Username</span>
-                    </a>
-                }
-            }
-        </div>
+        <input type="text" id="contactSearchInput" placeholder="Search contacts... (⌘K)" style="width:100%; padding:8px 14px; border-radius:8px; border:1px solid #33333e; background:#23232a; color:#f4f4f5; font-size:14px; outline:none;" />
     </div>
 
     <div class="filter-tabs">
@@ -115,6 +87,7 @@
                         {
                             <div class="avatar-circle chat-avatar-fallback">@user.Initial</div>
                         }
+                        <span class="avatar-online-badge" data-user-id="@user.Id"></span>
                     </div>
                     <div class="chat-info">
                         <div class="chat-info-top">
@@ -165,18 +138,8 @@
         </div>
     </div>
 
-    <!-- Dedicated Group Chats List -->
+    <!-- Dedicated Group Chats List (Aligned with Chat List) -->
     <div class="group-list-container" id="groupListContainer" style="display: none;">
-        <div class="group-list-header">
-            <span>Groups</span>
-            <button type="button" class="btn-new-group" id="btnOpenNewGroupModal">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                + New Group
-            </button>
-        </div>
         <div id="groupList"></div>
     </div>
 </div>
@@ -194,22 +157,24 @@
             <div class="avatar-circle large" id="chatHeaderAvatarFallback" style="display: none;">@otherUser.Initial</div>
             <div class="conversation-user-info">
                 <h3 id="chatHeaderTitle">@otherUser.Username</h3>
-                <span class="typing-status" id="chatHeaderStatus">Online</span>
+                <div class="status-indicator-wrap">
+                    <span class="status-dot" id="chatHeaderStatusDot"></span>
+                    <span class="typing-status" id="chatHeaderStatus">Offline</span>
+                </div>
             </div>
         </div>
         <div class="conversation-actions">
             <button type="button" class="favorite-action-btn @(isFavorite ? "active" : "")" id="toggleFavoriteBtn" title="@(isFavorite ? "Remove from Favorites" : "Add to Favorites")" data-target-id="@otherUser.Id">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="@(isFavorite ? "#ee4c49" : "none")" stroke="@(isFavorite ? "#ee4c49" : "currentColor")" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="@(isFavorite ? "#e11d48" : "none")" stroke="@(isFavorite ? "#e11d48" : "currentColor")" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                 </svg>
-                <span id="favBtnText">@(isFavorite ? "Remove from Favorites" : "Add to Favorites")</span>
             </button>
             <button type="button" class="icon-btn" id="startVoiceCallBtn" title="Start Voice Call">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                 </svg>
             </button>
-            <button class="icon-btn" title="Video call (Unavailable)" disabled style="opacity: 0.4; cursor: not-allowed;">
+            <button type="button" class="icon-btn" id="startVideoCallBtn" title="Start Video Call">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="23 7 16 12 23 17 23 7" />
                     <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
@@ -225,7 +190,7 @@
         </div>
     </div>
 
-    <div class="messages-container" id="messagesContainer">
+    <div class="messages-container" id="messagesContainer" style="background-color: #121214 !important; background-image: none !important;">
         @if (Model == null || !Model.Any())
         {
             <div class="empty-conversation-notice" id="emptyNotice" style="text-align: center; margin: auto; color: #888;">
@@ -337,7 +302,7 @@
     <div class="call-modal-card">
         <div class="call-avatar" id="incomingCallAvatar">?</div>
         <h3 class="call-user-name" id="incomingCallerName">Caller</h3>
-        <p class="call-status-label">Incoming voice call...</p>
+        <p class="call-status-label" id="incomingCallTypeLabel">Incoming call...</p>
         <div class="call-actions-row">
             <button type="button" class="call-btn call-btn-accept" id="btnAcceptCall">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -358,12 +323,20 @@
 
 <!-- Active / Outgoing Call Screen Modal -->
 <div id="activeCallModal" class="call-modal-overlay" style="display: none;">
-    <div class="call-modal-card">
+    <div class="call-modal-card" id="activeCallCard">
+        <!-- Voice Calling Avatar (hidden during video call) -->
         <div class="call-avatar" id="activeCallAvatar">@otherUser.Initial</div>
         <h3 class="call-user-name" id="activeCallUserName">@otherUser.Username</h3>
         <p class="call-status-label" id="activeCallStatus">Calling...</p>
+
+        <!-- Video Calling Streams Container -->
+        <div class="call-video-container" id="callVideoContainer" style="display: none;">
+            <video id="remoteVideo" class="call-remote-video" autoplay playsinline></video>
+            <video id="localVideo" class="call-local-video" autoplay playsinline muted></video>
+        </div>
+
         <div class="call-actions-row">
-            <button type="button" class="call-btn call-btn-mute" id="btnMuteCall">
+            <button type="button" class="call-btn call-btn-mute" id="btnMuteCall" title="Mute Microphone">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                     <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
@@ -372,7 +345,14 @@
                 </svg>
                 <span id="muteBtnLabel">Mute</span>
             </button>
-            <button type="button" class="call-btn call-btn-end" id="btnEndCall">
+            <button type="button" class="call-btn call-btn-video" id="btnToggleVideo" style="display: none;" title="Toggle Camera">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7" />
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                </svg>
+                <span id="videoBtnLabel">Cam Off</span>
+            </button>
+            <button type="button" class="call-btn call-btn-end" id="btnEndCall" title="End Call">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
                     <line x1="1" y1="1" x2="23" y2="23"></line>
@@ -481,16 +461,45 @@
             ]
         },
         {
+            id: 'group-1',
+            name: 'Design Team',
+            members: ['Alice', 'Francis', 'Joana', 'Caleb', 'Arnold', 'You'],
+            avatarColor: '#2563eb',
+            initials: 'DT',
+            lastMessage: 'Alice: The dark theme specs are ready for review!',
+            lastTime: '14:25',
+            messages: [
+                { sender: 'Alice', content: 'Hey team, please review the latest sprint designs.', time: '14:10', isSelf: false },
+                { sender: 'Francis', content: 'Looks super clean! Love the high contrast dark mode.', time: '14:18', isSelf: false },
+                { sender: 'You', content: 'Checking it out right now, great work everyone.', time: '14:22', isSelf: true },
+                { sender: 'Alice', content: 'The dark theme specs are ready for review!', time: '14:25', isSelf: false }
+            ]
+        },
+        {
+            id: 'group-2',
+            name: 'Product Launch Sprint',
+            members: ['David', 'Sarah', 'Arnold', 'Arman', 'You'],
+            avatarColor: '#059669',
+            initials: 'PL',
+            lastMessage: 'David: All QA checklists cleared for deployment.',
+            lastTime: '13:05',
+            messages: [
+                { sender: 'David', content: 'Staging environment is updated with the latest build.', time: '12:45', isSelf: false },
+                { sender: 'Sarah', content: 'Testing authentication persistence across reloads.', time: '12:58', isSelf: false },
+                { sender: 'David', content: 'All QA checklists cleared for deployment.', time: '13:05', isSelf: false }
+            ]
+        },
+        {
             id: 'group-3',
             name: 'Weekend Gamers',
-            members: ['You', 'Sam', 'joana', 'benedict', 'francis'],
-            avatarGradient: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+            members: ['Sam', 'Joana', 'Benedict', 'Francis', 'You'],
+            avatarColor: '#d97706',
             initials: 'WG',
             lastMessage: 'Sam: Anyone up for a raid this Saturday night?',
             lastTime: 'Yesterday',
             messages: [
                 { sender: 'Sam', content: 'Who is free this weekend for some matches?', time: 'Yesterday', isSelf: false },
-                { sender: 'joana', content: 'Count me in for Saturday evening!', time: 'Yesterday', isSelf: false },
+                { sender: 'Joana', content: 'Count me in for Saturday evening!', time: 'Yesterday', isSelf: false },
                 { sender: 'Sam', content: 'Anyone up for a raid this Saturday night?', time: 'Yesterday', isSelf: false }
             ]
         }
@@ -508,6 +517,11 @@
         const mc = document.getElementById("messagesContainer");
         if (mc) initialDirectChatState.html = mc.innerHTML;
         renderGroupsList();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('view') === 'groups') {
+            switchToGroupsView();
+        }
     });
 
     function escapeHtml(text) {
@@ -532,7 +546,7 @@
             item.className = `group-item ${activeGroupChatId === group.id ? 'active' : ''}`;
             item.setAttribute('data-group-id', group.id);
             item.innerHTML = `
-                <div class="group-avatar" style="background: ${group.avatarGradient};">
+                <div class="group-avatar" style="background-color: ${group.avatarColor};">
                     ${escapeHtml(group.initials)}
                 </div>
                 <div class="group-info">
@@ -572,13 +586,16 @@
         if (avatarImg) avatarImg.style.display = 'none';
         if (avatarFallback) {
             avatarFallback.style.display = 'flex';
-            avatarFallback.style.background = group.avatarGradient;
-            avatarFallback.style.borderRadius = '14px';
+            avatarFallback.style.backgroundColor = group.avatarColor;
+            avatarFallback.style.borderRadius = '12px';
             avatarFallback.textContent = group.initials;
         }
         if (title) title.textContent = group.name;
-        if (status) status.textContent = `${group.members.length} members • ${group.members.slice(0, 3).join(', ')}${group.members.length > 3 ? '...' : ''}`;
-        if (favBtn) favBtn.style.display = 'none';
+        if (status) {
+            status.textContent = `${group.members.length} members • ${group.members.join(', ')}`;
+        }
+        // Keep visibility hidden so the action button coordinates never shift
+        if (favBtn) favBtn.style.visibility = 'hidden';
 
         renderGroupMessages(group);
     }
@@ -641,9 +658,7 @@
 
         const chatList = document.getElementById('chatList');
         const groupListContainer = document.getElementById('groupListContainer');
-        const updatesSection = document.querySelector('.updates-section');
         if (chatList) chatList.style.display = 'none';
-        if (updatesSection) updatesSection.style.display = 'none';
         if (groupListContainer) groupListContainer.style.display = 'flex';
 
         renderGroupsList();
@@ -666,9 +681,7 @@
 
         const chatList = document.getElementById('chatList');
         const groupListContainer = document.getElementById('groupListContainer');
-        const updatesSection = document.querySelector('.updates-section');
         if (chatList) chatList.style.display = 'block';
-        if (updatesSection) updatesSection.style.display = 'flex';
         if (groupListContainer) groupListContainer.style.display = 'none';
 
         restoreDirectChat();
@@ -694,7 +707,7 @@
         }
         if (title) title.textContent = initialDirectChatState.username;
         if (status) status.textContent = 'Online';
-        if (favBtn) favBtn.style.display = 'inline-flex';
+        if (favBtn) favBtn.style.visibility = 'visible';
         if (container && initialDirectChatState.html) {
             container.innerHTML = initialDirectChatState.html;
             container.scrollTop = container.scrollHeight;
@@ -703,7 +716,7 @@
 
     // Modal logic
     const createGroupModal = document.getElementById('createGroupModal');
-    const btnOpenNewGroupModal = document.getElementById('btnOpenNewGroupModal');
+    const headerNewGroupBtn = document.getElementById('headerNewGroupBtn');
     const closeCreateGroupBtn = document.getElementById('closeCreateGroupBtn');
     const cancelCreateGroupBtn = document.getElementById('cancelCreateGroupBtn');
     const createGroupForm = document.getElementById('createGroupForm');
@@ -742,7 +755,7 @@
         if (createGroupModal) createGroupModal.style.display = 'none';
     }
 
-    if (btnOpenNewGroupModal) btnOpenNewGroupModal.addEventListener('click', openCreateGroupModal);
+    if (headerNewGroupBtn) headerNewGroupBtn.addEventListener('click', openCreateGroupModal);
     if (closeCreateGroupBtn) closeCreateGroupBtn.addEventListener('click', closeCreateGroupModal);
     if (cancelCreateGroupBtn) cancelCreateGroupBtn.addEventListener('click', closeCreateGroupModal);
     if (createGroupModal) {
@@ -765,20 +778,14 @@
                 ? (words[0][0] + words[1][0]).toUpperCase()
                 : name.substring(0, 2).toUpperCase();
 
-            const palette = [
-                'linear-gradient(135deg, #6366f1, #a855f7)',
-                'linear-gradient(135deg, #10b981, #06b6d4)',
-                'linear-gradient(135deg, #f43f5e, #fb923c)',
-                'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                'linear-gradient(135deg, #8b5cf6, #ec4899)'
-            ];
-            const gradient = palette[sampleGroups.length % palette.length];
+            const palette = ['#2563eb', '#059669', '#e11d48', '#d97706', '#7c3aed'];
+            const color = palette[sampleGroups.length % palette.length];
 
             const newGroup = {
                 id: 'group-' + Date.now(),
                 name: name,
                 members: selectedMembers,
-                avatarGradient: gradient,
+                avatarColor: color,
                 initials: initials,
                 lastMessage: 'Group created. Start messaging!',
                 lastTime: 'Just now',
@@ -789,7 +796,7 @@
 
             sampleGroups.unshift(newGroup);
             closeCreateGroupModal();
-            renderGroupsList();
+            switchToGroupsView();
             selectGroup(newGroup.id);
         });
     }
@@ -1002,7 +1009,67 @@
         }
     });
 
-    connection.start().catch(err => console.error("SignalR connection error:", err));
+    // SignalR Presence
+    connection.on("OnlineUsersList", (onlineIds) => {
+        const onlineSet = new Set(onlineIds.map(Number));
+        document.querySelectorAll('.avatar-online-badge').forEach(badge => {
+            const uid = parseInt(badge.getAttribute('data-user-id'));
+            if (onlineSet.has(uid)) {
+                badge.classList.add('online');
+            } else {
+                badge.classList.remove('online');
+            }
+        });
+
+        const isOtherOnline = onlineSet.has(otherUserId);
+        const headerDot = document.getElementById('chatHeaderStatusDot');
+        const headerStatus = document.getElementById('chatHeaderStatus');
+        if (headerDot && headerStatus) {
+            if (isOtherOnline) {
+                headerDot.classList.add('online');
+                headerStatus.textContent = "Online";
+            } else {
+                headerDot.classList.remove('online');
+                headerStatus.textContent = "Offline";
+            }
+        }
+    });
+
+    connection.on("UserStatusChanged", (userId, isOnline) => {
+        document.querySelectorAll(`.avatar-online-badge[data-user-id="${userId}"]`).forEach(badge => {
+            if (isOnline) {
+                badge.classList.add('online');
+            } else {
+                badge.classList.remove('online');
+            }
+        });
+
+        if (userId === otherUserId) {
+            const headerDot = document.getElementById('chatHeaderStatusDot');
+            const headerStatus = document.getElementById('chatHeaderStatus');
+            if (headerDot && headerStatus) {
+                if (isOnline) {
+                    headerDot.classList.add('online');
+                    headerStatus.textContent = "Online";
+                } else {
+                    headerDot.classList.remove('online');
+                    headerStatus.textContent = "Offline";
+                }
+            }
+        }
+    });
+
+    connection.start().then(() => {
+        if (typeof currentUserId !== 'undefined' && currentUserId > 0) {
+            connection.invoke("RegisterUser", currentUserId);
+        }
+    }).catch(err => console.error("SignalR connection error:", err));
+
+    window.addEventListener('beforeunload', () => {
+        if (connection.state === signalR.HubConnectionState.Connected && typeof currentUserId !== 'undefined' && currentUserId > 0) {
+            connection.invoke("SetUserStatus", currentUserId, false);
+        }
+    });
 
     // Message Form Submit
     document.getElementById("messageForm").addEventListener("submit", async (e) => {
@@ -1342,13 +1409,15 @@
     }
 
     // ============================================================
-    // WebRTC Voice Call Logic
+    // WebRTC Voice & Video Call Logic
     // ============================================================
     let peerConnection = null;
     let localStream = null;
     let isCallInitiator = false;
+    let isCurrentCallVideo = false;
     let activeCallPartnerId = null;
     let pendingCallerId = null;
+    let pendingCallIsVideo = false;
 
     const rtcConfig = {
         iceServers: [
@@ -1358,19 +1427,28 @@
     };
 
     const startVoiceCallBtn = document.getElementById('startVoiceCallBtn');
+    const startVideoCallBtn = document.getElementById('startVideoCallBtn');
     const incomingCallModal = document.getElementById('incomingCallModal');
     const incomingCallerName = document.getElementById('incomingCallerName');
     const incomingCallAvatar = document.getElementById('incomingCallAvatar');
+    const incomingCallTypeLabel = document.getElementById('incomingCallTypeLabel');
     const btnAcceptCall = document.getElementById('btnAcceptCall');
     const btnDeclineCall = document.getElementById('btnDeclineCall');
 
     const activeCallModal = document.getElementById('activeCallModal');
+    const activeCallCard = document.getElementById('activeCallCard');
+    const activeCallAvatar = document.getElementById('activeCallAvatar');
     const activeCallUserName = document.getElementById('activeCallUserName');
     const activeCallStatus = document.getElementById('activeCallStatus');
+    const callVideoContainer = document.getElementById('callVideoContainer');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const localVideo = document.getElementById('localVideo');
+    const remoteAudio = document.getElementById('remoteAudio');
     const btnMuteCall = document.getElementById('btnMuteCall');
     const muteBtnLabel = document.getElementById('muteBtnLabel');
+    const btnToggleVideo = document.getElementById('btnToggleVideo');
+    const videoBtnLabel = document.getElementById('videoBtnLabel');
     const btnEndCall = document.getElementById('btnEndCall');
-    const remoteAudio = document.getElementById('remoteAudio');
 
     function resetCallState() {
         if (localStream) {
@@ -1384,8 +1462,22 @@
         if (remoteAudio) {
             remoteAudio.srcObject = null;
         }
+        if (remoteVideo) {
+            remoteVideo.srcObject = null;
+        }
+        if (localVideo) {
+            localVideo.srcObject = null;
+        }
         if (activeCallModal) activeCallModal.style.display = 'none';
         if (incomingCallModal) incomingCallModal.style.display = 'none';
+        if (callVideoContainer) callVideoContainer.style.display = 'none';
+        if (activeCallCard) activeCallCard.classList.remove('call-video-active');
+        if (activeCallAvatar) activeCallAvatar.style.display = 'flex';
+        if (btnToggleVideo) {
+            btnToggleVideo.style.display = 'none';
+            btnToggleVideo.classList.remove('video-off');
+            if (videoBtnLabel) videoBtnLabel.textContent = 'Cam Off';
+        }
         if (btnMuteCall) {
             btnMuteCall.classList.remove('muted');
             if (muteBtnLabel) muteBtnLabel.textContent = 'Mute';
@@ -1393,9 +1485,11 @@
         activeCallPartnerId = null;
         pendingCallerId = null;
         isCallInitiator = false;
+        isCurrentCallVideo = false;
+        pendingCallIsVideo = false;
     }
 
-    async function createPeerConnection(partnerId) {
+    async function createPeerConnection(partnerId, isVideo = false) {
         peerConnection = new RTCPeerConnection(rtcConfig);
 
         peerConnection.onicecandidate = (event) => {
@@ -1405,10 +1499,18 @@
         };
 
         peerConnection.ontrack = (event) => {
-            if (remoteAudio && event.streams && event.streams[0]) {
-                remoteAudio.srcObject = event.streams[0];
+            if (event.streams && event.streams[0]) {
+                if (remoteAudio) {
+                    remoteAudio.srcObject = event.streams[0];
+                }
+                if (isVideo || event.track.kind === 'video') {
+                    if (remoteVideo) remoteVideo.srcObject = event.streams[0];
+                    if (callVideoContainer) callVideoContainer.style.display = 'block';
+                    if (activeCallAvatar) activeCallAvatar.style.display = 'none';
+                    if (activeCallCard) activeCallCard.classList.add('call-video-active');
+                }
             }
-            if (activeCallStatus) activeCallStatus.textContent = 'Connected (Audio)';
+            if (activeCallStatus) activeCallStatus.textContent = isVideo ? 'Connected (Video)' : 'Connected (Audio)';
         };
 
         peerConnection.oniceconnectionstatechange = () => {
@@ -1419,36 +1521,75 @@
             }
         };
 
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: isVideo ? { width: { ideal: 1280 }, height: { ideal: 720 } } : false
+            });
+        } catch (mediaErr) {
+            console.warn("Could not capture video+audio, trying fallback:", mediaErr);
+            if (isVideo) {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                isVideo = false;
+                isCurrentCallVideo = false;
+            } else {
+                throw mediaErr;
+            }
+        }
+
         localStream.getTracks().forEach(track => {
             peerConnection.addTrack(track, localStream);
         });
 
+        if (isVideo) {
+            if (localVideo) localVideo.srcObject = localStream;
+            if (callVideoContainer) callVideoContainer.style.display = 'block';
+            if (activeCallAvatar) activeCallAvatar.style.display = 'none';
+            if (activeCallCard) activeCallCard.classList.add('call-video-active');
+            if (btnToggleVideo) btnToggleVideo.style.display = 'inline-flex';
+        }
+
         return peerConnection;
+    }
+
+    async function startOutgoingCall(isVideo) {
+        isCurrentCallVideo = isVideo;
+        activeCallPartnerId = otherUserId;
+        isCallInitiator = true;
+
+        activeCallModal.style.display = 'flex';
+        activeCallUserName.textContent = "@otherUser.Username";
+        activeCallStatus.textContent = isVideo ? "Calling with video..." : "Calling @otherUser.Username...";
+
+        if (isVideo) {
+            if (btnToggleVideo) btnToggleVideo.style.display = 'inline-flex';
+        }
+
+        if (connection.state === signalR.HubConnectionState.Connected) {
+            await connection.invoke("CallUser", currentUserId, otherUserId, "@currentUser.Username", isVideo);
+        }
     }
 
     // Click Start Voice Call
     if (startVoiceCallBtn) {
-        startVoiceCallBtn.addEventListener('click', async () => {
-            activeCallPartnerId = otherUserId;
-            isCallInitiator = true;
-
-            activeCallModal.style.display = 'flex';
-            activeCallUserName.textContent = "@otherUser.Username";
-            activeCallStatus.textContent = "Calling @otherUser.Username...";
-
-            if (connection.state === signalR.HubConnectionState.Connected) {
-                await connection.invoke("CallUser", currentUserId, otherUserId, "@currentUser.Username");
-            }
-        });
+        startVoiceCallBtn.addEventListener('click', () => startOutgoingCall(false));
     }
 
-    // SignalR: Incoming Call
-    connection.on("IncomingCall", (callerId, targetUserId, callerName) => {
+    // Click Start Video Call
+    if (startVideoCallBtn) {
+        startVideoCallBtn.addEventListener('click', () => startOutgoingCall(true));
+    }
+
+    // SignalR: Incoming Call (audio or video)
+    connection.on("IncomingCall", (callerId, targetUserId, callerName, isVideo = false) => {
         if (targetUserId === currentUserId) {
             pendingCallerId = callerId;
+            pendingCallIsVideo = !!isVideo;
             incomingCallerName.textContent = callerName;
             if (incomingCallAvatar) incomingCallAvatar.textContent = callerName.charAt(0).toUpperCase();
+            if (incomingCallTypeLabel) {
+                incomingCallTypeLabel.textContent = isVideo ? "Incoming video call..." : "Incoming voice call...";
+            }
             incomingCallModal.style.display = 'flex';
         }
     });
@@ -1458,20 +1599,22 @@
         btnAcceptCall.addEventListener('click', async () => {
             incomingCallModal.style.display = 'none';
             const callerId = pendingCallerId;
+            const isVideo = pendingCallIsVideo;
+            isCurrentCallVideo = isVideo;
             activeCallPartnerId = callerId;
 
             activeCallModal.style.display = 'flex';
             activeCallUserName.textContent = incomingCallerName.textContent;
-            activeCallStatus.textContent = "Connecting audio...";
+            activeCallStatus.textContent = isVideo ? "Connecting video call..." : "Connecting audio...";
 
             try {
-                await createPeerConnection(callerId);
+                await createPeerConnection(callerId, isVideo);
                 if (connection.state === signalR.HubConnectionState.Connected) {
-                    await connection.invoke("AnswerCall", currentUserId, callerId, true);
+                    await connection.invoke("AnswerCall", currentUserId, callerId, true, isVideo);
                 }
             } catch (err) {
-                console.error("Microphone access or WebRTC error:", err);
-                activeCallStatus.textContent = "Microphone error: " + err.message;
+                console.error("Media access or WebRTC error:", err);
+                activeCallStatus.textContent = "Media error: " + err.message;
                 setTimeout(resetCallState, 3000);
             }
         });
@@ -1482,22 +1625,22 @@
         btnDeclineCall.addEventListener('click', async () => {
             incomingCallModal.style.display = 'none';
             if (pendingCallerId && connection.state === signalR.HubConnectionState.Connected) {
-                await connection.invoke("AnswerCall", currentUserId, pendingCallerId, false);
+                await connection.invoke("AnswerCall", currentUserId, pendingCallerId, false, pendingCallIsVideo);
             }
             pendingCallerId = null;
         });
     }
 
     // SignalR: Call Answered
-    connection.on("CallAnswered", async (answeringUserId, targetUserId, accepted) => {
+    connection.on("CallAnswered", async (answeringUserId, targetUserId, accepted, isVideo = false) => {
         if (targetUserId === currentUserId && isCallInitiator) {
             if (!accepted) {
                 activeCallStatus.textContent = "Call declined";
                 setTimeout(resetCallState, 2000);
             } else {
-                activeCallStatus.textContent = "Connecting audio...";
+                activeCallStatus.textContent = isCurrentCallVideo ? "Connecting video..." : "Connecting audio...";
                 try {
-                    await createPeerConnection(answeringUserId);
+                    await createPeerConnection(answeringUserId, isCurrentCallVideo);
                     const offer = await peerConnection.createOffer();
                     await peerConnection.setLocalDescription(offer);
 
@@ -1573,7 +1716,7 @@
         });
     }
 
-    // Click Mute
+    // Click Mute Mic
     if (btnMuteCall) {
         btnMuteCall.addEventListener('click', () => {
             if (localStream) {
@@ -1587,6 +1730,22 @@
                     } else {
                         btnMuteCall.classList.remove('muted');
                         if (muteBtnLabel) muteBtnLabel.textContent = 'Mute';
+                    }
+                }
+            }
+        });
+    }
+
+    // Click Toggle Camera
+    if (btnToggleVideo) {
+        btnToggleVideo.addEventListener('click', () => {
+            if (localStream) {
+                const videoTracks = localStream.getVideoTracks();
+                if (videoTracks.length > 0) {
+                    videoTracks[0].enabled = !videoTracks[0].enabled;
+                    btnToggleVideo.classList.toggle('video-off', !videoTracks[0].enabled);
+                    if (videoBtnLabel) {
+                        videoBtnLabel.textContent = videoTracks[0].enabled ? 'Cam Off' : 'Cam On';
                     }
                 }
             }

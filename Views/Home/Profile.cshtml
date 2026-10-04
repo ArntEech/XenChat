@@ -1,510 +1,1002 @@
 @model XenChat.Models.User
 @{
-    ViewData["Title"] = "Profile";
+    ViewData["Title"] = "Settings";
     var activeTab = (ViewBag.ActiveTab as string) ?? "profile";
 }
 
-<aside class="profile-page">
-    <header class="profile-header">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <a href="@Url.Action("Index", "Home")" class="chat-back-btn" title="Back to chats">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+<div class="settings-layout">
+    <!-- 1. Sleek, Modern Settings Sidebar -->
+    <aside class="settings-sidebar">
+        <div class="settings-sidebar-header">
+            <a href="@Url.Action("Index", "Home")" class="settings-back-btn" title="Back to chats">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="19" y1="12" x2="5" y2="12"></line>
                     <polyline points="12 19 5 12 12 5"></polyline>
                 </svg>
             </a>
-            <h1>XenChat</h1>
+            <h1 class="settings-title">Settings</h1>
         </div>
-    </header>
 
-    <div class="profile-identity">
-        <img src="@Model.AvatarPath" alt="@Model.Username" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-        <div class="profile-identity-fallback" style="display:none;">@Model.Initial</div>
-        <p>@Model.Username</p>
-    </div>
-
-    <div class="profile-content">
-        <div class="profile-sections">
-
-            <button class="profile-section @(activeTab == "general" ? "active" : "")" type="button" data-tab="general" id="tab-general">
-                <span class="profile-section-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="3" />
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                    </svg>
-                </span>
-                <span class="profile-section-copy">
-                    <span>General</span>
-                    <strong>App preferences and startup behavior</strong>
-                </span>
+        <nav class="settings-nav-list">
+            <button class="settings-nav-item @(activeTab == "profile" ? "active" : "")" type="button" data-tab="profile" id="tab-profile">
+                <svg class="settings-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span>Profile Details</span>
             </button>
 
-            <button class="profile-section @(activeTab == "profile" ? "active" : "")" type="button" data-tab="profile" id="tab-profile">
-                <span class="profile-section-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                    </svg>
-                </span>
-                <span class="profile-section-copy">
-                    <span>Profile</span>
-                    <strong>Personal details, photo and username</strong>
-                </span>
+            <button class="settings-nav-item @(activeTab == "account" ? "active" : "")" type="button" data-tab="account" id="tab-account">
+                <svg class="settings-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span>Account</span>
             </button>
 
-            <button class="profile-section @(activeTab == "account" ? "active" : "")" type="button" data-tab="account" id="tab-account">
-                <span class="profile-section-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    </svg>
-                </span>
-                <span class="profile-section-copy">
-                    <span>Account</span>
-                    <strong>Login, security and account details</strong>
-                </span>
+            <button class="settings-nav-item @(activeTab == "general" ? "active" : "")" type="button" data-tab="general" id="tab-general">
+                <svg class="settings-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+                <span>General</span>
             </button>
 
-            <button class="profile-section @(activeTab == "privacy" ? "active" : "")" type="button" data-tab="privacy" id="tab-privacy">
-                <span class="profile-section-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                </span>
-                <span class="profile-section-copy">
-                    <span>Privacy</span>
-                    <strong>Blocked users, message privacy and controls</strong>
-                </span>
+            <button class="settings-nav-item @(activeTab == "chat" ? "active" : "")" type="button" data-tab="chat" id="tab-chat">
+                <svg class="settings-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                <span>Chat</span>
             </button>
 
-            <button class="profile-section @(activeTab == "chat" ? "active" : "")" type="button" data-tab="chat" id="tab-chat">
-                <span class="profile-section-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                </span>
-                <span class="profile-section-copy">
-                    <span>Chat</span>
-                    <strong>Chat appearance, themes and settings</strong>
-                </span>
+            <button class="settings-nav-item @(activeTab == "calls" ? "active" : "")" type="button" data-tab="calls" id="tab-calls">
+                <svg class="settings-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7" />
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                </svg>
+                <span>Calls</span>
             </button>
 
-            <button class="profile-section @(activeTab == "calls" ? "active" : "")" type="button" data-tab="calls" id="tab-calls">
-                <span class="profile-section-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="23 7 16 12 23 17 23 7" />
-                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-                    </svg>
-                </span>
-                <span class="profile-section-copy">
-                    <span>Calls</span>
-                    <strong>Camera, microphone and audio preferences</strong>
-                </span>
+            <button class="settings-nav-item @(activeTab == "notifications" ? "active" : "")" type="button" data-tab="notifications" id="tab-notifications">
+                <svg class="settings-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                <span>Notifications</span>
             </button>
 
-            <button class="profile-section @(activeTab == "notifications" ? "active" : "")" type="button" data-tab="notifications" id="tab-notifications">
-                <span class="profile-section-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                    </svg>
-                </span>
-                <span class="profile-section-copy">
-                    <span>Notifications</span>
-                    <strong>Message alerts and notification preferences</strong>
-                </span>
+            <button class="settings-nav-item @(activeTab == "privacy" ? "active" : "")" type="button" data-tab="privacy" id="tab-privacy">
+                <svg class="settings-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <span>Privacy</span>
             </button>
 
-            <button class="profile-section @(activeTab == "help" ? "active" : "")" type="button" data-tab="help" id="tab-help">
-                <span class="profile-section-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                        <line x1="12" y1="17" x2="12.01" y2="17" />
-                    </svg>
-                </span>
-                <span class="profile-section-copy">
-                    <span>Help &amp; Support</span>
-                    <strong>Help center, feedback and important information</strong>
-                </span>
+            <button class="settings-nav-item @(activeTab == "help" ? "active" : "")" type="button" data-tab="help" id="tab-help">
+                <svg class="settings-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                <span>Help &amp; Support</span>
             </button>
+        </nav>
 
+        <div class="settings-sidebar-footer">
+            <a href="@Url.Action("Logout", "Account")" class="settings-logout-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>Log Out</span>
+            </a>
         </div>
+    </aside>
 
-        <a href="@Url.Action("Logout", "Account")" class="profile-logout">
-            Logout
-        </a>
-    </div>
-</aside>
+    <!-- 2. Settings Content Area -->
+    <main class="settings-content-area">
+        <header class="settings-header">
+            <h2 id="settingsPanelTitle">@(activeTab switch {
+                "general" => "General Settings",
+                "account" => "Account Information",
+                "privacy" => "Privacy Settings",
+                "chat" => "Chat Settings",
+                "calls" => "Call Settings",
+                "notifications" => "Notification Settings",
+                "help" => "Help & Support",
+                _ => "Profile Details"
+            })</h2>
+        </header>
 
-<section class="profile-details-panel">
-    <div class="profile-details-header">
-        <h2 id="settingsPanelTitle">@(activeTab switch {
-            "general" => "General Settings",
-            "account" => "Account Information",
-            "privacy" => "Privacy Settings",
-            "chat" => "Chat Settings",
-            "calls" => "Call Settings",
-            "notifications" => "Notification Settings",
-            "help" => "Help & Support",
-            _ => "Profile Details"
-        })</h2>
-    </div>
-
-    <div class="profile-details-content">
-        @if (TempData["Success"] != null)
-        {
-            <div class="profile-alert success">@TempData["Success"]</div>
-        }
-        @if (TempData["Error"] != null)
-        {
-            <div class="profile-alert error">@TempData["Error"]</div>
-        }
-
-        <!-- 1. PROFILE PANEL (EDIT INTERFACE) -->
-        <div class="settings-tab-panel @(activeTab == "profile" ? "active" : "")" id="panel-profile">
-            <form method="post" asp-action="Profile" asp-controller="Home" enctype="multipart/form-data" class="profile-form">
-                <div class="profile-avatar-edit">
-                    <div class="avatar-preview-wrap">
-                        <img id="avatarPreview" src="@Model.AvatarPath" alt="@Model.Username" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                        <div class="avatar-preview-fallback" style="display:none;">@Model.Initial</div>
-                        <label for="avatarInput" class="avatar-upload-btn" title="Change photo">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                                <circle cx="12" cy="13" r="4" />
-                            </svg>
-                        </label>
-                    </div>
-                    <div class="avatar-info">
-                        <label for="avatarInput" class="upload-link-text">Upload new profile picture</label>
-                        <span class="upload-hint">JPG, PNG, GIF, or WebP.</span>
-                        <input type="file" id="avatarInput" name="avatarFile" accept="image/*" style="display: none;" />
-                    </div>
+        <div class="settings-scroll-body">
+            @if (TempData["Success"] != null)
+            {
+                <div class="settings-alert success">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span>@TempData["Success"]</span>
                 </div>
-
-                <div class="form-group">
-                    <label for="usernameInput">Username</label>
-                    <input type="text" id="usernameInput" name="username" value="@Model.Username" required placeholder="Enter username" autocomplete="off" />
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="settings-alert error">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <span>@TempData["Error"]</span>
                 </div>
+            }
 
-                <div class="form-group">
-                    <label for="emailInput">Email</label>
-                    <input type="email" id="emailInput" value="@Model.Email" readonly disabled class="readonly-input" />
-                    <span class="field-hint">Email address cannot be changed</span>
-                </div>
-
-                <div class="form-group">
-                    <label for="profileInfoInput">About / Bio</label>
-                    <textarea id="profileInfoInput" name="profileInfo" rows="3" placeholder="Tell us something about yourself...">@Model.ProfileInfo</textarea>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="primary-button save-profile-btn">Save Changes</button>
-                </div>
-            </form>
-        </div>
-
-        <!-- 2. GENERAL SETTINGS PANEL -->
-        <div class="settings-tab-panel @(activeTab == "general" ? "active" : "")" id="panel-general">
-            <div class="settings-section-card">
-                <h3 class="settings-card-title">General Settings</h3>
-                <p class="settings-card-subtitle">Manage application preferences, appearance, and startup behavior.</p>
-
-                <div class="settings-info-list">
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Theme Appearance</span>
-                        <div style="display: flex; gap: 8px; margin-top: 6px;">
-                            <button type="button" class="settings-pill-btn active theme-opt" data-theme="Dark">Dark</button>
-                            <button type="button" class="settings-pill-btn theme-opt" data-theme="Light">Light</button>
-                            <button type="button" class="settings-pill-btn theme-opt" data-theme="System">System Default</button>
-                        </div>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Startup Behavior</span>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-                            <span class="settings-info-val" id="startupBehaviorLabel">Open directly to active conversations</span>
-                            <button type="button" class="settings-toggle-btn active" id="btnStartupToggle">ON</button>
-                        </div>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Application Language</span>
-                        <div style="margin-top: 6px;">
-                            <select class="settings-select" id="langSelect">
-                                <option value="English (US)" selected>English (US)</option>
-                                <option value="Spanish">Español (Spanish)</option>
-                                <option value="French">Français (French)</option>
-                                <option value="German">Deutsch (German)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Spell Check</span>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-                            <span class="settings-info-val" id="spellCheckLabel">Spell check enabled</span>
-                            <button type="button" class="settings-toggle-btn active" id="btnSpellCheckToggle">ON</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. ACCOUNT PANEL -->
-        <div class="settings-tab-panel @(activeTab == "account" ? "active" : "")" id="panel-account">
-            <div class="settings-section-card">
-                <h3 class="settings-card-title">Account Information</h3>
-                <p class="settings-card-subtitle">Review your account credentials, identifier, and security status.</p>
-
-                <div class="settings-info-list">
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">User ID</span>
-                        <span class="settings-info-val">#@Model.Id</span>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Username</span>
-                        <span class="settings-info-val">@Model.Username</span>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Email Address</span>
-                        <span class="settings-info-val">@Model.Email</span>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Account Status</span>
-                        <span class="settings-info-val status-badge-active">Active</span>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Security &amp; Password</span>
-                        <span class="settings-info-val">Password is securely hashed (ASP.NET Core PasswordHasher)</span>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
-                    <button type="button" class="primary-button" style="width: auto; padding: 8px 20px; font-size: 13px; border-radius: 20px;" onclick="switchTab('profile')">
-                        Edit Profile Details
-                    </button>
-                    <a href="@Url.Action("Logout", "Account")" class="primary-button" style="width: auto; padding: 8px 20px; font-size: 13px; border-radius: 20px; background: #333; text-decoration: none; color: #fff;">
-                        Sign Out
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. PRIVACY PANEL -->
-        <div class="settings-tab-panel @(activeTab == "privacy" ? "active" : "")" id="panel-privacy">
-            <div class="settings-section-card">
-                <h3 class="settings-card-title">Privacy Settings</h3>
-                <p class="settings-card-subtitle">Control message privacy, status visibility, and contact permissions.</p>
-
-                <div class="settings-info-list">
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Message Privacy</span>
-                        <span class="settings-info-val">Conversations are stored privately and delivered securely.</span>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Read Receipts</span>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-                            <span class="settings-info-val" id="readReceiptsLabel">Show read receipts in chats</span>
-                            <button type="button" class="settings-toggle-btn active" id="btnReadReceiptsToggle">ON</button>
-                        </div>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Last Seen Visibility</span>
-                        <div style="display: flex; gap: 8px; margin-top: 6px;">
-                            <button type="button" class="settings-pill-btn active last-seen-opt" data-val="Everyone">Everyone</button>
-                            <button type="button" class="settings-pill-btn last-seen-opt" data-val="Contacts">Contacts Only</button>
-                            <button type="button" class="settings-pill-btn last-seen-opt" data-val="Nobody">Nobody</button>
-                        </div>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Blocked Contacts</span>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-                            <span class="settings-info-val" id="blockedCountLabel">0 contacts blocked</span>
-                            <button type="button" class="settings-btn-action" id="btnViewBlocked">View Blocked List</button>
-                        </div>
-                        <div id="blockedListInfo" style="display: none; font-size: 13px; color: #4caf50; margin-top: 6px;">
-                            No blocked contacts found. All contacts are permitted.
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 24px;">
-                    <a href="@Url.Action("Privacy", "Home")" class="settings-action-link" style="color: #ee4c49; text-decoration: none; font-size: 14px; font-weight: 500;">
-                        View Full Privacy Policy &rarr;
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. CHAT PANEL -->
-        <div class="settings-tab-panel @(activeTab == "chat" ? "active" : "")" id="panel-chat">
-            <div class="settings-section-card">
-                <h3 class="settings-card-title">Chat Settings</h3>
-                <p class="settings-card-subtitle">Manage chat window behavior, keyboard shortcuts, and media display.</p>
-
-                <div class="settings-info-list">
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Send Message on Enter</span>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-                            <span class="settings-info-val" id="enterSendLabel">Press Enter to send (Shift + Enter for new line)</span>
-                            <button type="button" class="settings-toggle-btn active" id="btnEnterSendToggle">ON</button>
-                        </div>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Media Auto-Download</span>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-                            <span class="settings-info-val" id="mediaDownloadLabel">Photos and images display automatically</span>
-                            <button type="button" class="settings-toggle-btn active" id="btnMediaDownloadToggle">ON</button>
-                        </div>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Chat Font Size</span>
-                        <div style="display: flex; gap: 8px; margin-top: 6px;">
-                            <button type="button" class="settings-pill-btn font-size-opt" data-size="12px">Small</button>
-                            <button type="button" class="settings-pill-btn active font-size-opt" data-size="14px">Medium (Standard)</button>
-                            <button type="button" class="settings-pill-btn font-size-opt" data-size="16px">Large</button>
-                        </div>
-                        <div id="fontSamplePreview" style="margin-top: 10px; padding: 8px 12px; background: #1b1d1f; border-radius: 6px; font-size: 14px; color: #ccc;">
-                            Sample chat message preview text
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 6. CALLS PANEL -->
-        <div class="settings-tab-panel @(activeTab == "calls" ? "active" : "")" id="panel-calls">
-            <div class="settings-section-card">
-                <h3 class="settings-card-title">Call Settings</h3>
-                <p class="settings-card-subtitle">Preferences and device configuration for voice and video communications.</p>
-
-                <div class="settings-info-list">
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Microphone Input</span>
-                        <div style="margin-top: 6px;">
-                            <select class="settings-select" id="micSelect" style="width: 100%; max-width: 380px;">
-                                <option selected>System Default (Integrated Microphone)</option>
-                                <option>Headset Microphone</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Camera Video</span>
-                        <div style="margin-top: 6px;">
-                            <select class="settings-select" id="cameraSelect" style="width: 100%; max-width: 380px;">
-                                <option selected>Integrated Webcam (Built-in)</option>
-                                <option>External USB Camera</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Audio &amp; Mic Testing</span>
-                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-                            <button type="button" class="settings-btn-action" id="btnTestAudio">Test Speaker &amp; Mic</button>
-                            <span id="audioTestResult" style="font-size: 13px; color: #4caf50; display: none;">Speakers and Microphone: OK!</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 7. NOTIFICATIONS PANEL -->
-        <div class="settings-tab-panel @(activeTab == "notifications" ? "active" : "")" id="panel-notifications">
-            <div class="settings-section-card">
-                <h3 class="settings-card-title">Notification Settings</h3>
-                <p class="settings-card-subtitle">Configure message alerts, badges, sound chimes, and banners.</p>
-
-                <div class="settings-info-list">
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Desktop Notifications</span>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-                            <span class="settings-info-val" id="desktopNotifLabel">Show popup alerts on new messages</span>
-                            <button type="button" class="settings-toggle-btn active" id="btnDesktopNotifToggle">ON</button>
-                        </div>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Sound Alerts</span>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-                            <span class="settings-info-val" id="soundAlertsLabel">Play chime on incoming messages</span>
-                            <button type="button" class="settings-toggle-btn active" id="btnSoundAlertsToggle">ON</button>
-                        </div>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Message Snippet Preview</span>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-                            <span class="settings-info-val" id="msgPreviewLabel">Show sender and text preview in alert</span>
-                            <button type="button" class="settings-toggle-btn active" id="btnMsgPreviewToggle">ON</button>
-                        </div>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Test Notification</span>
-                        <div style="margin-top: 8px;">
-                            <button type="button" class="settings-btn-action" id="btnTestNotif">Trigger Test Notification</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 8. HELP & SUPPORT PANEL -->
-        <div class="settings-tab-panel @(activeTab == "help" ? "active" : "")" id="panel-help">
-            <div class="settings-section-card">
-                <h3 class="settings-card-title">Help &amp; Support</h3>
-                <p class="settings-card-subtitle">Help documentation, support channels, and platform version information.</p>
-
-                <div class="settings-info-list">
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">App Version</span>
-                        <span class="settings-info-val">XenChat v1.0.0 (.NET 8.0 MVC + SQLite)</span>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Contact Support</span>
-                        <span class="settings-info-val">
-                            <a href="mailto:support@xenchat.local" style="color: #ee4c49; text-decoration: none;">support@xenchat.local</a>
-                        </span>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Privacy Policy</span>
-                        <span class="settings-info-val">
-                            <a href="@Url.Action("Privacy", "Home")" style="color: #ee4c49; text-decoration: none;">Read full privacy policy &rarr;</a>
-                        </span>
-                    </div>
-                    <div class="settings-info-item">
-                        <span class="settings-info-label">Frequently Asked Questions</span>
-                        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
-                            <div class="faq-item" style="background: #1b1d1f; border-radius: 8px; padding: 10px 14px; cursor: pointer;">
-                                <div style="font-weight: 500; font-size: 13px; color: #fff; display: flex; justify-content: space-between;">
-                                    <span>How do I post a Status update?</span>
-                                    <span>+</span>
+            <div class="settings-form-container">
+                <!-- 1. PROFILE DETAILS PANEL -->
+                <div class="settings-tab-panel @(activeTab == "profile" ? "active" : "")" id="panel-profile">
+                    <form method="post" asp-action="Profile" asp-controller="Home" enctype="multipart/form-data" class="settings-form" id="profileForm">
+                        <div class="settings-avatar-row">
+                            <div class="avatar-preview-box">
+                                <img id="avatarPreview" src="@Model.AvatarPath" alt="@Model.Username" onerror="this.style.display='none'; document.getElementById('avatarFallback').style.display='flex';" />
+                                <div class="avatar-preview-fallback" id="avatarFallback" style="display:none;">@Model.Initial</div>
+                            </div>
+                            <div class="avatar-actions-meta">
+                                <div class="avatar-btn-group">
+                                    <label for="avatarInput" class="btn-action-text change-avatar" title="Select photo">Change Avatar</label>
+                                    <button type="button" class="btn-action-text remove-avatar" id="btnRemoveAvatar">Remove</button>
+                                    <input type="file" id="avatarInput" name="avatarFile" accept=".jpg,.jpeg,.png,.gif,.webp" style="display: none;" />
+                                    <input type="hidden" id="removeAvatarInput" name="removeAvatar" value="false" />
                                 </div>
-                                <div class="faq-ans" style="display: none; font-size: 13px; color: #aaa; margin-top: 6px;">
-                                    Go to Updates or Home, click the &quot;Add Status&quot; button, select a photo, optionally type a caption, and post!
+                                <span class="avatar-help-text">JPG, PNG, GIF or WebP. Max 5MB.</span>
+                            </div>
+                        </div>
+
+                        <div class="settings-field-group">
+                            <label for="usernameInput" class="settings-label">Username</label>
+                            <input type="text" id="usernameInput" name="username" value="@Model.Username" required placeholder="Enter username" class="settings-input" autocomplete="off" />
+                        </div>
+
+                        <div class="settings-field-group">
+                            <label for="emailInput" class="settings-label">Email Address</label>
+                            <div class="settings-input-icon-wrap">
+                                <input type="email" id="emailInput" value="@Model.Email" readonly disabled class="settings-input readonly-input" />
+                                <svg class="settings-input-lock" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                            </div>
+                            <span class="settings-field-hint">Email address cannot be changed</span>
+                        </div>
+
+                        <div class="settings-field-group">
+                            <label for="profileInfoInput" class="settings-label">About / Bio</label>
+                            <textarea id="profileInfoInput" name="profileInfo" rows="3" placeholder="Tell us something about yourself..." class="settings-textarea">@Model.ProfileInfo</textarea>
+                        </div>
+
+                        <!-- Sticky bottom action bar -->
+                        <div class="settings-sticky-footer">
+                            <button type="submit" class="settings-primary-btn">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 2. ACCOUNT PANEL -->
+                <div class="settings-tab-panel @(activeTab == "account" ? "active" : "")" id="panel-account">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Account Information</h3>
+                        <p class="settings-card-subtitle">Review your account credentials, identifier, and security status.</p>
+
+                        <div class="settings-info-list">
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">User ID</span>
+                                <span class="settings-info-val">#@Model.Id</span>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Username</span>
+                                <span class="settings-info-val">@Model.Username</span>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Email Address</span>
+                                <span class="settings-info-val">@Model.Email</span>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Account Status</span>
+                                <span class="settings-badge-active">Active</span>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Security &amp; Password</span>
+                                <span class="settings-info-val">Password is securely hashed (ASP.NET Core PasswordHasher)</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
+                            <button type="button" class="settings-secondary-btn" onclick="switchTab('profile')">
+                                Edit Profile Details
+                            </button>
+                            <a href="@Url.Action("Logout", "Account")" class="settings-secondary-btn" style="text-decoration: none;">
+                                Sign Out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. GENERAL SETTINGS PANEL -->
+                <div class="settings-tab-panel @(activeTab == "general" ? "active" : "")" id="panel-general">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">General Settings</h3>
+                        <p class="settings-card-subtitle">Manage application preferences, appearance, and startup behavior.</p>
+
+                        <div class="settings-info-list">
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Theme Appearance</span>
+                                <div style="display: flex; gap: 8px; margin-top: 6px;">
+                                    <button type="button" class="settings-pill-btn active theme-opt" data-theme="Dark">Dark</button>
+                                    <button type="button" class="settings-pill-btn theme-opt" data-theme="Light">Light</button>
+                                    <button type="button" class="settings-pill-btn theme-opt" data-theme="System">System Default</button>
                                 </div>
                             </div>
-                            <div class="faq-item" style="background: #1b1d1f; border-radius: 8px; padding: 10px 14px; cursor: pointer;">
-                                <div style="font-weight: 500; font-size: 13px; color: #fff; display: flex; justify-content: space-between;">
-                                    <span>How do I change my profile photo?</span>
-                                    <span>+</span>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Startup Behavior</span>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span class="settings-info-val" id="startupBehaviorLabel">Open directly to active conversations</span>
+                                    <button type="button" class="settings-toggle-btn active" id="btnStartupToggle">ON</button>
                                 </div>
-                                <div class="faq-ans" style="display: none; font-size: 13px; color: #aaa; margin-top: 6px;">
-                                    Click the Profile tab on the left, click the camera icon on your avatar, select an image, and click &quot;Save Changes&quot;.
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Application Language</span>
+                                <div style="margin-top: 6px;">
+                                    <select class="settings-select" id="langSelect">
+                                        <option value="English (US)" selected>English (US)</option>
+                                        <option value="Spanish">Español (Spanish)</option>
+                                        <option value="French">Français (French)</option>
+                                        <option value="German">Deutsch (German)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Spell Check</span>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span class="settings-info-val" id="spellCheckLabel">Spell check enabled</span>
+                                    <button type="button" class="settings-toggle-btn active" id="btnSpellCheckToggle">ON</button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- 4. CHAT PANEL -->
+                <div class="settings-tab-panel @(activeTab == "chat" ? "active" : "")" id="panel-chat">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Chat Settings</h3>
+                        <p class="settings-card-subtitle">Manage chat window behavior, keyboard shortcuts, and media display.</p>
+
+                        <div class="settings-info-list">
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Send Message on Enter</span>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span class="settings-info-val" id="enterSendLabel">Press Enter to send (Shift + Enter for new line)</span>
+                                    <button type="button" class="settings-toggle-btn active" id="btnEnterSendToggle">ON</button>
+                                </div>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Media Auto-Download</span>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span class="settings-info-val" id="mediaDownloadLabel">Photos and images display automatically</span>
+                                    <button type="button" class="settings-toggle-btn active" id="btnMediaDownloadToggle">ON</button>
+                                </div>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Chat Font Size</span>
+                                <div style="display: flex; gap: 8px; margin-top: 6px;">
+                                    <button type="button" class="settings-pill-btn font-size-opt" data-size="12px">Small</button>
+                                    <button type="button" class="settings-pill-btn active font-size-opt" data-size="14px">Medium (Standard)</button>
+                                    <button type="button" class="settings-pill-btn font-size-opt" data-size="16px">Large</button>
+                                </div>
+                                <div id="fontSamplePreview" style="margin-top: 10px; padding: 10px 14px; background: #121214; border: 1px solid #27272a; border-radius: 6px; font-size: 14px; color: #a1a1aa;">
+                                    Sample chat message preview text
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. CALLS PANEL -->
+                <div class="settings-tab-panel @(activeTab == "calls" ? "active" : "")" id="panel-calls">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Call Settings</h3>
+                        <p class="settings-card-subtitle">Preferences and device configuration for voice and video communications.</p>
+
+                        <div class="settings-info-list">
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Microphone Input</span>
+                                <div style="margin-top: 6px;">
+                                    <select class="settings-select" id="micSelect" style="width: 100%; max-width: 380px;">
+                                        <option selected>System Default (Integrated Microphone)</option>
+                                        <option>Headset Microphone</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Camera Video</span>
+                                <div style="margin-top: 6px;">
+                                    <select class="settings-select" id="cameraSelect" style="width: 100%; max-width: 380px;">
+                                        <option selected>Integrated Webcam (Built-in)</option>
+                                        <option>External USB Camera</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Audio &amp; Mic Testing</span>
+                                <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                                    <button type="button" class="settings-secondary-btn" id="btnTestAudio">Test Speaker &amp; Mic</button>
+                                    <span id="audioTestResult" style="font-size: 13px; color: #22c55e; display: none;">Speakers and Microphone: OK!</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. NOTIFICATIONS PANEL -->
+                <div class="settings-tab-panel @(activeTab == "notifications" ? "active" : "")" id="panel-notifications">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Notification Settings</h3>
+                        <p class="settings-card-subtitle">Configure message alerts, badges, sound chimes, and banners.</p>
+
+                        <div class="settings-info-list">
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Desktop Notifications</span>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span class="settings-info-val" id="desktopNotifLabel">Show popup alerts on new messages</span>
+                                    <button type="button" class="settings-toggle-btn active" id="btnDesktopNotifToggle">ON</button>
+                                </div>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Sound Alerts</span>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span class="settings-info-val" id="soundAlertsLabel">Play chime on incoming messages</span>
+                                    <button type="button" class="settings-toggle-btn active" id="btnSoundAlertsToggle">ON</button>
+                                </div>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Message Snippet Preview</span>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span class="settings-info-val" id="msgPreviewLabel">Show sender and text preview in alert</span>
+                                    <button type="button" class="settings-toggle-btn active" id="btnMsgPreviewToggle">ON</button>
+                                </div>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Test Notification</span>
+                                <div style="margin-top: 8px;">
+                                    <button type="button" class="settings-secondary-btn" id="btnTestNotif">Trigger Test Notification</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. PRIVACY PANEL -->
+                <div class="settings-tab-panel @(activeTab == "privacy" ? "active" : "")" id="panel-privacy">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Privacy Settings</h3>
+                        <p class="settings-card-subtitle">Control message privacy, status visibility, and contact permissions.</p>
+
+                        <div class="settings-info-list">
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Message Privacy</span>
+                                <span class="settings-info-val">Conversations are stored privately and delivered securely.</span>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Read Receipts</span>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span class="settings-info-val" id="readReceiptsLabel">Show read receipts in chats</span>
+                                    <button type="button" class="settings-toggle-btn active" id="btnReadReceiptsToggle">ON</button>
+                                </div>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Last Seen Visibility</span>
+                                <div style="display: flex; gap: 8px; margin-top: 6px;">
+                                    <button type="button" class="settings-pill-btn active last-seen-opt" data-val="Everyone">Everyone</button>
+                                    <button type="button" class="settings-pill-btn last-seen-opt" data-val="Contacts">Contacts Only</button>
+                                    <button type="button" class="settings-pill-btn last-seen-opt" data-val="Nobody">Nobody</button>
+                                </div>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Blocked Contacts</span>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span class="settings-info-val" id="blockedCountLabel">0 contacts blocked</span>
+                                    <button type="button" class="settings-secondary-btn" id="btnViewBlocked">View Blocked List</button>
+                                </div>
+                                <div id="blockedListInfo" style="display: none; font-size: 13px; color: #22c55e; margin-top: 6px;">
+                                    No blocked contacts found. All contacts are permitted.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 24px;">
+                            <a href="@Url.Action("Privacy", "Home")" style="color: #f43f5e; text-decoration: none; font-size: 14px; font-weight: 500;">
+                                View Full Privacy Policy &rarr;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 8. HELP & SUPPORT PANEL -->
+                <div class="settings-tab-panel @(activeTab == "help" ? "active" : "")" id="panel-help">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Help &amp; Support</h3>
+                        <p class="settings-card-subtitle">Help documentation, support channels, and platform version information.</p>
+
+                        <div class="settings-info-list">
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">App Version</span>
+                                <span class="settings-info-val">XenChat v1.0.0 (.NET 8.0 MVC + SQLite)</span>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Contact Support</span>
+                                <span class="settings-info-val">
+                                    <a href="mailto:support@xenchat.local" style="color: #f43f5e; text-decoration: none;">support@xenchat.local</a>
+                                </span>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Privacy Policy</span>
+                                <span class="settings-info-val">
+                                    <a href="@Url.Action("Privacy", "Home")" style="color: #f43f5e; text-decoration: none;">Read full privacy policy &rarr;</a>
+                                </span>
+                            </div>
+                            <div class="settings-info-item">
+                                <span class="settings-info-label">Frequently Asked Questions</span>
+                                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+                                    <div class="faq-item" style="background: #121214; border: 1px solid #27272a; border-radius: 8px; padding: 12px 16px; cursor: pointer;">
+                                        <div style="font-weight: 500; font-size: 13px; color: #fff; display: flex; justify-content: space-between;">
+                                            <span>How do I post a Status update?</span>
+                                            <span>+</span>
+                                        </div>
+                                        <div class="faq-ans" style="display: none; font-size: 13px; color: #a1a1aa; margin-top: 8px; line-height: 1.5;">
+                                            Go to Updates, click the &quot;Add Status&quot; button, select a photo, optionally type a caption, and post!
+                                        </div>
+                                    </div>
+                                    <div class="faq-item" style="background: #121214; border: 1px solid #27272a; border-radius: 8px; padding: 12px 16px; cursor: pointer;">
+                                        <div style="font-weight: 500; font-size: 13px; color: #fff; display: flex; justify-content: space-between;">
+                                            <span>How do I change my profile photo?</span>
+                                            <span>+</span>
+                                        </div>
+                                        <div class="faq-ans" style="display: none; font-size: 13px; color: #a1a1aa; margin-top: 8px; line-height: 1.5;">
+                                            In Settings &gt; Profile Details, click &quot;Change Avatar&quot;, select an image file, and click &quot;Save Changes&quot;.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
-
-    </div>
-</section>
+    </main>
+</div>
 
 <!-- Settings Toast Notification -->
-<div id="settingsToast" style="display:none; position:fixed; bottom:24px; right:24px; background:#232428; border:1px solid #ee4c49; color:#fff; padding:10px 20px; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.5); font-size:13px; z-index:9999;"></div>
+<div id="settingsToast" style="display:none; position:fixed; bottom:24px; right:24px; background:#18181b; border:1px solid #f43f5e; color:#fff; padding:10px 20px; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.6); font-size:13px; z-index:9999;"></div>
 
 <style>
+    /* ============================================================
+       PROFILE & SETTINGS DESKTOP-GRADE LAYOUT
+       Solid High-Contrast Surfaces: #0f0f11, #18181b, #27272a
+       Accent: #f43f5e (Coral/Rose)
+       ============================================================ */
+    .settings-layout {
+        display: flex;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+        background-color: #0f0f11;
+        color: #f4f4f5;
+        font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Sidebar Navigation */
+    .settings-sidebar {
+        width: 260px;
+        flex: 0 0 260px;
+        height: 100%;
+        background-color: #18181b;
+        border-right: 1px solid #27272a;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+    }
+
+    .settings-sidebar::-webkit-scrollbar {
+        width: 5px;
+    }
+    .settings-sidebar::-webkit-scrollbar-thumb {
+        background-color: #27272a;
+        border-radius: 4px;
+    }
+
+    .settings-sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 20px 16px 16px;
+        border-bottom: 1px solid #27272a;
+        flex-shrink: 0;
+    }
+
+    .settings-back-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        color: #a1a1aa;
+        background: transparent;
+        text-decoration: none;
+        transition: background 0.15s ease, color 0.15s ease;
+        flex-shrink: 0;
+    }
+
+    .settings-back-btn:hover {
+        background: #27272a;
+        color: #f4f4f5;
+    }
+
+    .settings-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #ffffff;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .settings-nav-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 12px 10px;
+        flex: 1;
+    }
+
+    .settings-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: #a1a1aa;
+        font-size: 13.5px;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: left;
+        transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        border-left: 3px solid transparent;
+        font-family: inherit;
+    }
+
+    .settings-nav-item:hover {
+        background: #202024;
+        color: #f4f4f5;
+    }
+
+    .settings-nav-item.active {
+        background: #27272a;
+        color: #ffffff;
+        border-left: 3px solid #f43f5e;
+    }
+
+    .settings-nav-icon {
+        flex-shrink: 0;
+        color: inherit;
+    }
+
+    .settings-sidebar-footer {
+        padding: 12px 10px;
+        border-top: 1px solid #27272a;
+        margin-top: auto;
+        flex-shrink: 0;
+    }
+
+    .settings-logout-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid #27272a;
+        background: transparent;
+        color: #ef4444;
+        font-size: 13.5px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.15s ease;
+        box-sizing: border-box;
+    }
+
+    .settings-logout-btn:hover {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    /* Content Area */
+    .settings-content-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background-color: #0f0f11;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .settings-header {
+        height: 64px;
+        min-height: 64px;
+        display: flex;
+        align-items: center;
+        padding: 0 32px;
+        background-color: #0f0f11;
+        border-bottom: 1px solid #27272a;
+        flex-shrink: 0;
+    }
+
+    .settings-header h2 {
+        font-size: 19px;
+        font-weight: 600;
+        color: #ffffff;
+        margin: 0;
+    }
+
+    .settings-scroll-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .settings-scroll-body::-webkit-scrollbar {
+        width: 6px;
+    }
+    .settings-scroll-body::-webkit-scrollbar-thumb {
+        background-color: #27272a;
+        border-radius: 4px;
+    }
+
+    .settings-form-container {
+        max-width: 540px;
+        width: 100%;
+    }
+
+    /* Tab Panels */
+    .settings-tab-panel {
+        display: none;
+    }
+
+    .settings-tab-panel.active {
+        display: block;
+    }
+
+    /* Alerts */
+    .settings-alert {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        margin-bottom: 24px;
+        max-width: 540px;
+    }
+
+    .settings-alert.success {
+        background-color: rgba(34, 197, 94, 0.12);
+        border: 1px solid rgba(34, 197, 94, 0.35);
+        color: #4ade80;
+    }
+
+    .settings-alert.error {
+        background-color: rgba(244, 63, 94, 0.12);
+        border: 1px solid rgba(244, 63, 94, 0.35);
+        color: #fb7185;
+    }
+
+    /* Avatar Section */
+    .settings-avatar-row {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 24px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #27272a;
+    }
+
+    .avatar-preview-box {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        overflow: hidden;
+        background-color: #18181b;
+        border: 2px solid #27272a;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .avatar-preview-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-preview-fallback {
+        width: 100%;
+        height: 100%;
+        background-color: #f43f5e;
+        color: #ffffff;
+        font-size: 28px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .avatar-actions-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .avatar-btn-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-action-text {
+        padding: 7px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: 1px solid #3f3f46;
+        background: #18181b;
+        color: #f4f4f5;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: inherit;
+    }
+
+    .btn-action-text.change-avatar:hover {
+        background: #27272a;
+        border-color: #f43f5e;
+        color: #ffffff;
+    }
+
+    .btn-action-text.remove-avatar {
+        color: #a1a1aa;
+        background: transparent;
+        border-color: #27272a;
+    }
+
+    .btn-action-text.remove-avatar:hover {
+        color: #f43f5e;
+        background: rgba(244, 63, 94, 0.1);
+        border-color: rgba(244, 63, 94, 0.3);
+    }
+
+    .avatar-help-text {
+        font-size: 12px;
+        color: #a1a1aa;
+    }
+
+    /* Form Fields */
+    .settings-form {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .settings-field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .settings-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #e4e4e7;
+    }
+
+    .settings-input,
+    .settings-textarea {
+        width: 100%;
+        height: 42px;
+        background-color: #18181b;
+        border: 1px solid #3f3f46;
+        border-radius: 8px;
+        padding: 0 14px;
+        color: #f4f4f5;
+        font-family: inherit;
+        font-size: 14px;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    .settings-input:focus,
+    .settings-textarea:focus {
+        border-color: #f43f5e;
+        box-shadow: 0 0 0 1px #f43f5e;
+    }
+
+    .settings-textarea {
+        height: auto;
+        min-height: 90px;
+        padding: 10px 14px;
+        resize: vertical;
+    }
+
+    .settings-input-icon-wrap {
+        position: relative;
+        width: 100%;
+    }
+
+    .settings-input-icon-wrap .readonly-input {
+        background-color: #121214;
+        color: #71717a;
+        border-color: #27272a;
+        cursor: not-allowed;
+        padding-right: 38px;
+    }
+
+    .settings-input-lock {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #71717a;
+        pointer-events: none;
+    }
+
+    .settings-field-hint {
+        font-size: 12px;
+        color: #71717a;
+    }
+
+    /* Sticky Footer Bar (Never clipped, zero layout fold issues) */
+    .settings-sticky-footer {
+        position: sticky;
+        bottom: 0;
+        background-color: #0f0f11;
+        padding: 16px 0;
+        border-top: 1px solid #27272a;
+        margin-top: 16px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+    }
+
+    .settings-primary-btn {
+        height: 42px;
+        padding: 0 24px;
+        background-color: #f43f5e;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.15s ease, transform 0.1s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: inherit;
+    }
+
+    .settings-primary-btn:hover {
+        background-color: #e11d48;
+    }
+
+    .settings-primary-btn:active {
+        transform: scale(0.98);
+    }
+
+    .settings-secondary-btn {
+        height: 38px;
+        padding: 0 18px;
+        background-color: #18181b;
+        color: #f4f4f5;
+        border: 1px solid #3f3f46;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: inherit;
+    }
+
+    .settings-secondary-btn:hover {
+        background-color: #27272a;
+        border-color: #52525b;
+    }
+
+    /* Cards for Other Tabs */
+    .settings-card {
+        background-color: #18181b;
+        border: 1px solid #27272a;
+        border-radius: 12px;
+        padding: 24px;
+    }
+
+    .settings-card-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #ffffff;
+        margin: 0 0 6px;
+    }
+
+    .settings-card-subtitle {
+        font-size: 13px;
+        color: #a1a1aa;
+        margin: 0 0 20px;
+    }
+
+    .settings-info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .settings-info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #27272a;
+    }
+
+    .settings-info-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .settings-info-label {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: #a1a1aa;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .settings-info-val {
+        font-size: 14px;
+        color: #f4f4f5;
+    }
+
+    .settings-badge-active {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background-color: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        width: fit-content;
+    }
+
     .settings-toggle-btn {
-        background: #2e7d32;
+        background: #22c55e;
         color: #fff;
-        border: 1px solid #4caf50;
+        border: 1px solid #16a34a;
         padding: 4px 14px;
         border-radius: 14px;
         font-size: 12px;
@@ -513,58 +1005,88 @@
         transition: all 0.2s ease;
     }
     .settings-toggle-btn.off {
-        background: #383a40;
-        border-color: #555;
-        color: #999;
+        background: #27272a;
+        border-color: #3f3f46;
+        color: #71717a;
     }
+
     .settings-pill-btn {
-        background: #1e1f22;
-        border: 1px solid #3c3e44;
-        color: #ccc;
+        background: #18181b;
+        border: 1px solid #3f3f46;
+        color: #a1a1aa;
         padding: 6px 14px;
         border-radius: 8px;
         font-size: 13px;
         cursor: pointer;
         transition: all 0.15s ease;
+        font-family: inherit;
     }
     .settings-pill-btn:hover {
-        border-color: #777;
+        border-color: #71717a;
+        color: #f4f4f5;
     }
     .settings-pill-btn.active {
-        background: #ee4c49;
-        border-color: #ee4c49;
+        background: #f43f5e;
+        border-color: #f43f5e;
         color: #fff;
         font-weight: 500;
     }
-    .settings-btn-action {
-        background: #2b2c30;
-        border: 1px solid #444;
-        color: #fff;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 13px;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    .settings-btn-action:hover {
-        border-color: #ee4c49;
-        color: #ee4c49;
-    }
+
     .settings-select {
-        background: #1e1f22;
-        border: 1px solid #3c3e44;
-        color: #fff;
+        background: #18181b;
+        border: 1px solid #3f3f46;
+        color: #f4f4f5;
         padding: 8px 12px;
         border-radius: 8px;
         font-size: 13px;
         outline: none;
+        font-family: inherit;
+    }
+    .settings-select:focus {
+        border-color: #f43f5e;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .settings-sidebar {
+            width: 72px;
+            flex: 0 0 72px;
+        }
+        .settings-sidebar .settings-title,
+        .settings-nav-item span,
+        .settings-logout-btn span {
+            display: none;
+        }
+        .settings-sidebar-header {
+            justify-content: center;
+            padding: 16px 8px;
+        }
+        .settings-nav-item {
+            justify-content: center;
+            padding: 12px;
+            border-left: none;
+            border-bottom: 3px solid transparent;
+        }
+        .settings-nav-item.active {
+            border-left: none;
+            border-bottom: 3px solid #f43f5e;
+        }
+        .settings-logout-btn {
+            justify-content: center;
+            padding: 12px;
+        }
+        .settings-header,
+        .settings-scroll-body {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
     }
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // Tab switching logic
-        const tabButtons = document.querySelectorAll('.profile-section[data-tab]');
+        const tabButtons = document.querySelectorAll('.settings-nav-item[data-tab]');
         const tabPanels = document.querySelectorAll('.settings-tab-panel');
         const headerTitle = document.getElementById('settingsPanelTitle');
 
@@ -750,10 +1272,12 @@
             });
         });
 
-        // Avatar preview logic
+        // Avatar preview & removal logic
         const avatarInput = document.getElementById('avatarInput');
         const avatarPreview = document.getElementById('avatarPreview');
-        const fallback = document.querySelector('.avatar-preview-fallback');
+        const avatarFallback = document.getElementById('avatarFallback');
+        const btnRemoveAvatar = document.getElementById('btnRemoveAvatar');
+        const removeAvatarInput = document.getElementById('removeAvatarInput');
 
         if (avatarInput && avatarPreview) {
             avatarInput.addEventListener('change', function () {
@@ -763,10 +1287,21 @@
                     reader.onload = function (e) {
                         avatarPreview.src = e.target.result;
                         avatarPreview.style.display = 'block';
-                        if (fallback) fallback.style.display = 'none';
+                        if (avatarFallback) avatarFallback.style.display = 'none';
+                        if (removeAvatarInput) removeAvatarInput.value = 'false';
                     };
                     reader.readAsDataURL(file);
                 }
+            });
+        }
+
+        if (btnRemoveAvatar) {
+            btnRemoveAvatar.addEventListener('click', function () {
+                if (avatarInput) avatarInput.value = '';
+                if (avatarPreview) avatarPreview.style.display = 'none';
+                if (avatarFallback) avatarFallback.style.display = 'flex';
+                if (removeAvatarInput) removeAvatarInput.value = 'true';
+                showToast('Avatar marked for removal. Click Save Changes to confirm.');
             });
         }
     });

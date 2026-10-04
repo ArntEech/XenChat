@@ -16,6 +16,12 @@
             <h1 class="brand-title">Chats</h1>
         </a>
         <div class="header-actions">
+            <button type="button" class="icon-btn" id="headerNewGroupBtn" title="New Group">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
             <button class="icon-btn" id="searchToggleBtn" title="Search">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8" />
@@ -33,41 +39,10 @@
     </div>
 
     <div class="search-bar-container" id="searchBarContainer" style="display:none; padding: 10px 16px;">
-        <input type="text" id="contactSearchInput" placeholder="Search contacts... (⌘K)" style="width:100%; padding:8px 14px; border-radius:8px; border:1px solid #3c3e44; background:#1e1f22; color:#fff; font-size:14px; outline:none;" />
+        <input type="text" id="contactSearchInput" placeholder="Search contacts... (⌘K)" style="width:100%; padding:8px 14px; border-radius:8px; border:1px solid #33333e; background:#23232a; color:#f4f4f5; font-size:14px; outline:none;" />
     </div>
 
-    <div class="updates-section">
-        <a href="@Url.Action("Updates", "Home")" class="updates-header" style="text-decoration: none; color: inherit;" title="View Updates">
-            <div class="updates-header-icon" style="color: #EE4C49; display: flex; align-items: center;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 8v8M8 12h8" />
-                </svg>
-            </div>
-            <h2 class="section-title">Updates</h2>
-        </a>
-        <div class="updates-carousel">
-            <a href="@Url.Action("AddStatus", "Home")" class="update-item" id="addStatusBtn" style="text-decoration: none; color: inherit; cursor: pointer;" title="Add Status">
-                <div class="add-avatar">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                </div>
-                <span class="update-name">Add</span>
-            </a>
-            @if (statuses != null && statuses.Any())
-            {
-                foreach (var status in statuses)
-                {
-                    <div class="update-item status-item" data-media="@status.MediaUrl" data-user="@status.Username" data-caption="@(status.Caption ?? "")" data-time="@status.CreatedAt.ToString("HH:mm")" style="cursor: pointer;" title="@status.Username">
-                        <img src="@status.MediaUrl" alt="@status.Username" class="avatar-image update-carousel-avatar" style="border: 2px solid #ee4c49;" onerror="this.src='/images/logo.png';" />
-                        <span class="update-name">@status.Username</span>
-                    </div>
-                }
-            }
-        </div>
-    </div>
+
 
     <div class="filter-tabs">
         <button class="filter-pill active" data-filter="chats">
@@ -108,6 +83,7 @@
                         {
                             <div class="avatar-circle chat-avatar-fallback">@user.Initial</div>
                         }
+                        <span class="avatar-online-badge" data-user-id="@user.Id"></span>
                     </div>
                     <div class="chat-info">
                         <div class="chat-info-top">
@@ -158,18 +134,8 @@
         </div>
     </div>
 
-    <!-- Dedicated Group Chats List -->
+    <!-- Dedicated Group Chats List (Aligned with Chat List) -->
     <div class="group-list-container" id="groupListContainer" style="display: none;">
-        <div class="group-list-header">
-            <span>Groups</span>
-            <button type="button" class="btn-new-group" id="btnOpenNewGroupModal">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                + New Group
-            </button>
-        </div>
         <div id="groupList"></div>
     </div>
 </div>
@@ -208,12 +174,21 @@
                 </div>
             </div>
             <div class="conversation-actions">
-                <button type="button" class="icon-btn" title="Group Call">
+                <button type="button" class="favorite-action-btn" style="visibility: hidden; pointer-events: none;" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                </button>
+                <button type="button" class="icon-btn" id="startVoiceCallBtn" title="Start Voice Call">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                     </svg>
                 </button>
-                <a href="@Url.Action("Profile", "Home")" class="icon-btn" title="Group Settings">
+                <button type="button" class="icon-btn" title="Video call (Unavailable)" disabled style="opacity: 0.4; cursor: not-allowed;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="23 7 16 12 23 17 23 7" />
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                    </svg>
+                </button>
+                <a href="@Url.Action("Profile", "Home")" class="icon-btn" title="Settings &amp; Options">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="1" />
                         <circle cx="19" cy="12" r="1" />
@@ -318,23 +293,23 @@
         {
             id: 'group-1',
             name: 'Design Team',
-            members: ['You', 'Alice', 'francis', 'joana', 'caleb_qa_5136', 'arnold_new'],
-            avatarGradient: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
+            members: ['Alice', 'Francis', 'Joana', 'Caleb', 'Arnold', 'You'],
+            avatarColor: '#2563eb',
             initials: 'DT',
-            lastMessage: 'Alice: The new mockups and dark theme specs are ready for review!',
+            lastMessage: 'Alice: The dark theme specs are ready for review!',
             lastTime: '14:25',
             messages: [
                 { sender: 'Alice', content: 'Hey team, please review the latest sprint designs.', time: '14:10', isSelf: false },
-                { sender: 'francis', content: 'Looks super clean! Love the new coral accent.', time: '14:18', isSelf: false },
+                { sender: 'Francis', content: 'Looks super clean! Love the high contrast dark mode.', time: '14:18', isSelf: false },
                 { sender: 'You', content: 'Checking it out right now, great work everyone.', time: '14:22', isSelf: true },
-                { sender: 'Alice', content: 'The new mockups and dark theme specs are ready for review!', time: '14:25', isSelf: false }
+                { sender: 'Alice', content: 'The dark theme specs are ready for review!', time: '14:25', isSelf: false }
             ]
         },
         {
             id: 'group-2',
             name: 'Product Launch Sprint',
-            members: ['You', 'David', 'Sarah', 'arnold_new', 'armanullah'],
-            avatarGradient: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+            members: ['David', 'Sarah', 'Arnold', 'Arman', 'You'],
+            avatarColor: '#059669',
             initials: 'PL',
             lastMessage: 'David: All QA checklists cleared for deployment.',
             lastTime: '13:05',
@@ -347,14 +322,14 @@
         {
             id: 'group-3',
             name: 'Weekend Gamers',
-            members: ['You', 'Sam', 'joana', 'benedict', 'francis'],
-            avatarGradient: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+            members: ['Sam', 'Joana', 'Benedict', 'Francis', 'You'],
+            avatarColor: '#d97706',
             initials: 'WG',
             lastMessage: 'Sam: Anyone up for a raid this Saturday night?',
             lastTime: 'Yesterday',
             messages: [
                 { sender: 'Sam', content: 'Who is free this weekend for some matches?', time: 'Yesterday', isSelf: false },
-                { sender: 'joana', content: 'Count me in for Saturday evening!', time: 'Yesterday', isSelf: false },
+                { sender: 'Joana', content: 'Count me in for Saturday evening!', time: 'Yesterday', isSelf: false },
                 { sender: 'Sam', content: 'Anyone up for a raid this Saturday night?', time: 'Yesterday', isSelf: false }
             ]
         }
@@ -364,6 +339,11 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         renderGroupsList();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('view') === 'groups') {
+            switchToGroupsView();
+        }
     });
 
     function escapeHtml(text) {
@@ -388,7 +368,7 @@
             item.className = `group-item ${activeGroupChatId === group.id ? 'active' : ''}`;
             item.setAttribute('data-group-id', group.id);
             item.innerHTML = `
-                <div class="group-avatar" style="background: ${group.avatarGradient};">
+                <div class="group-avatar" style="background-color: ${group.avatarColor};">
                     ${escapeHtml(group.initials)}
                 </div>
                 <div class="group-info">
@@ -430,11 +410,13 @@
         const status = document.getElementById('groupHeaderStatus');
 
         if (avatar) {
-            avatar.style.background = group.avatarGradient;
+            avatar.style.backgroundColor = group.avatarColor;
             avatar.textContent = group.initials;
         }
         if (title) title.textContent = group.name;
-        if (status) status.textContent = `${group.members.length} members • ${group.members.slice(0, 3).join(', ')}${group.members.length > 3 ? '...' : ''}`;
+        if (status) {
+            status.textContent = `${group.members.length} members • ${group.members.join(', ')}`;
+        }
 
         renderGroupMessages(group);
     }
@@ -497,9 +479,7 @@
 
         const chatList = document.getElementById('chatList');
         const groupListContainer = document.getElementById('groupListContainer');
-        const updatesSection = document.querySelector('.updates-section');
         if (chatList) chatList.style.display = 'none';
-        if (updatesSection) updatesSection.style.display = 'none';
         if (groupListContainer) groupListContainer.style.display = 'flex';
 
         renderGroupsList();
@@ -522,9 +502,7 @@
 
         const chatList = document.getElementById('chatList');
         const groupListContainer = document.getElementById('groupListContainer');
-        const updatesSection = document.querySelector('.updates-section');
         if (chatList) chatList.style.display = 'block';
-        if (updatesSection) updatesSection.style.display = 'flex';
         if (groupListContainer) groupListContainer.style.display = 'none';
 
         const emptySec = document.getElementById('emptyWorkspaceSection');
@@ -538,7 +516,7 @@
 
     // Modal logic
     const createGroupModal = document.getElementById('createGroupModal');
-    const btnOpenNewGroupModal = document.getElementById('btnOpenNewGroupModal');
+    const headerNewGroupBtn = document.getElementById('headerNewGroupBtn');
     const closeCreateGroupBtn = document.getElementById('closeCreateGroupBtn');
     const cancelCreateGroupBtn = document.getElementById('cancelCreateGroupBtn');
     const createGroupForm = document.getElementById('createGroupForm');
@@ -575,7 +553,7 @@
         if (createGroupModal) createGroupModal.style.display = 'none';
     }
 
-    if (btnOpenNewGroupModal) btnOpenNewGroupModal.addEventListener('click', openCreateGroupModal);
+    if (headerNewGroupBtn) headerNewGroupBtn.addEventListener('click', openCreateGroupModal);
     if (closeCreateGroupBtn) closeCreateGroupBtn.addEventListener('click', closeCreateGroupModal);
     if (cancelCreateGroupBtn) cancelCreateGroupBtn.addEventListener('click', closeCreateGroupModal);
     if (createGroupModal) {
@@ -598,20 +576,14 @@
                 ? (words[0][0] + words[1][0]).toUpperCase()
                 : name.substring(0, 2).toUpperCase();
 
-            const palette = [
-                'linear-gradient(135deg, #ec4899, #8b5cf6)',
-                'linear-gradient(135deg, #06b6d4, #3b82f6)',
-                'linear-gradient(135deg, #f59e0b, #ef4444)',
-                'linear-gradient(135deg, #6366f1, #a855f7)',
-                'linear-gradient(135deg, #10b981, #06b6d4)'
-            ];
-            const gradient = palette[sampleGroups.length % palette.length];
+            const palette = ['#2563eb', '#059669', '#e11d48', '#d97706', '#7c3aed'];
+            const color = palette[sampleGroups.length % palette.length];
 
             const newGroup = {
                 id: 'group-' + Date.now(),
                 name: name,
                 members: selectedMembers,
-                avatarGradient: gradient,
+                avatarColor: color,
                 initials: initials,
                 lastMessage: 'Group created. Start messaging!',
                 lastTime: 'Just now',
@@ -622,7 +594,7 @@
 
             sampleGroups.unshift(newGroup);
             closeCreateGroupModal();
-            renderGroupsList();
+            switchToGroupsView();
             selectGroup(newGroup.id);
         });
     }
@@ -761,7 +733,39 @@
         }
     });
 
-    connection.start().catch(err => console.error("SignalR error:", err));
+    connection.on("OnlineUsersList", (onlineIds) => {
+        const onlineSet = new Set(onlineIds.map(Number));
+        document.querySelectorAll('.avatar-online-badge').forEach(badge => {
+            const uid = parseInt(badge.getAttribute('data-user-id'));
+            if (onlineSet.has(uid)) {
+                badge.classList.add('online');
+            } else {
+                badge.classList.remove('online');
+            }
+        });
+    });
+
+    connection.on("UserStatusChanged", (userId, isOnline) => {
+        document.querySelectorAll(`.avatar-online-badge[data-user-id="${userId}"]`).forEach(badge => {
+            if (isOnline) {
+                badge.classList.add('online');
+            } else {
+                badge.classList.remove('online');
+            }
+        });
+    });
+
+    connection.start().then(() => {
+        if (typeof currentUserId !== 'undefined' && currentUserId > 0) {
+            connection.invoke("RegisterUser", currentUserId);
+        }
+    }).catch(err => console.error("SignalR error:", err));
+
+    window.addEventListener('beforeunload', () => {
+        if (connection.state === signalR.HubConnectionState.Connected && typeof currentUserId !== 'undefined' && currentUserId > 0) {
+            connection.invoke("SetUserStatus", currentUserId, false);
+        }
+    });
 
     // Status Upload & Viewer Handlers
 

@@ -19,7 +19,7 @@
                     <div class="sidebar-logo-fallback" style="display: none;">X</div>
                 </a>
                 <div class="sidebar-nav">
-                    <a href="@Url.Action("Index", "Home")" class="nav-icon @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")" id="railChatsBtn" title="Direct Chats">
+                    <a href="@Url.Action("Index", "Home")" class="nav-icon @((ViewContext.RouteData.Values["action"]?.ToString() == "Index" && (ViewContext.RouteData.Values["controller"]?.ToString() == "Home" || ViewContext.RouteData.Values["controller"]?.ToString() == "Chat")) ? "active" : "")" id="railChatsBtn" title="Direct Chats">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
@@ -38,15 +38,10 @@
                             <path d="M12 8v8M8 12h8" />
                         </svg>
                     </a>
-                    <a href="@Url.Action("Profile", "Home")" class="nav-icon @((ViewContext.RouteData.Values["action"]?.ToString() == "Profile" || ViewContext.RouteData.Values["action"]?.ToString() == "Settings") ? "active" : "")" title="Profile &amp; Settings">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                        </svg>
-                    </a>
+
                 </div>
                 <div class="sidebar-bottom">
-                    <a href="@Url.Action("Profile", "Home")" class="user-avatar-small user-profile-link" title="Profile &amp; Settings">
+                    <a href="@Url.Action("Profile", "Home")" class="user-avatar-small user-profile-link @((ViewContext.RouteData.Values["action"]?.ToString() == "Profile" || ViewContext.RouteData.Values["action"]?.ToString() == "Settings") ? "active" : "")" title="Profile &amp; Settings">
                         <div class="user-avatar-circle">@(string.IsNullOrEmpty(Context.Session.GetString("Username")) ? "?" : Context.Session.GetString("Username")!.Substring(0, 1).ToUpper())</div>
                     </a>
                     <a href="@Url.Action("Logout", "Account")" class="nav-icon logout-icon" title="Logout">
