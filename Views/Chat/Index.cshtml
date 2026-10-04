@@ -195,7 +195,7 @@
         {
             @foreach (var message in Model)
             {
-                <div class="message @(message.SenderId == currentUserId ? "sent" : "received")">
+                <div class="message @(message.SenderId == currentUserId ? "sent" : "received")" data-message-id="@message.MessageId">
                     <div class="message-bubble">
                         @if (message.Content.StartsWith("[img]") && message.Content.Contains("[/img]"))
                         {
@@ -216,7 +216,18 @@
                         {
                             <p>@message.Content</p>
                         }
-                        <span class="timestamp">@message.Timestamp.ToString("HH:mm")</span>
+                        <div class="message-meta">
+                            <span class="timestamp">@message.Timestamp.ToString("HH:mm")</span>
+                            @if (message.SenderId == currentUserId)
+                            {
+                                <button type="button" class="delete-msg-btn" title="Delete message" onclick="deleteMessage(@message.MessageId)">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            }
+                        </div>
                     </div>
                 </div>
             }
@@ -354,7 +365,7 @@
         .withUrl("/chatHub", { accessTokenFactory: () => localStorage.getItem("xenchat_token") || "" })
         .build();
 
-    connection.on("ReceiveMessage", (senderId, receiverId, message, senderName, timestamp) => {
+    connection.on("ReceiveMessage", (senderId, receiverId, message, senderName, timestamp, messageId) => {
         // If message is between the currently open conversation
         if ((senderId === currentUserId && receiverId === otherUserId) ||
             (senderId === otherUserId && receiverId === currentUserId)) {
@@ -365,6 +376,9 @@
             const messagesContainer = document.getElementById("messagesContainer");
             const messageDiv = document.createElement("div");
             messageDiv.className = "message " + (senderId === currentUserId ? "sent" : "received");
+            if (messageId) {
+                messageDiv.setAttribute("data-message-id", messageId);
+            }
 
             const bubble = document.createElement("div");
             bubble.className = "message-bubble";
@@ -402,11 +416,30 @@
                 bubble.appendChild(p);
             }
 
+            const meta = document.createElement("div");
+            meta.className = "message-meta";
+
             const span = document.createElement("span");
             span.className = "timestamp";
             span.textContent = timestamp;
+            meta.appendChild(span);
 
-            bubble.appendChild(span);
+            if (senderId === currentUserId && messageId) {
+                const delBtn = document.createElement("button");
+                delBtn.type = "button";
+                delBtn.className = "delete-msg-btn";
+                delBtn.title = "Delete message";
+                delBtn.innerHTML = `
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                `;
+                delBtn.addEventListener("click", () => deleteMessage(messageId));
+                meta.appendChild(delBtn);
+            }
+
+            bubble.appendChild(meta);
             messageDiv.appendChild(bubble);
 
             messagesContainer.appendChild(messageDiv);
@@ -437,6 +470,25 @@
                 }
             }
         });
+    });
+
+    connection.on("MessageDeleted", (messageId, senderId, receiverId) => {
+        if ((senderId === currentUserId && receiverId === otherUserId) ||
+            (senderId === otherUserId && receiverId === currentUserId)) {
+            const msgElem = document.querySelector(`.message[data-message-id="${messageId}"]`);
+            if (msgElem) {
+                msgElem.remove();
+            }
+            const container = document.getElementById("messagesContainer");
+            if (container && container.querySelectorAll(".message").length === 0) {
+                const emptyNotice = document.createElement("div");
+                emptyNotice.id = "emptyNotice";
+                emptyNotice.className = "empty-conversation-notice";
+                emptyNotice.style.cssText = "text-align: center; margin: auto; color: #888;";
+                emptyNotice.innerHTML = "<p>No messages yet. Say hello to @otherUser.Username!</p>";
+                container.appendChild(emptyNotice);
+            }
+        }
     });
 
     connection.start().catch(err => console.error("SignalR connection error:", err));
@@ -473,7 +525,7 @@
 
                 const result = await response.json();
                 if (result.success) {
-                    await connection.invoke("SendMessage", currentUserId, parseInt(receiverId), message, "@currentUser.Username");
+                    await connection.invoke("SendMessage", currentUserId, parseInt(receiverId), message, "@currentUser.Username", result.messageId || 0);
                     messageInput.value = '';
                     messageInput.focus();
                 } else {
@@ -628,7 +680,7 @@
 
                 const data = await res.json();
                 if (data.success) {
-                    await connection.invoke("SendMessage", currentUserId, otherUserId, data.content, "@currentUser.Username");
+                    await connection.invoke("SendMessage", currentUserId, otherUserId, data.content, "@currentUser.Username", data.messageId || 0);
                     closeChatImageModal();
                 } else {
                     alert(data.error || "Failed to send photo");
@@ -642,6 +694,59 @@
             }
         });
     }
+
+    async function deleteMessage(messageId) {
+        if (!messageId) return;
+
+        try {
+            const token = localStorage.getItem("xenchat_token");
+            const headers = {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            };
+            if (token) {
+                headers['Authorization'] = 'Bearer ' + token;
+            }
+
+            const response = await fetch('/Chat/DeleteMessage', {
+                method: 'POST',
+                headers: headers,
+                body: `messageId=${messageId}`
+            });
+
+            if (response.status === 401) {
+                localStorage.removeItem("xenchat_token");
+                window.location.href = '/Account/Login';
+                return;
+            }
+
+            const result = await response.json();
+            if (result.success) {
+                const msgElem = document.querySelector(`.message[data-message-id="${messageId}"]`);
+                if (msgElem) {
+                    msgElem.remove();
+                }
+                const container = document.getElementById("messagesContainer");
+                if (container && container.querySelectorAll(".message").length === 0) {
+                    const emptyNotice = document.createElement("div");
+                    emptyNotice.id = "emptyNotice";
+                    emptyNotice.className = "empty-conversation-notice";
+                    emptyNotice.style.cssText = "text-align: center; margin: auto; color: #888;";
+                    emptyNotice.innerHTML = "<p>No messages yet. Say hello to @otherUser.Username!</p>";
+                    container.appendChild(emptyNotice);
+                }
+
+                if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                    await connection.invoke("DeleteMessage", messageId, currentUserId, otherUserId);
+                }
+            } else {
+                alert(result.error || "Failed to delete message");
+            }
+        } catch (err) {
+            console.error("Error deleting message:", err);
+            alert("An error occurred while deleting the message.");
+        }
+    }
+    window.deleteMessage = deleteMessage;
 
     document.addEventListener('DOMContentLoaded', function() {
         const messagesContainer = document.getElementById('messagesContainer');

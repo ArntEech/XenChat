@@ -59,5 +59,21 @@ namespace XenChat.Services
                 _db.SaveChanges();
             }
         }
+
+        public Message? GetMessageById(int messageId)
+        {
+            return _db.Messages.FirstOrDefault(m => m.MessageId == messageId);
+        }
+
+        public bool DeleteMessage(int messageId, int userId)
+        {
+            var message = _db.Messages.FirstOrDefault(m => m.MessageId == messageId);
+            if (message == null) return false;
+            if (message.SenderId != userId) return false;
+
+            _db.Messages.Remove(message);
+            _db.SaveChanges();
+            return true;
+        }
     }
 }

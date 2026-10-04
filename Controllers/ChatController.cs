@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using XenChat.Data;
 using XenChat.Models;
 using XenChat.Services;
 
@@ -8,11 +9,13 @@ namespace XenChat.Controllers
     {
         private readonly UserService _userService;
         private readonly MessageService _messageService;
+        private readonly XenChatDbContext _db;
 
-        public ChatController(UserService userService, MessageService messageService)
+        public ChatController(UserService userService, MessageService messageService, XenChatDbContext db)
         {
             _userService = userService;
             _messageService = messageService;
+            _db = db;
         }
 
         public IActionResult Index(int userId)
@@ -128,7 +131,7 @@ namespace XenChat.Controllers
 
             _messageService.SendMessage(newMessage);
 
-            return Json(new { success = true, timestamp = newMessage.Timestamp.ToString("HH:mm") });
+            return Json(new { success = true, timestamp = newMessage.Timestamp.ToString("HH:mm"), messageId = newMessage.MessageId });
         }
 
         [HttpPost]
@@ -205,8 +208,52 @@ namespace XenChat.Controllers
                 content = newMessage.Content,
                 imageUrl = $"/images/chat/{fileName}",
                 caption = caption?.Trim(),
-                timestamp = newMessage.Timestamp.ToString("HH:mm")
+                timestamp = newMessage.Timestamp.ToString("HH:mm"),
+                messageId = newMessage.MessageId
             });
+        }
+
+        [HttpPost]
+        public IActionResult DeleteMessage(int messageId)
+        {
+            var senderId = HttpContext.Session.GetInt32("UserId");
+
+            var authHeader = Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                var principal = _userService.ValidateToken(token);
+                if (principal != null)
+                {
+                    var idClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                                  ?? principal.FindFirst("id")?.Value;
+                    if (int.TryParse(idClaim, out int tokenUserId))
+                    {
+                        var tokenUser = _userService.GetUserById(tokenUserId);
+                        if (tokenUser != null)
+                        {
+                            senderId = tokenUserId;
+                            HttpContext.Session.SetInt32("UserId", tokenUser.Id);
+                            HttpContext.Session.SetString("Username", tokenUser.Username);
+                        }
+                    }
+                }
+            }
+
+            if (senderId == null)
+                return Unauthorized(new { success = false, error = "Not logged in" });
+
+            var message = _messageService.GetMessageById(messageId);
+            if (message == null)
+                return Json(new { success = false, error = "Message not found" });
+
+            if (message.SenderId != senderId.Value)
+                return Json(new { success = false, error = "Only the sender can delete their own message" });
+
+            var receiverId = message.ReceiverId;
+            var deleted = _messageService.DeleteMessage(messageId, senderId.Value);
+
+            return Json(new { success = deleted, messageId = messageId, receiverId = receiverId });
         }
     }
 }

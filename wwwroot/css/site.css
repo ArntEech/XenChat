@@ -663,8 +663,37 @@ body {
 .timestamp {
     font-size: 11px;
     color: rgba(255, 255, 255, 0.6);
-    display: block;
+    display: inline-block;
     text-align: right;
+}
+
+.message-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.delete-msg-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+    color: rgba(255, 255, 255, 0.55);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease;
+    opacity: 0.65;
+    line-height: 1;
+}
+
+.delete-msg-btn:hover {
+    color: #ff6b6b;
+    background-color: rgba(255, 255, 255, 0.15);
+    opacity: 1;
 }
 
 /* ============================================================

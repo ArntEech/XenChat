@@ -78,6 +78,14 @@ using (var scope = app.Services.CreateScope())
                 ""CreatedAt"" TEXT NOT NULL
             );
         ");
+
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS ""Favorites"" (
+                ""Id"" INTEGER PRIMARY KEY AUTOINCREMENT,
+                ""UserId"" INTEGER NOT NULL,
+                ""FavoriteUserId"" INTEGER NOT NULL
+            );
+        ");
     }
     catch (Exception ex)
     {
