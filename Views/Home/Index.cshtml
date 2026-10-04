@@ -7,6 +7,7 @@
     var lastMessages = ViewBag.LastMessages as Dictionary<int, string>;
     var lastMessageTimes = ViewBag.LastMessageTimes as Dictionary<int, string>;
     var statuses = ViewBag.Statuses as List<XenChat.Models.Status> ?? new List<XenChat.Models.Status>();
+    var favoriteUserIds = ViewBag.FavoriteUserIds as HashSet<int> ?? new HashSet<int>();
 }
 
 <div class="chat-list-panel chat-list-view">
@@ -81,7 +82,7 @@
         </button>
         <button class="filter-pill" data-filter="groups" disabled title="Groups (Unavailable)" style="opacity: 0.45; cursor: not-allowed;">Groups</button>
         <button class="filter-pill" data-filter="unread">Unread</button>
-        <button class="filter-pill" data-filter="favorites" disabled title="Favorites (Unavailable)" style="opacity: 0.45; cursor: not-allowed;">Favorites</button>
+        <button class="filter-pill" data-filter="favorites" id="favFilterBtn">Favorites <span class="badge" id="favBadge">@favoriteUserIds.Count</span></button>
     </div>
 
     <div class="chat-list" id="chatList">
@@ -89,7 +90,7 @@
         {
             @foreach (var user in Model)
             {
-                <a href="@Url.Action("Index", "Chat", new { userId = user.Id })" class="chat-item" data-username="@user.Username.ToLower()">
+                <a href="@Url.Action("Index", "Chat", new { userId = user.Id })" class="chat-item" data-username="@user.Username.ToLower()" data-user-id="@user.Id" data-favorite="@(favoriteUserIds.Contains(user.Id) ? "true" : "false")">
                     <img src="@user.AvatarPath" alt="@user.Username" class="avatar-image chat-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                     <div class="avatar-circle chat-avatar-fallback" style="display: none;">@user.Initial</div>
                     <div class="chat-info">
@@ -207,8 +208,10 @@
             let matchesFilter = true;
             if (currentFilter === 'unread') {
                 matchesFilter = hasUnread;
-            } else if (currentFilter === 'groups' || currentFilter === 'favorites') {
-                matchesFilter = false; // Groups and Favorites empty in this version
+            } else if (currentFilter === 'favorites') {
+                matchesFilter = (item.getAttribute('data-favorite') === 'true');
+            } else if (currentFilter === 'groups') {
+                matchesFilter = false;
             }
 
             const matchesSearch = !query || username.includes(query);
@@ -224,6 +227,10 @@
         const noResults = document.getElementById('noResultsState');
         if (noResults) {
             noResults.style.display = (visibleCount === 0) ? 'block' : 'none';
+            const p = noResults.querySelector('p');
+            if (p) {
+                p.textContent = (currentFilter === 'favorites') ? 'No favorite contacts yet.' : 'No matching conversations found.';
+            }
         }
     }
 
@@ -231,6 +238,16 @@
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/chatHub")
         .build();
+
+    connection.on("IncomingCall", (callerId, targetUserId, callerName) => {
+        if (targetUserId === currentUserId) {
+            if (confirm("Incoming voice call from " + callerName + ". Open conversation to answer?")) {
+                window.location.href = '/Chat?userId=' + callerId;
+            } else {
+                connection.invoke("AnswerCall", currentUserId, callerId, false);
+            }
+        }
+    });
 
     connection.on("ReceiveMessage", (senderId, receiverId, message, senderName, timestamp) => {
         if (senderId === currentUserId || receiverId === currentUserId) {

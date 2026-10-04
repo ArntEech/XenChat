@@ -69,6 +69,13 @@ namespace XenChat.Controllers
             ViewBag.LastMessageTimes = lastMessageTimes;
             ViewBag.UnreadCounts = unreadCounts;
 
+            var favoriteUserIds = _db.Favorites
+                .Where(f => f.UserId == currentUserId.Value)
+                .Select(f => f.FavoriteUserId)
+                .ToHashSet();
+            ViewBag.FavoriteUserIds = favoriteUserIds;
+            ViewBag.IsFavorite = favoriteUserIds.Contains(userId);
+
             ViewData["AllUsers"] = allUsers;
 
             return View(messages);
@@ -254,6 +261,66 @@ namespace XenChat.Controllers
             var deleted = _messageService.DeleteMessage(messageId, senderId.Value);
 
             return Json(new { success = deleted, messageId = messageId, receiverId = receiverId });
+        }
+
+        [HttpPost]
+        public IActionResult ToggleFavorite(int targetUserId)
+        {
+            var senderId = HttpContext.Session.GetInt32("UserId");
+
+            var authHeader = Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                var principal = _userService.ValidateToken(token);
+                if (principal != null)
+                {
+                    var idClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                                  ?? principal.FindFirst("id")?.Value;
+                    if (int.TryParse(idClaim, out int tokenUserId))
+                    {
+                        var tokenUser = _userService.GetUserById(tokenUserId);
+                        if (tokenUser != null)
+                        {
+                            senderId = tokenUserId;
+                            HttpContext.Session.SetInt32("UserId", tokenUser.Id);
+                            HttpContext.Session.SetString("Username", tokenUser.Username);
+                        }
+                    }
+                }
+            }
+
+            if (senderId == null)
+                return Unauthorized(new { success = false, error = "Not logged in" });
+
+            if (senderId.Value == targetUserId)
+                return Json(new { success = false, error = "Cannot favorite yourself" });
+
+            var targetUser = _userService.GetUserById(targetUserId);
+            if (targetUser == null)
+                return Json(new { success = false, error = "User not found" });
+
+            var existing = _db.Favorites.FirstOrDefault(f => f.UserId == senderId.Value && f.FavoriteUserId == targetUserId);
+            bool isFavorite;
+            if (existing != null)
+            {
+                _db.Favorites.Remove(existing);
+                isFavorite = false;
+            }
+            else
+            {
+                _db.Favorites.Add(new Favorite
+                {
+                    UserId = senderId.Value,
+                    FavoriteUserId = targetUserId
+                });
+                isFavorite = true;
+            }
+
+            _db.SaveChanges();
+
+            var count = _db.Favorites.Count(f => f.UserId == senderId.Value);
+            return Json(new { success = true, isFavorite, count });
         }
     }
 }

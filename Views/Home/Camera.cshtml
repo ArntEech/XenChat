@@ -2,10 +2,23 @@
     ViewData["Title"] = "Camera";
 }
 
-<div class="placeholder-page" style="padding: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #fff;">
-    <h2 style="margin-bottom: 20px;">Camera</h2>
-    <div class="camera-container" style="position: relative; width: 100%; max-width: 640px; aspect-ratio: 4/3; background: #1a1b1e; border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid #333;">
+<div class="placeholder-page" style="padding: 32px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100%; color: #fff; max-width: 720px; margin: 0 auto; width: 100%;">
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <a href="@Url.Action("Index", "Home")" class="chat-back-btn" title="Back to chats">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </a>
+            <h2 style="font-size: 24px; font-weight: 600; margin: 0;">Camera</h2>
+        </div>
+        <a href="@Url.Action("AddStatus", "Home")" style="color: #ee4c49; font-size: 14px; text-decoration: none; font-weight: 500;">Add Status</a>
+    </div>
+
+    <div class="camera-container" style="position: relative; width: 100%; aspect-ratio: 4/3; max-height: 480px; background: #1a1b1e; border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid #333;">
         <video id="cameraVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+        <img id="capturedPhoto" style="display: none; width: 100%; height: 100%; object-fit: cover;" alt="Captured Photo" />
         <div id="cameraFallback" style="display: none; flex-direction: column; align-items: center; gap: 12px; color: #888; padding: 20px; text-align: center;">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
@@ -15,43 +28,80 @@
             <button type="button" id="startCameraBtn" class="primary-button" style="padding: 8px 16px; font-size: 14px;">Try Again</button>
         </div>
     </div>
-    <div style="margin-top: 20px;">
-        <button type="button" id="captureBtn" class="primary-button" style="display: none; padding: 10px 24px;">Capture Photo</button>
+
+    <div style="margin-top: 24px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center;">
+        <button type="button" id="captureBtn" class="primary-button" style="display: none; padding: 10px 28px; font-size: 14px; border-radius: 24px;">Capture Photo</button>
+        <button type="button" id="retakeBtn" style="display: none; padding: 10px 24px; font-size: 14px; background: #333; color: #fff; border-radius: 24px; border: 1px solid #555; cursor: pointer;">Retake</button>
+        <a href="@Url.Action("AddStatus", "Home")" id="useAsStatusBtn" class="primary-button" style="display: none; padding: 10px 24px; font-size: 14px; text-decoration: none; border-radius: 24px; align-items: center; justify-content: center;">Share as Status</a>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const video = document.getElementById('cameraVideo');
+        const capturedPhoto = document.getElementById('capturedPhoto');
         const fallback = document.getElementById('cameraFallback');
         const statusText = document.getElementById('cameraStatusText');
         const startBtn = document.getElementById('startCameraBtn');
         const captureBtn = document.getElementById('captureBtn');
+        const retakeBtn = document.getElementById('retakeBtn');
+        const useAsStatusBtn = document.getElementById('useAsStatusBtn');
+        let currentStream = null;
 
         async function initCamera() {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 video.style.display = 'none';
+                capturedPhoto.style.display = 'none';
                 fallback.style.display = 'flex';
                 statusText.textContent = "Your browser does not support camera access.";
                 return;
             }
 
             try {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(t => t.stop());
+                }
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                currentStream = stream;
                 video.srcObject = stream;
                 video.style.display = 'block';
+                capturedPhoto.style.display = 'none';
                 fallback.style.display = 'none';
                 captureBtn.style.display = 'inline-block';
+                retakeBtn.style.display = 'none';
+                useAsStatusBtn.style.display = 'none';
             } catch (err) {
                 video.style.display = 'none';
+                capturedPhoto.style.display = 'none';
                 fallback.style.display = 'flex';
                 statusText.textContent = "Camera permission denied or camera device not connected.";
             }
         }
 
         startBtn.addEventListener('click', initCamera);
+
         captureBtn.addEventListener('click', function () {
-            alert('Photo captured!');
+            if (video && video.videoWidth > 0 && video.videoHeight > 0) {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                capturedPhoto.src = canvas.toDataURL('image/png');
+                capturedPhoto.style.display = 'block';
+                video.style.display = 'none';
+                captureBtn.style.display = 'none';
+                retakeBtn.style.display = 'inline-block';
+                useAsStatusBtn.style.display = 'inline-flex';
+            }
+        });
+
+        retakeBtn.addEventListener('click', function () {
+            capturedPhoto.style.display = 'none';
+            video.style.display = 'block';
+            captureBtn.style.display = 'inline-block';
+            retakeBtn.style.display = 'none';
+            useAsStatusBtn.style.display = 'none';
         });
 
         initCamera();

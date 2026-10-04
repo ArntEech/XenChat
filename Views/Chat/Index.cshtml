@@ -8,6 +8,8 @@
     var lastMessages = ViewBag.LastMessages as Dictionary<int, string>;
     var lastMessageTimes = ViewBag.LastMessageTimes as Dictionary<int, string>;
     var unreadCounts = ViewBag.UnreadCounts as Dictionary<int, int>;
+    var isFavorite = (ViewBag.IsFavorite as bool?) ?? false;
+    var favoriteUserIds = ViewBag.FavoriteUserIds as HashSet<int> ?? new HashSet<int>();
 }
 
 <div class="chat-list-panel chat-conversation-view">
@@ -50,7 +52,7 @@
             <h2 class="section-title">Updates</h2>
         </a>
         <div class="updates-carousel">
-            <a href="@Url.Action("Index", "Home")" class="update-item" style="text-decoration:none; color:inherit;" title="Add Status">
+            <a href="@Url.Action("AddStatus", "Home")" class="update-item" style="text-decoration:none; color:inherit;" title="Add Status">
                 <div class="add-avatar">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19" />
@@ -83,7 +85,7 @@
         </button>
         <button class="filter-pill" data-filter="groups" disabled title="Groups (Unavailable)" style="opacity: 0.45; cursor: not-allowed;">Groups</button>
         <button class="filter-pill" data-filter="unread">Unread</button>
-        <button class="filter-pill" data-filter="favorites" disabled title="Favorites (Unavailable)" style="opacity: 0.45; cursor: not-allowed;">Favorites</button>
+        <button class="filter-pill" data-filter="favorites" id="favFilterBtn">Favorites <span class="badge" id="favBadge">@favoriteUserIds.Count</span></button>
     </div>
 
     <div class="chat-list" id="chatList">
@@ -93,7 +95,9 @@
             {
                 <a href="@Url.Action("Index", "Chat", new { userId = user.Id })"
                        class="chat-item @(user.Id == otherUser.Id ? "active" : "")"
-                       data-username="@user.Username.ToLower()">
+                       data-username="@user.Username.ToLower()"
+                       data-user-id="@user.Id"
+                       data-favorite="@(favoriteUserIds.Contains(user.Id) ? "true" : "false")">
                     <img src="@user.AvatarPath" alt="@user.Username" class="avatar-image chat-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                     <div class="avatar-circle chat-avatar-fallback" style="display: none;">@user.Initial</div>
                     <div class="chat-info">
@@ -163,7 +167,13 @@
             </div>
         </div>
         <div class="conversation-actions">
-            <button class="icon-btn" title="Voice call (Unavailable)" disabled style="opacity: 0.4; cursor: not-allowed;">
+            <button type="button" class="favorite-action-btn @(isFavorite ? "active" : "")" id="toggleFavoriteBtn" title="@(isFavorite ? "Remove from Favorites" : "Add to Favorites")" data-target-id="@otherUser.Id">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="@(isFavorite ? "#ee4c49" : "none")" stroke="@(isFavorite ? "#ee4c49" : "currentColor")" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <span id="favBtnText">@(isFavorite ? "Remove from Favorites" : "Add to Favorites")</span>
+            </button>
+            <button type="button" class="icon-btn" id="startVoiceCallBtn" title="Start Voice Call">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                 </svg>
@@ -288,6 +298,60 @@
     </div>
 </div>
 
+<!-- Remote Audio Element for WebRTC -->
+<audio id="remoteAudio" autoplay playsinline></audio>
+
+<!-- Incoming Call Modal -->
+<div id="incomingCallModal" class="call-modal-overlay" style="display: none;">
+    <div class="call-modal-card">
+        <div class="call-avatar" id="incomingCallAvatar">?</div>
+        <h3 class="call-user-name" id="incomingCallerName">Caller</h3>
+        <p class="call-status-label">Incoming voice call...</p>
+        <div class="call-actions-row">
+            <button type="button" class="call-btn call-btn-accept" id="btnAcceptCall">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                </svg>
+                Accept
+            </button>
+            <button type="button" class="call-btn call-btn-decline" id="btnDeclineCall">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                Decline
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Active / Outgoing Call Screen Modal -->
+<div id="activeCallModal" class="call-modal-overlay" style="display: none;">
+    <div class="call-modal-card">
+        <div class="call-avatar" id="activeCallAvatar">@otherUser.Initial</div>
+        <h3 class="call-user-name" id="activeCallUserName">@otherUser.Username</h3>
+        <p class="call-status-label" id="activeCallStatus">Calling...</p>
+        <div class="call-actions-row">
+            <button type="button" class="call-btn call-btn-mute" id="btnMuteCall">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+                <span id="muteBtnLabel">Mute</span>
+            </button>
+            <button type="button" class="call-btn call-btn-end" id="btnEndCall">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+                End Call
+            </button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script>
     const currentUserId = @currentUserId;
@@ -340,7 +404,9 @@
             let matchesFilter = true;
             if (currentFilter === 'unread') {
                 matchesFilter = hasUnread;
-            } else if (currentFilter === 'groups' || currentFilter === 'favorites') {
+            } else if (currentFilter === 'favorites') {
+                matchesFilter = (item.getAttribute('data-favorite') === 'true');
+            } else if (currentFilter === 'groups') {
                 matchesFilter = false;
             }
 
@@ -357,6 +423,10 @@
         const noResults = document.getElementById('noResultsState');
         if (noResults) {
             noResults.style.display = (visibleCount === 0) ? 'block' : 'none';
+            const p = noResults.querySelector('p');
+            if (p) {
+                p.textContent = (currentFilter === 'favorites') ? 'No favorite contacts yet.' : 'No matching conversations found.';
+            }
         }
     }
 
@@ -747,6 +817,330 @@
         }
     }
     window.deleteMessage = deleteMessage;
+
+    // Toggle Favorite button
+    const favBtn = document.getElementById('toggleFavoriteBtn');
+    if (favBtn) {
+        favBtn.addEventListener('click', async function () {
+            const targetId = this.getAttribute('data-target-id');
+            if (!targetId) return;
+
+            try {
+                const token = localStorage.getItem('xenchat_token');
+                const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                const res = await fetch('/Chat/ToggleFavorite', {
+                    method: 'POST',
+                    headers: headers,
+                    body: 'targetUserId=' + targetId
+                });
+
+                if (res.status === 401) {
+                    localStorage.removeItem('xenchat_token');
+                    window.location.href = '/Account/Login';
+                    return;
+                }
+
+                const data = await res.json();
+                if (data.success) {
+                    const isFav = data.isFavorite;
+                    const svg = this.querySelector('svg');
+                    const textSpan = document.getElementById('favBtnText');
+                    if (isFav) {
+                        this.classList.add('active');
+                        this.title = 'Remove from Favorites';
+                        if (textSpan) textSpan.textContent = 'Remove from Favorites';
+                        if (svg) {
+                            svg.setAttribute('fill', '#ee4c49');
+                            svg.setAttribute('stroke', '#ee4c49');
+                        }
+                    } else {
+                        this.classList.remove('active');
+                        this.title = 'Add to Favorites';
+                        if (textSpan) textSpan.textContent = 'Add to Favorites';
+                        if (svg) {
+                            svg.setAttribute('fill', 'none');
+                            svg.setAttribute('stroke', 'currentColor');
+                        }
+                    }
+
+                    // Update sidebar item
+                    const sidebarItem = document.querySelector(`.chat-item[data-user-id="${targetId}"]`);
+                    if (sidebarItem) {
+                        sidebarItem.setAttribute('data-favorite', isFav ? 'true' : 'false');
+                    }
+
+                    // Update badge count
+                    const badge = document.getElementById('favBadge');
+                    if (badge) {
+                        badge.textContent = data.count;
+                    }
+
+                    // Re-apply filters if currently on favorites tab
+                    if (currentFilter === 'favorites') {
+                        applyFilters();
+                    }
+                } else {
+                    alert(data.error || 'Failed to update favorite');
+                }
+            } catch (err) {
+                console.error('Error toggling favorite:', err);
+            }
+        });
+    }
+
+    // ============================================================
+    // WebRTC Voice Call Logic
+    // ============================================================
+    let peerConnection = null;
+    let localStream = null;
+    let isCallInitiator = false;
+    let activeCallPartnerId = null;
+    let pendingCallerId = null;
+
+    const rtcConfig = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+        ]
+    };
+
+    const startVoiceCallBtn = document.getElementById('startVoiceCallBtn');
+    const incomingCallModal = document.getElementById('incomingCallModal');
+    const incomingCallerName = document.getElementById('incomingCallerName');
+    const incomingCallAvatar = document.getElementById('incomingCallAvatar');
+    const btnAcceptCall = document.getElementById('btnAcceptCall');
+    const btnDeclineCall = document.getElementById('btnDeclineCall');
+
+    const activeCallModal = document.getElementById('activeCallModal');
+    const activeCallUserName = document.getElementById('activeCallUserName');
+    const activeCallStatus = document.getElementById('activeCallStatus');
+    const btnMuteCall = document.getElementById('btnMuteCall');
+    const muteBtnLabel = document.getElementById('muteBtnLabel');
+    const btnEndCall = document.getElementById('btnEndCall');
+    const remoteAudio = document.getElementById('remoteAudio');
+
+    function resetCallState() {
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
+        }
+        if (peerConnection) {
+            peerConnection.close();
+            peerConnection = null;
+        }
+        if (remoteAudio) {
+            remoteAudio.srcObject = null;
+        }
+        if (activeCallModal) activeCallModal.style.display = 'none';
+        if (incomingCallModal) incomingCallModal.style.display = 'none';
+        if (btnMuteCall) {
+            btnMuteCall.classList.remove('muted');
+            if (muteBtnLabel) muteBtnLabel.textContent = 'Mute';
+        }
+        activeCallPartnerId = null;
+        pendingCallerId = null;
+        isCallInitiator = false;
+    }
+
+    async function createPeerConnection(partnerId) {
+        peerConnection = new RTCPeerConnection(rtcConfig);
+
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate && connection.state === signalR.HubConnectionState.Connected) {
+                connection.invoke("SendIceCandidate", currentUserId, partnerId, JSON.stringify(event.candidate));
+            }
+        };
+
+        peerConnection.ontrack = (event) => {
+            if (remoteAudio && event.streams && event.streams[0]) {
+                remoteAudio.srcObject = event.streams[0];
+            }
+            if (activeCallStatus) activeCallStatus.textContent = 'Connected (Audio)';
+        };
+
+        peerConnection.oniceconnectionstatechange = () => {
+            if (peerConnection) {
+                if (peerConnection.iceConnectionState === 'disconnected' || peerConnection.iceConnectionState === 'failed') {
+                    if (activeCallStatus) activeCallStatus.textContent = 'Connection ' + peerConnection.iceConnectionState;
+                }
+            }
+        };
+
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        localStream.getTracks().forEach(track => {
+            peerConnection.addTrack(track, localStream);
+        });
+
+        return peerConnection;
+    }
+
+    // Click Start Voice Call
+    if (startVoiceCallBtn) {
+        startVoiceCallBtn.addEventListener('click', async () => {
+            activeCallPartnerId = otherUserId;
+            isCallInitiator = true;
+
+            activeCallModal.style.display = 'flex';
+            activeCallUserName.textContent = "@otherUser.Username";
+            activeCallStatus.textContent = "Calling @otherUser.Username...";
+
+            if (connection.state === signalR.HubConnectionState.Connected) {
+                await connection.invoke("CallUser", currentUserId, otherUserId, "@currentUser.Username");
+            }
+        });
+    }
+
+    // SignalR: Incoming Call
+    connection.on("IncomingCall", (callerId, targetUserId, callerName) => {
+        if (targetUserId === currentUserId) {
+            pendingCallerId = callerId;
+            incomingCallerName.textContent = callerName;
+            if (incomingCallAvatar) incomingCallAvatar.textContent = callerName.charAt(0).toUpperCase();
+            incomingCallModal.style.display = 'flex';
+        }
+    });
+
+    // Accept Call
+    if (btnAcceptCall) {
+        btnAcceptCall.addEventListener('click', async () => {
+            incomingCallModal.style.display = 'none';
+            const callerId = pendingCallerId;
+            activeCallPartnerId = callerId;
+
+            activeCallModal.style.display = 'flex';
+            activeCallUserName.textContent = incomingCallerName.textContent;
+            activeCallStatus.textContent = "Connecting audio...";
+
+            try {
+                await createPeerConnection(callerId);
+                if (connection.state === signalR.HubConnectionState.Connected) {
+                    await connection.invoke("AnswerCall", currentUserId, callerId, true);
+                }
+            } catch (err) {
+                console.error("Microphone access or WebRTC error:", err);
+                activeCallStatus.textContent = "Microphone error: " + err.message;
+                setTimeout(resetCallState, 3000);
+            }
+        });
+    }
+
+    // Decline Call
+    if (btnDeclineCall) {
+        btnDeclineCall.addEventListener('click', async () => {
+            incomingCallModal.style.display = 'none';
+            if (pendingCallerId && connection.state === signalR.HubConnectionState.Connected) {
+                await connection.invoke("AnswerCall", currentUserId, pendingCallerId, false);
+            }
+            pendingCallerId = null;
+        });
+    }
+
+    // SignalR: Call Answered
+    connection.on("CallAnswered", async (answeringUserId, targetUserId, accepted) => {
+        if (targetUserId === currentUserId && isCallInitiator) {
+            if (!accepted) {
+                activeCallStatus.textContent = "Call declined";
+                setTimeout(resetCallState, 2000);
+            } else {
+                activeCallStatus.textContent = "Connecting audio...";
+                try {
+                    await createPeerConnection(answeringUserId);
+                    const offer = await peerConnection.createOffer();
+                    await peerConnection.setLocalDescription(offer);
+
+                    if (connection.state === signalR.HubConnectionState.Connected) {
+                        await connection.invoke("SendCallOffer", currentUserId, answeringUserId, JSON.stringify(offer));
+                    }
+                } catch (err) {
+                    console.error("WebRTC Offer error:", err);
+                    activeCallStatus.textContent = "Connection error: " + err.message;
+                    setTimeout(resetCallState, 3000);
+                }
+            }
+        }
+    });
+
+    // SignalR: Receive Call Offer
+    connection.on("ReceiveCallOffer", async (senderId, receiverId, sdpJson) => {
+        if (receiverId === currentUserId && peerConnection) {
+            try {
+                const offer = JSON.parse(sdpJson);
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+
+                if (connection.state === signalR.HubConnectionState.Connected) {
+                    await connection.invoke("SendCallAnswer", currentUserId, senderId, JSON.stringify(answer));
+                }
+            } catch (err) {
+                console.error("Error answering WebRTC offer:", err);
+            }
+        }
+    });
+
+    // SignalR: Receive Call Answer
+    connection.on("ReceiveCallAnswer", async (senderId, receiverId, sdpJson) => {
+        if (receiverId === currentUserId && peerConnection) {
+            try {
+                const answer = JSON.parse(sdpJson);
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+            } catch (err) {
+                console.error("Error setting remote answer:", err);
+            }
+        }
+    });
+
+    // SignalR: Receive ICE Candidate
+    connection.on("ReceiveIceCandidate", async (senderId, receiverId, candidateJson) => {
+        if (receiverId === currentUserId && peerConnection) {
+            try {
+                const candidate = JSON.parse(candidateJson);
+                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (err) {
+                console.error("Error adding ICE candidate:", err);
+            }
+        }
+    });
+
+    // SignalR: Call Ended
+    connection.on("CallEnded", (senderId, receiverId) => {
+        if ((senderId === currentUserId && receiverId === activeCallPartnerId) ||
+            (senderId === activeCallPartnerId && receiverId === currentUserId)) {
+            resetCallState();
+        }
+    });
+
+    // Click End Call
+    if (btnEndCall) {
+        btnEndCall.addEventListener('click', async () => {
+            if (activeCallPartnerId && connection.state === signalR.HubConnectionState.Connected) {
+                await connection.invoke("EndCall", currentUserId, activeCallPartnerId);
+            }
+            resetCallState();
+        });
+    }
+
+    // Click Mute
+    if (btnMuteCall) {
+        btnMuteCall.addEventListener('click', () => {
+            if (localStream) {
+                const audioTracks = localStream.getAudioTracks();
+                if (audioTracks.length > 0) {
+                    const isMuted = !audioTracks[0].enabled;
+                    audioTracks[0].enabled = isMuted; // Toggle enabled
+                    if (!audioTracks[0].enabled) {
+                        btnMuteCall.classList.add('muted');
+                        if (muteBtnLabel) muteBtnLabel.textContent = 'Unmute';
+                    } else {
+                        btnMuteCall.classList.remove('muted');
+                        if (muteBtnLabel) muteBtnLabel.textContent = 'Mute';
+                    }
+                }
+            }
+        });
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         const messagesContainer = document.getElementById('messagesContainer');
