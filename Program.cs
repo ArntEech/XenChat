@@ -4,6 +4,9 @@ using XenChat.Data;
 using XenChat.Hubs;
 using XenChat.Services;
 
+// Enable legacy timestamp behavior for Npgsql to seamlessly handle DateTime across PostgreSQL models
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 // 1. Load .env file into environment variables
 var envFile = Path.Combine(Directory.GetCurrentDirectory(), ".env");
 if (File.Exists(envFile))
@@ -61,45 +64,20 @@ static string ConvertPostgreSqlUrl(string raw)
     return raw;
 }
 
-// 2. Resolve Database Connection String (Prioritize .env DATABASE_URL)
+// 2. Resolve Database Connection String (Strictly from .env DATABASE_URL)
 var envDbUrl = Environment.GetEnvironmentVariable("DATABASE_URL")
     ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-bool isPostgreSql = !string.IsNullOrWhiteSpace(envDbUrl) &&
-    (envDbUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
-     envDbUrl.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase) ||
-     envDbUrl.Contains("Host=", StringComparison.OrdinalIgnoreCase));
-
-if (isPostgreSql)
+if (string.IsNullOrWhiteSpace(envDbUrl))
 {
-    var pgConnectionString = ConvertPostgreSqlUrl(envDbUrl!);
-    Console.WriteLine("[Database] Using PostgreSQL database from .env.");
-    builder.Services.AddDbContext<XenChatDbContext>(options =>
-        options.UseNpgsql(pgConnectionString));
+    throw new InvalidOperationException("DATABASE_URL environment variable is not configured. XenChat requires PostgreSQL from the .env file.");
 }
-else
-{
-    var connectionString = envDbUrl ?? "Data Source=Data/xenchat.db";
-    if (connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
-    {
-        var rawPath = connectionString.Substring("Data Source=".Length).Trim();
-        if (!Path.IsPathRooted(rawPath))
-        {
-            var absolutePath = Path.Combine(builder.Environment.ContentRootPath, rawPath.Replace('/', Path.DirectorySeparatorChar));
-            var dir = Path.GetDirectoryName(absolutePath);
-            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-            connectionString = $"Data Source={absolutePath}";
-        }
-    }
 
-    Console.WriteLine("[Database] Using SQLite fallback.");
-    builder.Services.AddDbContext<XenChatDbContext>(options =>
-        options.UseSqlite(connectionString));
-}
+var pgConnectionString = ConvertPostgreSqlUrl(envDbUrl);
+Console.WriteLine("[Database] Strictly using PostgreSQL from .env DATABASE_URL.");
+builder.Services.AddDbContext<XenChatDbContext>(options =>
+    options.UseNpgsql(pgConnectionString));
 
 // Services
 builder.Services.AddScoped<UserService>();
@@ -125,31 +103,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<XenChatDbContext>();
     try
     {
-        db.Database.EnsureCreated(); // Creates tables and seeds initial users if missing
-
-        if (db.Database.IsSqlite())
-        {
-            // SQLite-specific table creation for legacy databases
-            db.Database.ExecuteSqlRaw(@"
-                CREATE TABLE IF NOT EXISTS ""Statuses"" (
-                    ""Id"" INTEGER PRIMARY KEY AUTOINCREMENT,
-                    ""UserId"" INTEGER NOT NULL,
-                    ""Username"" TEXT NOT NULL,
-                    ""UserAvatar"" TEXT NULL,
-                    ""MediaUrl"" TEXT NOT NULL,
-                    ""Caption"" TEXT NULL,
-                    ""CreatedAt"" TEXT NOT NULL
-                );
-            ");
-
-            db.Database.ExecuteSqlRaw(@"
-                CREATE TABLE IF NOT EXISTS ""Favorites"" (
-                    ""Id"" INTEGER PRIMARY KEY AUTOINCREMENT,
-                    ""UserId"" INTEGER NOT NULL,
-                    ""FavoriteUserId"" INTEGER NOT NULL
-                );
-            ");
-        }
+        db.Database.EnsureCreated(); // Creates tables and seeds initial users in PostgreSQL if missing
 
         Console.WriteLine($"[Database] Successfully connected: {db.Database.ProviderName}");
         Console.WriteLine($"[Database] Users in DB: {db.Users.Count()}");
