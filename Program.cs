@@ -6,8 +6,24 @@ using XenChat.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=Data/xenchat.db";
+if (connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
+{
+    var rawPath = connectionString.Substring("Data Source=".Length).Trim();
+    if (!Path.IsPathRooted(rawPath))
+    {
+        var absolutePath = Path.Combine(builder.Environment.ContentRootPath, rawPath.Replace('/', Path.DirectorySeparatorChar));
+        var dir = Path.GetDirectoryName(absolutePath);
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
+        connectionString = $"Data Source={absolutePath}";
+    }
+}
+
 builder.Services.AddDbContext<XenChatDbContext>(options =>
-    options.UseSqlite("Data Source=Data/xenchat.db"));
+    options.UseSqlite(connectionString));
 
 // Services
 builder.Services.AddScoped<UserService>();

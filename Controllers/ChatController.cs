@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using XenChat.Models;
 using XenChat.Services;
 
@@ -21,12 +21,24 @@ namespace XenChat.Controllers
             if (currentUserId == null)
                 return RedirectToAction("Login", "Account");
 
+            if (userId == currentUserId.Value)
+                return RedirectToAction("Index", "Home");
+
+            var currentUser = _userService.GetUserById(currentUserId.Value);
+            if (currentUser == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Account");
+            }
+
             var otherUser = _userService.GetUserById(userId);
             if (otherUser == null)
                 return RedirectToAction("Index", "Home");
 
+            // Mark incoming messages from otherUser as read
+            _messageService.MarkConversationAsRead(userId, currentUserId.Value);
+
             var messages = _messageService.GetConversation(currentUserId.Value, userId);
-            var currentUser = _userService.GetUserById(currentUserId.Value);
             var allUsers = _userService.GetAllUsers().Where(u => u.Id != currentUserId.Value).ToList();
 
             ViewBag.CurrentUserId = currentUserId.Value;
@@ -45,7 +57,8 @@ namespace XenChat.Controllers
                 lastMessages[user.Id] = lastMessage?.Content ?? "No messages yet";
                 lastMessageTimes[user.Id] = lastMessage?.Timestamp.ToString("HH:mm") ?? "";
 
-                var unreadCount = userMessages.Count(m => m.SenderId == user.Id && m.ReceiverId == currentUserId.Value);
+                // Only count unread messages sent by this user to current user
+                var unreadCount = userMessages.Count(m => m.SenderId == user.Id && m.ReceiverId == currentUserId.Value && !m.IsRead);
                 unreadCounts[user.Id] = unreadCount;
             }
 
@@ -65,21 +78,26 @@ namespace XenChat.Controllers
             if (senderId == null)
                 return Json(new { success = false, error = "Not logged in" });
 
-            if (!string.IsNullOrWhiteSpace(message))
+            if (receiverId == senderId.Value)
+                return Json(new { success = false, error = "Cannot message yourself" });
+
+            if (string.IsNullOrWhiteSpace(message))
+                return Json(new { success = false, error = "Empty message" });
+
+            var recipient = _userService.GetUserById(receiverId);
+            if (recipient == null)
+                return Json(new { success = false, error = "Recipient not found" });
+
+            var newMessage = new Message
             {
-                var newMessage = new Message
-                {
-                    SenderId = senderId.Value,
-                    ReceiverId = receiverId,
-                    Content = message
-                };
+                SenderId = senderId.Value,
+                ReceiverId = receiverId,
+                Content = message.Trim()
+            };
 
-                _messageService.SendMessage(newMessage);
+            _messageService.SendMessage(newMessage);
 
-                return Json(new { success = true });
-            }
-
-            return Json(new { success = false, error = "Empty message" });
+            return Json(new { success = true, timestamp = newMessage.Timestamp.ToString("HH:mm") });
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Verify";
     Layout = null;
 }
@@ -67,6 +67,7 @@
                 </div>
 
                 <input type="hidden" name="code" id="codeHidden" />
+                <input type="hidden" name="email" value="@ViewBag.Email" />
 
                 <button class="primary-button" type="submit">Verify</button>
 
@@ -114,43 +115,56 @@
                     });
                 });
 
-                // On submit → combine digits, show overlay, then navigate
+                // On submit → combine digits, show overlay, and let form submit
                 form.addEventListener('submit', function (e) {
-                    e.preventDefault();
-
                     const digits = Array.from(inputs).map(i => i.value).join('');
                     if (digits.length < 6) {
+                        e.preventDefault();
                         const firstEmpty = Array.from(inputs).findIndex(i => !i.value);
                         if (firstEmpty !== -1) inputs[firstEmpty].focus();
                         return;
                     }
 
                     codeHidden.value = digits;
-
-                    // Show loading overlay
                     overlay.classList.add('show');
-
-                    // Simulate processing, then go to Account Created screen
-                    setTimeout(function () {
-                        window.location.href = '@Url.Action("AccountCreated", "Account")';
-                    }, 1800);
                 });
 
                 // Countdown timer
                 let seconds = 59;
                 const timerEl = document.getElementById('timer');
-                const interval = setInterval(function () {
+                let interval = setInterval(function () {
                     seconds = Math.max(0, seconds - 1);
                     timerEl.textContent = seconds;
                     if (seconds === 0) clearInterval(interval);
                 }, 1000);
 
                 // Resend
-                document.getElementById('resendBtn').addEventListener('click', function () {
-                    inputs.forEach(i => i.value = '');
-                    inputs[0].focus();
-                    seconds = 59;
-                    timerEl.textContent = seconds;
+                document.getElementById('resendBtn').addEventListener('click', async function () {
+                    if (seconds > 0) return;
+                    try {
+                        const emailVal = '@ViewBag.Email';
+                        const response = await fetch('@Url.Action("ResendCode", "Account")', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: 'email=' + encodeURIComponent(emailVal)
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            inputs.forEach(i => i.value = '');
+                            inputs[0].focus();
+                            seconds = 59;
+                            timerEl.textContent = seconds;
+                            interval = setInterval(function () {
+                                seconds = Math.max(0, seconds - 1);
+                                timerEl.textContent = seconds;
+                                if (seconds === 0) clearInterval(interval);
+                            }, 1000);
+                        } else {
+                            alert(data.error || 'Failed to resend code');
+                        }
+                    } catch (err) {
+                        console.error('Error resending code:', err);
+                    }
                 });
             });
     </script>

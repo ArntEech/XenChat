@@ -1,4 +1,4 @@
-﻿@model List<XenChat.Models.Message>
+@model List<XenChat.Models.Message>
 @{
     ViewData["Title"] = "Chat";
     var currentUserId = ViewBag.CurrentUserId;
@@ -18,7 +18,7 @@
             <h1 class="brand-title">XenChat</h1>
         </div>
         <div class="header-actions">
-            <button class="icon-btn" title="Search">
+            <button class="icon-btn" id="searchToggleBtn" title="Search">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8" />
                     <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -32,6 +32,10 @@
                 </svg>
             </button>
         </div>
+    </div>
+
+    <div class="search-bar-container" id="searchBarContainer" style="display:none; padding: 10px 16px;">
+        <input type="text" id="contactSearchInput" placeholder="Search contacts..." style="width:100%; padding:8px 14px; border-radius:8px; border:1px solid #3c3e44; background:#1e1f22; color:#fff; font-size:14px; outline:none;" />
     </div>
 
     <div class="updates-section">
@@ -59,31 +63,31 @@
             {
                 foreach (var user in allUsers.Take(6))
                 {
-                    <div class="update-item">
+                    <a href="@Url.Action("Index", "Chat", new { userId = user.Id })" class="update-item" style="text-decoration:none; color:inherit;">
                         <img src="@user.AvatarPath" alt="@user.Username" class="avatar-image update-carousel-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                         <div class="avatar-circle update-carousel-avatar" style="display: none;">@user.Initial</div>
                         <span class="update-name">@user.Username</span>
-                    </div>
+                    </a>
                 }
             }
         </div>
     </div>
 
     <div class="filter-tabs">
-        <button class="filter-pill active">
+        <button class="filter-pill active" data-filter="chats">
             Chats
             @if (allUsers != null)
             {
                 <span class="badge">@allUsers.Count</span>
             }
         </button>
-        <button class="filter-pill">Groups</button>
-        <button class="filter-pill">Unread</button>
-        <button class="filter-pill">Favorites</button>
+        <button class="filter-pill" data-filter="groups">Groups</button>
+        <button class="filter-pill" data-filter="unread">Unread</button>
+        <button class="filter-pill" data-filter="favorites">Favorites</button>
     </div>
 
     <div class="chat-list" id="chatList">
-        @if (allUsers != null)
+        @if (allUsers != null && allUsers.Any())
         {
             foreach (var user in allUsers)
             {
@@ -122,6 +126,15 @@
                 </a>
             }
         }
+        else
+        {
+            <div class="empty-state" style="padding: 40px 16px; text-align: center; color: #888;">
+                <p>No contacts found.</p>
+            </div>
+        }
+        <div id="noResultsState" class="empty-state" style="display:none; padding: 40px 16px; text-align: center; color: #888;">
+            <p>No matching conversations found.</p>
+        </div>
     </div>
 </div>
 
@@ -158,14 +171,23 @@
     </div>
 
     <div class="messages-container" id="messagesContainer">
-        @foreach (var message in Model)
+        @if (Model == null || !Model.Any())
         {
-            <div class="message @(message.SenderId == currentUserId ? "sent" : "received")">
-                <div class="message-bubble">
-                    <p>@message.Content</p>
-                    <span class="timestamp">@message.Timestamp.ToString("HH:mm")</span>
-                </div>
+            <div class="empty-conversation-notice" id="emptyNotice" style="text-align: center; margin: auto; color: #888;">
+                <p>No messages yet. Say hello to @otherUser.Username!</p>
             </div>
+        }
+        @if (Model != null)
+        {
+            @foreach (var message in Model)
+            {
+                <div class="message @(message.SenderId == currentUserId ? "sent" : "received")">
+                    <div class="message-bubble">
+                        <p>@message.Content</p>
+                        <span class="timestamp">@message.Timestamp.ToString("HH:mm")</span>
+                    </div>
+                </div>
+            }
         }
     </div>
 
@@ -179,13 +201,13 @@
                 <line x1="15" y1="9" x2="15.01" y2="9" />
             </svg>
         </button>
-        <input type="text" id="messageInput" placeholder="Type a message..." required />
+        <input type="text" id="messageInput" placeholder="Type a message..." required autocomplete="off" />
         <button type="button" class="attach-btn" title="Attach">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
         </button>
-        <button type="submit" class="send-btn">
+        <button type="submit" class="send-btn" title="Send">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13" />
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
@@ -199,79 +221,178 @@
     const currentUserId = @currentUserId;
     const otherUserId = @otherUser.Id;
 
+    // Search toggle & input
+    const searchBtn = document.getElementById('searchToggleBtn');
+    const searchContainer = document.getElementById('searchBarContainer');
+    const searchInput = document.getElementById('contactSearchInput');
+
+    if (searchBtn && searchContainer && searchInput) {
+        searchBtn.addEventListener('click', () => {
+            const isHidden = searchContainer.style.display === 'none';
+            searchContainer.style.display = isHidden ? 'block' : 'none';
+            if (isHidden) {
+                searchInput.focus();
+            } else {
+                searchInput.value = '';
+                applyFilters();
+            }
+        });
+
+        searchInput.addEventListener('input', () => {
+            applyFilters();
+        });
+    }
+
+    // Filter pills
+    let currentFilter = 'chats';
+    const filterPills = document.querySelectorAll('.filter-pill');
+    filterPills.forEach(pill => {
+        pill.addEventListener('click', function () {
+            filterPills.forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.getAttribute('data-filter') || 'chats';
+            applyFilters();
+        });
+    });
+
+    function applyFilters() {
+        const query = (searchInput ? searchInput.value.trim().toLowerCase() : '');
+        const items = document.querySelectorAll('.chat-item');
+        let visibleCount = 0;
+
+        items.forEach(item => {
+            const username = item.getAttribute('data-username') || '';
+            const unreadBadge = item.querySelector('.unread-count-badge');
+            const hasUnread = unreadBadge && parseInt(unreadBadge.textContent) > 0;
+
+            let matchesFilter = true;
+            if (currentFilter === 'unread') {
+                matchesFilter = hasUnread;
+            } else if (currentFilter === 'groups' || currentFilter === 'favorites') {
+                matchesFilter = false;
+            }
+
+            const matchesSearch = !query || username.includes(query);
+
+            if (matchesFilter && matchesSearch) {
+                item.style.display = 'flex';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        const noResults = document.getElementById('noResultsState');
+        if (noResults) {
+            noResults.style.display = (visibleCount === 0) ? 'block' : 'none';
+        }
+    }
+
+    // SignalR
     const connection = new signalR.HubConnectionBuilder()
-    .withUrl("/chatHub")
-    .build();
+        .withUrl("/chatHub")
+        .build();
 
     connection.on("ReceiveMessage", (senderId, receiverId, message, senderName, timestamp) => {
-    if ((senderId == currentUserId && receiverId == otherUserId) ||
-    (senderId == otherUserId && receiverId == currentUserId)) {
+        // If message is between the currently open conversation
+        if ((senderId === currentUserId && receiverId === otherUserId) ||
+            (senderId === otherUserId && receiverId === currentUserId)) {
 
-    const messagesContainer = document.getElementById("messagesContainer");
-    const messageDiv = document.createElement("div");
-    messageDiv.className = "message " + (senderId == currentUserId ? "sent" : "received");
+            const emptyNotice = document.getElementById("emptyNotice");
+            if (emptyNotice) emptyNotice.remove();
 
-    messageDiv.innerHTML = `
-    <div class="message-bubble">
-    <p>${message}</p>
-    <span class="timestamp">${timestamp}</span>
-    </div>
-    `;
+            const messagesContainer = document.getElementById("messagesContainer");
+            const messageDiv = document.createElement("div");
+            messageDiv.className = "message " + (senderId === currentUserId ? "sent" : "received");
 
-    messagesContainer.appendChild(messageDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            const bubble = document.createElement("div");
+            bubble.className = "message-bubble";
 
-    const chatItems = document.querySelectorAll('.chat-item');
-    chatItems.forEach(item => {
-    if (item.getAttribute('href').includes('userId=' + otherUserId)) {
-    const preview = item.querySelector('.last-message-preview');
-    const time = item.querySelector('.chat-time');
-    if (preview) preview.textContent = message;
-    if (time) time.textContent = timestamp;
-    }
+            const p = document.createElement("p");
+            p.textContent = message; // Safe against XSS
+
+            const span = document.createElement("span");
+            span.className = "timestamp";
+            span.textContent = timestamp;
+
+            bubble.appendChild(p);
+            bubble.appendChild(span);
+            messageDiv.appendChild(bubble);
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Update the chat list items in the sidebar
+        const targetUserId = (senderId === currentUserId) ? receiverId : senderId;
+        const chatItems = document.querySelectorAll('.chat-item');
+        chatItems.forEach(item => {
+            if (item.getAttribute('href').includes('userId=' + targetUserId)) {
+                const preview = item.querySelector('.last-message-preview');
+                const time = item.querySelector('.chat-time');
+                if (preview) preview.textContent = message;
+                if (time) time.textContent = timestamp;
+
+                if (receiverId === currentUserId && senderId !== otherUserId) {
+                    let badge = item.querySelector('.unread-count-badge');
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'unread-count-badge';
+                        badge.textContent = '0';
+                        const bottom = item.querySelector('.chat-info-bottom');
+                        if (bottom) bottom.appendChild(badge);
+                    }
+                    const count = parseInt(badge.textContent) || 0;
+                    badge.textContent = count + 1;
+                }
+            }
+        });
     });
-    }
-    });
 
-    connection.start().catch(err => console.error(err));
+    connection.start().catch(err => console.error("SignalR connection error:", err));
 
     document.getElementById("messageForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    const messageInput = document.getElementById("messageInput");
-    const message = messageInput.value.trim();
-    const receiverId = document.getElementById("receiverId").value;
+        const messageInput = document.getElementById("messageInput");
+        const message = messageInput.value.trim();
+        const receiverId = document.getElementById("receiverId").value;
 
-    if (message) {
-    try {
-    const response = await fetch('/Chat/SendMessage', {
-    method: 'POST',
-    headers: {
-    'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: `receiverId=${receiverId}&message=${encodeURIComponent(message)}`
-    });
+        if (message) {
+            try {
+                const response = await fetch('/Chat/SendMessage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `receiverId=${receiverId}&message=${encodeURIComponent(message)}`
+                });
 
-    if (response.ok) {
-    await connection.invoke("SendMessage", currentUserId, parseInt(receiverId), message, "@currentUser.Username");
-    messageInput.value = '';
-    messageInput.focus();
-    }
-    } catch (error) {
-    console.error("Error sending message:", error);
-    }
-    }
+                const result = await response.json();
+                if (result.success) {
+                    await connection.invoke("SendMessage", currentUserId, parseInt(receiverId), message, "@currentUser.Username");
+                    messageInput.value = '';
+                    messageInput.focus();
+                } else {
+                    console.error("Server error:", result.error);
+                }
+            } catch (error) {
+                console.error("Error sending message:", error);
+            }
+        }
     });
 
     document.getElementById("messageInput").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-    e.preventDefault();
-    document.getElementById("messageForm").dispatchEvent(new Event("submit"));
-    }
+        if (e.key === "Enter") {
+            e.preventDefault();
+            document.getElementById("messageForm").dispatchEvent(new Event("submit"));
+        }
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-    const messagesContainer = document.getElementById('messagesContainer');
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        const messagesContainer = document.getElementById('messagesContainer');
+        if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
     });
 </script>

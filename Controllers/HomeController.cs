@@ -20,8 +20,14 @@ namespace XenChat.Controllers
             if (userId == null)
                 return RedirectToAction("Login", "Account");
 
-            var users = _userService.GetAllUsers().Where(u => u.Id != userId).ToList();
             var currentUser = _userService.GetUserById(userId.Value);
+            if (currentUser == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Account");
+            }
+
+            var users = _userService.GetAllUsers().Where(u => u.Id != userId.Value).ToList();
 
             ViewBag.CurrentUser = currentUser;
             ViewBag.LastMessages = new Dictionary<int, string>();
@@ -36,7 +42,7 @@ namespace XenChat.Controllers
                 ViewBag.LastMessages[user.Id] = lastMessage?.Content ?? "No messages yet";
                 ViewBag.LastMessageTimes[user.Id] = lastMessage?.Timestamp.ToString("HH:mm") ?? "";
 
-                var unreadCount = messages.Count(m => m.SenderId == user.Id && m.ReceiverId == userId.Value);
+                var unreadCount = messages.Count(m => m.SenderId == user.Id && m.ReceiverId == userId.Value && !m.IsRead);
                 ViewBag.UnreadCounts[user.Id] = unreadCount;
             }
 
@@ -64,6 +70,12 @@ namespace XenChat.Controllers
                 return RedirectToAction("Login", "Account");
 
             var user = _userService.GetUserById(userId.Value);
+            if (user == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Account");
+            }
+
             return View(user);
         }
     }

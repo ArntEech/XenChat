@@ -1,4 +1,4 @@
-﻿using XenChat.Data;
+using XenChat.Data;
 using XenChat.Models;
 
 namespace XenChat.Services
@@ -42,6 +42,22 @@ namespace XenChat.Services
                 .FirstOrDefault();
 
             return msg?.Content ?? "No messages yet";
+        }
+
+        public void MarkConversationAsRead(int senderId, int receiverId)
+        {
+            var unread = _db.Messages
+                .Where(m => m.SenderId == senderId && m.ReceiverId == receiverId && !m.IsRead)
+                .ToList();
+
+            if (unread.Any())
+            {
+                foreach (var msg in unread)
+                {
+                    msg.IsRead = true;
+                }
+                _db.SaveChanges();
+            }
         }
     }
 }

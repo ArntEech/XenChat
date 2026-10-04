@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using XenChat.Models;
 using XenChat.Services;
 
@@ -135,15 +135,19 @@ namespace XenChat.Controllers
         }
 
         [HttpPost]
-        public IActionResult Verify(string code)
+        public IActionResult Verify(string code, string? email)
         {
-            var email = TempData["VerifyEmail"]?.ToString();
+            if (string.IsNullOrEmpty(email))
+            {
+                email = TempData["VerifyEmail"]?.ToString();
+            }
+
             System.Diagnostics.Debug.WriteLine("====================================================");
             System.Diagnostics.Debug.WriteLine($"[Verify POST] email='{email}' code='{code}'");
 
             if (string.IsNullOrEmpty(email))
             {
-                System.Diagnostics.Debug.WriteLine("[Verify POST] No email in TempData → redirecting to Signup");
+                System.Diagnostics.Debug.WriteLine("[Verify POST] No email provided → redirecting to Signup");
                 return RedirectToAction("Signup");
             }
 
@@ -152,7 +156,7 @@ namespace XenChat.Controllers
             {
                 System.Diagnostics.Debug.WriteLine("[Verify POST] No pending signup found");
                 TempData["VerifyEmail"] = email;
-                TempData["VerifyError"] = "No pending signup found";
+                TempData["VerifyError"] = "No pending signup found or session expired. Please sign up again.";
                 return RedirectToAction("Verify");
             }
 
@@ -163,7 +167,7 @@ namespace XenChat.Controllers
                 System.Diagnostics.Debug.WriteLine("[Verify POST] OTP expired");
                 _pendingStore.Remove(email);
                 TempData["VerifyEmail"] = email;
-                TempData["VerifyError"] = "Code expired";
+                TempData["VerifyError"] = "Verification code has expired. Please sign up again.";
                 return RedirectToAction("Verify");
             }
 
@@ -171,7 +175,7 @@ namespace XenChat.Controllers
             {
                 System.Diagnostics.Debug.WriteLine($"[Verify POST] Wrong OTP. Expected='{pending.Otp}', got='{code}'");
                 TempData["VerifyEmail"] = email;
-                TempData["VerifyError"] = "Invalid code";
+                TempData["VerifyError"] = "Invalid verification code. Please check and try again.";
                 return RedirectToAction("Verify");
             }
 
@@ -188,12 +192,48 @@ namespace XenChat.Controllers
 
             System.Diagnostics.Debug.WriteLine("[Verify POST] CreateUser returned");
 
-            var check = _userService.GetAllUsers();
-            System.Diagnostics.Debug.WriteLine($"[Verify POST] After create, total users = {check.Count}");
-
             _pendingStore.Remove(email);
+            TempData["SignupSuccess"] = "Account created successfully! Please log in.";
 
             return RedirectToAction("AccountCreated");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResendCode(string? email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                email = TempData["VerifyEmail"]?.ToString();
+            }
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return Json(new { success = false, error = "Email address is required." });
+            }
+
+            var pending = _pendingStore.Get(email);
+            if (pending == null)
+            {
+                return Json(new { success = false, error = "No pending registration found for this email." });
+            }
+
+            var otp = new Random().Next(100000, 999999).ToString();
+            pending.Otp = otp;
+            pending.ExpiresAt = DateTime.Now.AddMinutes(5);
+            _pendingStore.Save(email, pending);
+
+            TempData["VerifyEmail"] = email;
+
+            try
+            {
+                await _emailService.SendOtpAsync(email, otp);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ResendCode] Failed to send email: {ex.Message}");
+            }
+
+            return Json(new { success = true });
         }
 
         [HttpGet]

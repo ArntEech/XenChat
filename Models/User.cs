@@ -1,4 +1,4 @@
-﻿namespace XenChat.Models
+namespace XenChat.Models
 {
     public class User
     {
@@ -9,7 +9,7 @@
         public string ProfileInfo { get; set; }
         public string Avatar { get; set; }
 
-        public string AvatarPath => $"/images/avatars/{Avatar}";
+        public string AvatarPath => $"/images/avatars/{(string.IsNullOrEmpty(Avatar) ? "user.png" : Avatar)}";
         public string Initial => string.IsNullOrEmpty(Username) ? "?" : Username.Substring(0, 1).ToUpper();
     }
 }
