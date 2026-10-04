@@ -1,29 +1,105 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using XenChat.Data;
 using XenChat.Hubs;
 using XenChat.Services;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Database
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=Data/xenchat.db";
-if (connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
+// 1. Load .env file into environment variables
+var envFile = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+if (File.Exists(envFile))
 {
-    var rawPath = connectionString.Substring("Data Source=".Length).Trim();
-    if (!Path.IsPathRooted(rawPath))
+    foreach (var line in File.ReadAllLines(envFile))
     {
-        var absolutePath = Path.Combine(builder.Environment.ContentRootPath, rawPath.Replace('/', Path.DirectorySeparatorChar));
-        var dir = Path.GetDirectoryName(absolutePath);
-        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+        var trimmed = line.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith('#'))
+            continue;
+
+        var eqIdx = trimmed.IndexOf('=');
+        if (eqIdx > 0)
         {
-            Directory.CreateDirectory(dir);
+            var key = trimmed.Substring(0, eqIdx).Trim();
+            var val = trimmed.Substring(eqIdx + 1).Trim();
+            if ((val.StartsWith('"') && val.EndsWith('"')) || (val.StartsWith('\'') && val.EndsWith('\'')))
+            {
+                val = val.Substring(1, val.Length - 2);
+            }
+            Environment.SetEnvironmentVariable(key, val);
         }
-        connectionString = $"Data Source={absolutePath}";
     }
 }
 
-builder.Services.AddDbContext<XenChatDbContext>(options =>
-    options.UseSqlite(connectionString));
+var builder = WebApplication.CreateBuilder(args);
+
+// Helper to convert postgres:// or postgresql:// URLs to Npgsql format
+static string ConvertPostgreSqlUrl(string raw)
+{
+    if (string.IsNullOrWhiteSpace(raw)) return raw;
+    if (raw.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+        raw.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+    {
+        var uri = new Uri(raw);
+        var userInfo = uri.UserInfo.Split(':');
+        var username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "";
+        var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+        var host = uri.Host;
+        var port = uri.Port > 0 ? uri.Port : 5432;
+        var database = uri.AbsolutePath.TrimStart('/');
+
+        var npgsqlBuilder = new NpgsqlConnectionStringBuilder
+        {
+            Host = host,
+            Port = port,
+            Username = username,
+            Password = password,
+            Database = database,
+            SslMode = SslMode.Require,
+            TrustServerCertificate = true,
+            Pooling = true
+        };
+        return npgsqlBuilder.ConnectionString;
+    }
+    return raw;
+}
+
+// 2. Resolve Database Connection String (Prioritize .env DATABASE_URL)
+var envDbUrl = Environment.GetEnvironmentVariable("DATABASE_URL")
+    ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
+bool isPostgreSql = !string.IsNullOrWhiteSpace(envDbUrl) &&
+    (envDbUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+     envDbUrl.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase) ||
+     envDbUrl.Contains("Host=", StringComparison.OrdinalIgnoreCase));
+
+if (isPostgreSql)
+{
+    var pgConnectionString = ConvertPostgreSqlUrl(envDbUrl!);
+    Console.WriteLine("[Database] Using PostgreSQL database from .env.");
+    builder.Services.AddDbContext<XenChatDbContext>(options =>
+        options.UseNpgsql(pgConnectionString));
+}
+else
+{
+    var connectionString = envDbUrl ?? "Data Source=Data/xenchat.db";
+    if (connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
+    {
+        var rawPath = connectionString.Substring("Data Source=".Length).Trim();
+        if (!Path.IsPathRooted(rawPath))
+        {
+            var absolutePath = Path.Combine(builder.Environment.ContentRootPath, rawPath.Replace('/', Path.DirectorySeparatorChar));
+            var dir = Path.GetDirectoryName(absolutePath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            connectionString = $"Data Source={absolutePath}";
+        }
+    }
+
+    Console.WriteLine("[Database] Using SQLite fallback.");
+    builder.Services.AddDbContext<XenChatDbContext>(options =>
+        options.UseSqlite(connectionString));
+}
 
 // Services
 builder.Services.AddScoped<UserService>();
@@ -47,53 +123,41 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<XenChatDbContext>();
-    db.Database.EnsureCreated();   // Creates xenchat.db + seeds 13 users if missing
-
-    // Ensure Messages table has SQLite autoincrement primary key
     try
     {
-        db.Database.ExecuteSqlRaw(@"
-            CREATE TABLE IF NOT EXISTS ""Messages_Fix"" (
-                ""MessageId"" INTEGER PRIMARY KEY AUTOINCREMENT,
-                ""SenderId"" INTEGER NOT NULL,
-                ""ReceiverId"" INTEGER NOT NULL,
-                ""Content"" TEXT NOT NULL,
-                ""Timestamp"" TEXT NOT NULL,
-                ""IsRead"" INTEGER NOT NULL DEFAULT 0
-            );
-            INSERT OR IGNORE INTO ""Messages_Fix"" (""MessageId"", ""SenderId"", ""ReceiverId"", ""Content"", ""Timestamp"", ""IsRead"")
-            SELECT ""MessageId"", ""SenderId"", ""ReceiverId"", ""Content"", ""Timestamp"", ""IsRead"" FROM ""Messages"";
-            DROP TABLE ""Messages"";
-            ALTER TABLE ""Messages_Fix"" RENAME TO ""Messages"";
-        ");
+        db.Database.EnsureCreated(); // Creates tables and seeds initial users if missing
 
-        db.Database.ExecuteSqlRaw(@"
-            CREATE TABLE IF NOT EXISTS ""Statuses"" (
-                ""Id"" INTEGER PRIMARY KEY AUTOINCREMENT,
-                ""UserId"" INTEGER NOT NULL,
-                ""Username"" TEXT NOT NULL,
-                ""UserAvatar"" TEXT NULL,
-                ""MediaUrl"" TEXT NOT NULL,
-                ""Caption"" TEXT NULL,
-                ""CreatedAt"" TEXT NOT NULL
-            );
-        ");
+        if (db.Database.IsSqlite())
+        {
+            // SQLite-specific table creation for legacy databases
+            db.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS ""Statuses"" (
+                    ""Id"" INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ""UserId"" INTEGER NOT NULL,
+                    ""Username"" TEXT NOT NULL,
+                    ""UserAvatar"" TEXT NULL,
+                    ""MediaUrl"" TEXT NOT NULL,
+                    ""Caption"" TEXT NULL,
+                    ""CreatedAt"" TEXT NOT NULL
+                );
+            ");
 
-        db.Database.ExecuteSqlRaw(@"
-            CREATE TABLE IF NOT EXISTS ""Favorites"" (
-                ""Id"" INTEGER PRIMARY KEY AUTOINCREMENT,
-                ""UserId"" INTEGER NOT NULL,
-                ""FavoriteUserId"" INTEGER NOT NULL
-            );
-        ");
+            db.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS ""Favorites"" (
+                    ""Id"" INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ""UserId"" INTEGER NOT NULL,
+                    ""FavoriteUserId"" INTEGER NOT NULL
+                );
+            ");
+        }
+
+        Console.WriteLine($"[Database] Successfully connected: {db.Database.ProviderName}");
+        Console.WriteLine($"[Database] Users in DB: {db.Users.Count()}");
     }
     catch (Exception ex)
     {
-        System.Diagnostics.Debug.WriteLine($"[Startup] Database tables check: {ex.Message}");
+        Console.WriteLine($"[Database] Initialization error: {ex.Message}");
     }
-
-    System.Diagnostics.Debug.WriteLine($"[Startup] Database ready.");
-    System.Diagnostics.Debug.WriteLine($"[Startup] Users in DB: {db.Users.Count()}");
 }
 
 if (!app.Environment.IsDevelopment())
