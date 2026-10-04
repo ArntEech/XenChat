@@ -44,8 +44,8 @@
                     </a>
                 </div>
                 <div class="sidebar-bottom">
-                    <a href="@Url.Action("Profile", "Home")" class="user-avatar-small" title="Profile &amp; Settings">
-                        <div class="avatar-circle small">@(string.IsNullOrEmpty(Context.Session.GetString("Username")) ? "?" : Context.Session.GetString("Username")!.Substring(0, 1).ToUpper())</div>
+                    <a href="@Url.Action("Profile", "Home")" class="user-avatar-small user-profile-link" title="Profile &amp; Settings">
+                        <div class="user-avatar-circle">@(string.IsNullOrEmpty(Context.Session.GetString("Username")) ? "?" : Context.Session.GetString("Username")!.Substring(0, 1).ToUpper())</div>
                     </a>
                     <a href="@Url.Action("Logout", "Account")" class="nav-icon logout-icon" title="Logout">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

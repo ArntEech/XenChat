@@ -14,10 +14,8 @@
 
 <div class="chat-list-panel chat-conversation-view">
     <div class="chat-list-header">
-        <a href="@Url.Action("Index", "Home")" class="brand-container" style="text-decoration: none; color: inherit;" title="XenChat">
-            <img src="~/images/logo.png" alt="XenChat Logo" class="brand-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-            <div class="brand-logo-fallback" style="display: none;">X</div>
-            <h1 class="brand-title">XenChat</h1>
+        <a href="@Url.Action("Index", "Home")" class="brand-container" style="text-decoration: none; color: inherit;" title="Chats">
+            <h1 class="brand-title">Chats</h1>
         </a>
         <div class="header-actions">
             <button class="icon-btn" id="searchToggleBtn" title="Search">
@@ -37,14 +35,13 @@
     </div>
 
     <div class="search-bar-container" id="searchBarContainer" style="display:none; padding: 10px 16px;">
-        <input type="text" id="contactSearchInput" placeholder="Search contacts..." style="width:100%; padding:8px 14px; border-radius:8px; border:1px solid #3c3e44; background:#1e1f22; color:#fff; font-size:14px; outline:none;" />
+        <input type="text" id="contactSearchInput" placeholder="Search contacts... (⌘K)" style="width:100%; padding:8px 14px; border-radius:8px; border:1px solid #3c3e44; background:#1e1f22; color:#fff; font-size:14px; outline:none;" />
     </div>
 
     <div class="updates-section">
         <a href="@Url.Action("Updates", "Home")" class="updates-header" style="text-decoration: none; color: inherit;" title="View Updates">
-            <img src="~/images/logo.png" alt="Updates" class="updates-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-            <div class="updates-logo-fallback" style="display: none;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="updates-header-icon" style="color: #EE4C49; display: flex; align-items: center;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10" />
                     <path d="M12 8v8M8 12h8" />
                 </svg>
@@ -78,14 +75,24 @@
     <div class="filter-tabs">
         <button class="filter-pill active" data-filter="chats">
             Chats
-            @if (allUsers != null)
+            @if (allUsers != null && allUsers.Count > 0)
             {
                 <span class="badge">@allUsers.Count</span>
             }
         </button>
         <button class="filter-pill" data-filter="groups" disabled title="Groups (Unavailable)" style="opacity: 0.45; cursor: not-allowed;">Groups</button>
         <button class="filter-pill" data-filter="unread">Unread</button>
-        <button class="filter-pill" data-filter="favorites" id="favFilterBtn">Favorites <span class="badge" id="favBadge">@favoriteUserIds.Count</span></button>
+        <button class="filter-pill" data-filter="favorites" id="favFilterBtn">
+            Favorites
+            @if (favoriteUserIds.Count > 0)
+            {
+                <span class="badge" id="favBadge">@favoriteUserIds.Count</span>
+            }
+            else
+            {
+                <span class="badge" id="favBadge" style="display: none;">0</span>
+            }
+        </button>
     </div>
 
     <div class="chat-list" id="chatList">
@@ -98,8 +105,17 @@
                        data-username="@user.Username.ToLower()"
                        data-user-id="@user.Id"
                        data-favorite="@(favoriteUserIds.Contains(user.Id) ? "true" : "false")">
-                    <img src="@user.AvatarPath" alt="@user.Username" class="avatar-image chat-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                    <div class="avatar-circle chat-avatar-fallback" style="display: none;">@user.Initial</div>
+                    <div class="chat-avatar-wrapper">
+                        @if (!string.IsNullOrWhiteSpace(user.Avatar) && user.Avatar != "user.png")
+                        {
+                            <img src="@user.AvatarPath" alt="@user.Username" class="avatar-image chat-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div class="avatar-circle chat-avatar-fallback" style="display: none;">@user.Initial</div>
+                        }
+                        else
+                        {
+                            <div class="avatar-circle chat-avatar-fallback">@user.Initial</div>
+                        }
+                    </div>
                     <div class="chat-info">
                         <div class="chat-info-top">
                             <h3>@user.Username</h3>
@@ -376,6 +392,15 @@
 
         searchInput.addEventListener('input', () => {
             applyFilters();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+                e.preventDefault();
+                searchContainer.style.display = 'block';
+                searchInput.focus();
+                searchInput.select();
+            }
         });
     }
 
@@ -875,6 +900,7 @@
                     const badge = document.getElementById('favBadge');
                     if (badge) {
                         badge.textContent = data.count;
+                        badge.style.display = data.count > 0 ? 'inline-flex' : 'none';
                     }
 
                     // Re-apply filters if currently on favorites tab
