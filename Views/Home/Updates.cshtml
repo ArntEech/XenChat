@@ -6,9 +6,9 @@
 <div class="updates-container" style="padding: 24px 32px; max-width: 900px; margin: 0 auto; color: #fff;">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
         <h2 style="font-size: 24px; font-weight: 600; margin: 0;">Status &amp; Updates</h2>
-        <button type="button" id="updatesAddStatusBtn" class="primary-button" style="width: auto; padding: 8px 18px; font-size: 14px; border-radius: 20px;">
+        <a href="@Url.Action("AddStatus", "Home")" id="updatesAddStatusBtn" class="primary-button" style="width: auto; padding: 8px 18px; font-size: 14px; border-radius: 20px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
             + Add Status
-        </button>
+        </a>
     </div>
 
     <!-- Statuses Carousel -->
@@ -23,7 +23,7 @@
         </div>
 
         <div class="updates-carousel" style="padding: 4px 0 12px 0;">
-            <div class="update-item" id="addStatusCardBtn" style="cursor: pointer;" title="Add Status">
+            <a href="@Url.Action("AddStatus", "Home")" class="update-item" id="addStatusCardBtn" style="text-decoration: none; color: inherit; cursor: pointer;" title="Add Status">
                 <div class="add-avatar">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19" />
@@ -31,7 +31,7 @@
                     </svg>
                 </div>
                 <span class="update-name">Add</span>
-            </div>
+            </a>
 
             @if (statuses != null && statuses.Any())
             {
@@ -132,9 +132,21 @@
 
 @section Scripts {
 <script>
+    window.openUpdatesStatusUploadDialog = function () {
+        const modal = document.getElementById('updatesStatusUploadModal');
+        const fileInput = document.getElementById('updatesModalFileInput');
+        if (modal) modal.style.display = 'flex';
+        if (fileInput) {
+            try {
+                fileInput.click();
+            } catch (err) {
+                console.warn("fileInput click error:", err);
+            }
+        }
+    };
+
     document.addEventListener('DOMContentLoaded', function () {
-        const addBtn1 = document.getElementById('updatesAddStatusBtn');
-        const addBtn2 = document.getElementById('addStatusCardBtn');
+
         const modal = document.getElementById('updatesStatusUploadModal');
         const fileInput = document.getElementById('updatesModalFileInput');
         const previewImg = document.getElementById('updatesUploadPreviewImg');
@@ -150,20 +162,17 @@
                     previewImg.src = e.target.result;
                     previewImg.style.display = 'block';
                     if (uploadPrompt) uploadPrompt.style.display = 'none';
-                    modal.style.display = 'flex';
+                    if (modal) modal.style.display = 'flex';
                     if (captionInput) captionInput.focus();
                 };
                 reader.readAsDataURL(file);
             }
         }
 
-        function triggerFileInput() {
-            fileInput.click();
-        }
 
-        if (addBtn1) addBtn1.addEventListener('click', triggerFileInput);
-        if (addBtn2) addBtn2.addEventListener('click', triggerFileInput);
-        if (dropZone) dropZone.addEventListener('click', triggerFileInput);
+        if (dropZone) dropZone.addEventListener('click', () => {
+            if (fileInput) fileInput.click();
+        });
 
         if (fileInput) {
             fileInput.addEventListener('change', function () {

@@ -1,0 +1,203 @@
+@{
+    ViewData["Title"] = "Add Status";
+}
+
+<div class="add-status-page" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100%; padding: 40px 20px; color: #fff; background: #16171b; width: 100%;">
+    <div style="width: 100%; max-width: 580px;">
+        
+        <!-- Header -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <a href="@Url.Action("Index", "Home")" class="icon-btn" style="text-decoration: none; color: #fff; background: #232428; border: 1px solid #333; border-radius: 50%; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Back to chats">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </a>
+                <div>
+                    <h2 style="font-size: 22px; font-weight: 600; margin: 0; color: #fff;">Add New Status</h2>
+                    <span style="font-size: 13px; color: #888;">Share a photo with your contacts</span>
+                </div>
+            </div>
+            <a href="@Url.Action("Updates", "Home")" style="color: #ee4c49; font-size: 14px; text-decoration: none; font-weight: 500;">View All</a>
+        </div>
+
+        @if (TempData["Error"] != null)
+        {
+            <div style="background: rgba(238, 76, 73, 0.15); border: 1px solid #ee4c49; color: #ff6b68; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 14px;">
+                @TempData["Error"]
+            </div>
+        }
+
+        <!-- Status Card Form -->
+        <div style="background: #232428; border: 1px solid #333; border-radius: 16px; padding: 28px; box-shadow: 0 8px 30px rgba(0,0,0,0.35);">
+            <form method="post" asp-action="AddStatus" asp-controller="Home" enctype="multipart/form-data" id="addStatusForm">
+                
+                <!-- Media Upload / Drop Zone -->
+                <div id="dropZone" style="position: relative; width: 100%; aspect-ratio: 4/3; max-height: 380px; background: #1a1b1e; border: 2px dashed #444; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;">
+                    
+                    <!-- Empty State Prompt -->
+                    <div id="uploadPrompt" style="display: flex; flex-direction: column; align-items: center; gap: 12px; color: #888; text-align: center; padding: 20px;">
+                        <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(238, 76, 73, 0.12); display: flex; align-items: center; justify-content: center; color: #ee4c49;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <polyline points="21 15 16 10 5 21" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p style="margin: 0; font-size: 15px; font-weight: 500; color: #eee;">Click to select a photo</p>
+                            <span style="font-size: 12px; color: #777;">or drag and drop here (JPG, PNG, GIF, WebP)</span>
+                        </div>
+                    </div>
+
+                    <!-- Selected Image Preview -->
+                    <img id="imagePreview" src="" alt="Status Preview" style="display: none; width: 100%; height: 100%; object-fit: contain; background: #111;" />
+
+                    <!-- Remove Button overlay when image chosen -->
+                    <button type="button" id="removeImgBtn" style="display: none; position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); border: 1px solid #555; color: #fff; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; cursor: pointer; z-index: 10;" title="Remove image">
+                        &times;
+                    </button>
+                </div>
+
+                <input type="file" id="statusImageInput" name="statusImage" accept="image/*" required style="display: none;" />
+
+                <!-- Caption Input -->
+                <div style="margin-top: 20px;">
+                    <label for="captionInput" style="display: block; font-size: 13px; font-weight: 500; color: #aaa; margin-bottom: 8px;">Caption (optional)</label>
+                    <div style="position: relative;">
+                        <input type="text" id="captionInput" name="caption" placeholder="Add a caption to your status..." maxlength="150" autocomplete="off" style="width: 100%; padding: 12px 16px; padding-right: 40px; background: #1e1f22; border: 1px solid #3c3e44; border-radius: 10px; color: #fff; font-size: 14px; outline: none; box-sizing: border-box; transition: border-color 0.2s;" />
+                    </div>
+                </div>
+
+                <!-- Quick Emojis -->
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+                    <span style="font-size: 12px; color: #777;">Quick emojis:</span>
+                    @foreach (var emoji in new[] { "🔥", "❤️", "😊", "✨", "🎉", "👍", "🚀", "☕", "💯" })
+                    {
+                        <button type="button" class="quick-emoji-btn" data-emoji="@emoji" style="background: #1e1f22; border: 1px solid #333; border-radius: 6px; padding: 3px 8px; font-size: 14px; cursor: pointer; transition: transform 0.1s;">@emoji</button>
+                    }
+                </div>
+
+                <!-- Expiry Note -->
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 20px; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 12px; color: #888;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span>Status updates are visible to contacts and disappear automatically after 24 hours.</span>
+                </div>
+
+                <!-- Submit / Cancel actions -->
+                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+                    <a href="@Url.Action("Index", "Home")" style="padding: 10px 20px; border-radius: 20px; color: #aaa; text-decoration: none; font-size: 14px; font-weight: 500; background: transparent; border: 1px solid #444; transition: background 0.2s;">
+                        Cancel
+                    </a>
+                    <button type="submit" id="submitStatusBtn" class="primary-button" style="width: auto; padding: 10px 28px; font-size: 14px; border-radius: 20px;">
+                        Post Status
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('statusImageInput');
+        const preview = document.getElementById('imagePreview');
+        const prompt = document.getElementById('uploadPrompt');
+        const removeBtn = document.getElementById('removeImgBtn');
+        const form = document.getElementById('addStatusForm');
+        const captionInput = document.getElementById('captionInput');
+
+        // Click to open file picker
+        dropZone.addEventListener('click', function (e) {
+            if (e.target !== removeBtn) {
+                fileInput.click();
+            }
+        });
+
+        // Drag and drop support
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = '#ee4c49';
+                dropZone.style.background = '#202127';
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = '#444';
+                dropZone.style.background = '#1a1b1e';
+            });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileChosen(e.dataTransfer.files[0]);
+            }
+        });
+
+        // File selection handling
+        fileInput.addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                handleFileChosen(this.files[0]);
+            }
+        });
+
+        function handleFileChosen(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please choose a valid image file (JPG, PNG, GIF, or WebP).');
+                fileInput.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                prompt.style.display = 'none';
+                removeBtn.style.display = 'flex';
+                dropZone.style.borderStyle = 'solid';
+                dropZone.style.borderColor = '#ee4c49';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Remove image
+        removeBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            fileInput.value = '';
+            preview.src = '';
+            preview.style.display = 'none';
+            removeBtn.style.display = 'none';
+            prompt.style.display = 'flex';
+            dropZone.style.borderStyle = 'dashed';
+            dropZone.style.borderColor = '#444';
+        });
+
+        // Quick emojis click
+        document.querySelectorAll('.quick-emoji-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const emoji = this.getAttribute('data-emoji');
+                captionInput.value += emoji;
+                captionInput.focus();
+            });
+        });
+
+        // Validation before submit
+        form.addEventListener('submit', function (e) {
+            if (!fileInput.files || fileInput.files.length === 0) {
+                e.preventDefault();
+                alert('Please select an image to share in your status.');
+                fileInput.click();
+            }
+        });
+    });
+</script>

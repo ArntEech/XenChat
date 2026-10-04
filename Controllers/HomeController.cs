@@ -92,6 +92,30 @@ namespace XenChat.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult AddStatus()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            var currentUser = _userService.GetUserById(userId.Value);
+            if (currentUser == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Account");
+            }
+
+            ViewBag.CurrentUser = currentUser;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddStatus(IFormFile statusImage, string? caption)
+        {
+            return await CreateStatus(statusImage, caption, "/Home/Index");
+        }
+
         public IActionResult Privacy()
         {
             return View();

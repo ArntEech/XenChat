@@ -49,7 +49,7 @@
             <h2 class="section-title">Updates</h2>
         </a>
         <div class="updates-carousel">
-            <div class="update-item" id="addStatusBtn" style="cursor: pointer;" title="Add Status">
+            <a href="@Url.Action("AddStatus", "Home")" class="update-item" id="addStatusBtn" style="text-decoration: none; color: inherit; cursor: pointer;" title="Add Status">
                 <div class="add-avatar">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19" />
@@ -57,7 +57,7 @@
                     </svg>
                 </div>
                 <span class="update-name">Add</span>
-            </div>
+            </a>
             @if (statuses != null && statuses.Any())
             {
                 foreach (var status in statuses)
@@ -263,7 +263,7 @@
     connection.start().catch(err => console.error("SignalR error:", err));
 
     // Status Upload & Viewer Handlers
-    const addStatusBtn = document.getElementById('addStatusBtn');
+
     const statusFileInput = document.getElementById('statusFileInput');
     const statusUploadModal = document.getElementById('statusUploadModal');
     const uploadPreviewImg = document.getElementById('uploadPreviewImg');
@@ -272,6 +272,17 @@
     const closeUploadModalBtn = document.getElementById('closeUploadModalBtn');
     const captionInput = document.getElementById('statusCaptionInput');
 
+    window.openStatusUploadDialog = function () {
+        if (statusUploadModal) statusUploadModal.style.display = 'flex';
+        if (statusFileInput) {
+            try {
+                statusFileInput.click();
+            } catch (err) {
+                console.warn("statusFileInput click error:", err);
+            }
+        }
+    };
+
     function openStatusModalWithFile(file) {
         if (file) {
             const reader = new FileReader();
@@ -279,19 +290,41 @@
                 uploadPreviewImg.src = e.target.result;
                 uploadPreviewImg.style.display = 'block';
                 if (uploadPrompt) uploadPrompt.style.display = 'none';
-                statusUploadModal.style.display = 'flex';
+                if (statusUploadModal) statusUploadModal.style.display = 'flex';
                 if (captionInput) captionInput.focus();
             };
             reader.readAsDataURL(file);
         }
     }
 
-    function triggerStatusFileInput() {
-        if (statusFileInput) statusFileInput.click();
-    }
 
-    if (addStatusBtn) addStatusBtn.addEventListener('click', triggerStatusFileInput);
-    if (dropZone) dropZone.addEventListener('click', triggerStatusFileInput);
+
+    if (dropZone) {
+        dropZone.addEventListener('click', () => {
+            if (statusFileInput) statusFileInput.click();
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#ee4c49';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '';
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+                const file = e.dataTransfer.files[0];
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                if (statusFileInput) statusFileInput.files = dt.files;
+                openStatusModalWithFile(file);
+            }
+        });
+    }
 
     if (statusFileInput) {
         statusFileInput.addEventListener('change', function () {
