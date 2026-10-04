@@ -1330,6 +1330,322 @@ body {
     }
 
 /* ============================================================
+   PROFILE DETAILS PANEL
+   ============================================================ */
+.profile-details-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #303236;
+    min-width: 0;
+    overflow-y: auto;
+}
+
+.profile-details-header {
+    display: flex;
+    align-items: center;
+    padding: 24px 32px;
+    background-color: #303236;
+    border-bottom: 1px solid #414247;
+}
+
+.profile-details-header h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.profile-details-content {
+    padding: 32px;
+    max-width: 600px;
+    width: 100%;
+}
+
+.profile-alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 24px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.profile-alert.success {
+    background-color: rgba(39, 174, 96, 0.15);
+    border: 1px solid #27ae60;
+    color: #2ecc71;
+}
+
+.profile-alert.error {
+    background-color: rgba(238, 76, 73, 0.15);
+    border: 1px solid #ee4c49;
+    color: #ee4c49;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.profile-avatar-edit {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-bottom: 8px;
+}
+
+.avatar-preview-wrap {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.avatar-preview-wrap img,
+.avatar-preview-fallback {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.avatar-preview-fallback {
+    background-color: #EE4C49;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 700;
+}
+
+.avatar-upload-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #EE4C49;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 2px solid #303236;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.avatar-upload-btn:hover {
+    transform: scale(1.1);
+    background-color: #ff5c59;
+}
+
+.avatar-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.upload-link-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #EE4C49;
+    cursor: pointer;
+}
+
+.upload-link-text:hover {
+    text-decoration: underline;
+}
+
+.upload-hint {
+    font-size: 12px;
+    color: #858585;
+}
+
+.profile-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profile-form label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #B5B5B5;
+}
+
+.profile-form input[type="text"],
+.profile-form textarea {
+    width: 100%;
+    background-color: #1B1D1F;
+    border: 1px solid #414247;
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: #FFFFFF;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+.profile-form input[type="text"]:focus,
+.profile-form textarea:focus {
+    border-color: #EE4C49;
+    box-shadow: 0 0 0 2px rgba(238, 76, 73, 0.25);
+}
+
+.profile-form .readonly-input {
+    background-color: #242528;
+    color: #888888;
+    cursor: not-allowed;
+    border-color: #333336;
+}
+
+.profile-form .field-hint {
+    font-size: 12px;
+    color: #858585;
+}
+
+.profile-form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.save-profile-btn {
+    max-width: 200px;
+    height: 44px;
+    font-size: 14px;
+}
+
+/* ============================================================
+   STATUS MODAL & VIEWER
+   ============================================================ */
+.status-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.status-modal-content {
+    background: #232428;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 480px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    border: 1px solid #3c3e44;
+}
+
+.status-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #333;
+}
+
+.status-modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #fff;
+    font-weight: 600;
+}
+
+.status-close-btn {
+    background: transparent;
+    border: none;
+    color: #aaa;
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+}
+
+.status-close-btn:hover {
+    color: #fff;
+}
+
+.status-preview-box {
+    width: 100%;
+    height: 280px;
+    background: #18191c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.status-preview-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.status-caption-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+}
+
+.status-caption-row input {
+    flex: 1;
+    background: #18191c;
+    border: 1px solid #3c3e44;
+    border-radius: 20px;
+    padding: 10px 16px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+}
+
+.status-caption-row input:focus {
+    border-color: #ee4c49;
+}
+
+.status-modal-content.viewer {
+    max-width: 540px;
+    background: #18191c;
+}
+
+.status-viewer-media {
+    width: 100%;
+    max-height: 60vh;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.status-viewer-media img {
+    max-width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+}
+
+.status-viewer-caption {
+    padding: 16px 20px;
+    color: #fff;
+    font-size: 14px;
+    background: #232428;
+    margin: 0;
+    text-align: center;
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 1024px) {
@@ -1422,3 +1738,101 @@ body {
         gap: 7px;
     }
 }
+
+/* ============================================================
+   SETTINGS TABS & INFO CARDS
+   ============================================================ */
+.profile-section.active {
+    background: #2b2c30;
+    box-shadow: inset 3px 0 0 #ee4c49;
+}
+
+.settings-tab-panel {
+    display: none;
+}
+
+.settings-tab-panel.active {
+    display: block;
+}
+
+.settings-section-card {
+    background: #262626;
+    border: 1px solid #3c3d42;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.settings-card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin: 0 0 6px 0;
+}
+
+.settings-card-subtitle {
+    font-size: 13px;
+    color: #9ea0a5;
+    margin: 0 0 20px 0;
+    line-height: 1.5;
+}
+
+.settings-info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.settings-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #323337;
+}
+
+.settings-info-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.settings-info-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #8c8e94;
+    font-weight: 500;
+}
+
+.settings-info-val {
+    font-size: 14px;
+    color: #fcf6f5;
+    font-weight: 400;
+}
+
+.status-badge-active {
+    display: inline-block;
+    width: fit-content;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: rgba(39, 174, 96, 0.2);
+    border: 1px solid #27ae60;
+    color: #2ecc71;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.settings-action-link {
+    display: inline-block;
+    color: #ee4c49;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.settings-action-link:hover {
+    opacity: 0.85;
+    text-decoration: underline;
+}
+

@@ -66,10 +66,22 @@ using (var scope = app.Services.CreateScope())
             DROP TABLE ""Messages"";
             ALTER TABLE ""Messages_Fix"" RENAME TO ""Messages"";
         ");
+
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS ""Statuses"" (
+                ""Id"" INTEGER PRIMARY KEY AUTOINCREMENT,
+                ""UserId"" INTEGER NOT NULL,
+                ""Username"" TEXT NOT NULL,
+                ""UserAvatar"" TEXT NULL,
+                ""MediaUrl"" TEXT NOT NULL,
+                ""Caption"" TEXT NULL,
+                ""CreatedAt"" TEXT NOT NULL
+            );
+        ");
     }
     catch (Exception ex)
     {
-        System.Diagnostics.Debug.WriteLine($"[Startup] Messages table check: {ex.Message}");
+        System.Diagnostics.Debug.WriteLine($"[Startup] Database tables check: {ex.Message}");
     }
 
     System.Diagnostics.Debug.WriteLine($"[Startup] Database ready.");

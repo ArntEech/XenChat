@@ -1,3 +1,8 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using XenChat.Data;
 using XenChat.Models;
 
@@ -6,10 +11,12 @@ namespace XenChat.Services
     public class UserService
     {
         private readonly XenChatDbContext _db;
+        private readonly IConfiguration? _configuration;
 
-        public UserService(XenChatDbContext db)
+        public UserService(XenChatDbContext db, IConfiguration? configuration = null)
         {
             _db = db;
+            _configuration = configuration;
         }
 
         public List<User> GetAllUsers()
@@ -53,6 +60,61 @@ namespace XenChat.Services
 
             System.Diagnostics.Debug.WriteLine($"[CreateUser] SAVED. New Id={user.Id}");
             System.Diagnostics.Debug.WriteLine($"[CreateUser] Total after save: {_db.Users.Count()}");
+        }
+
+        public string GenerateToken(User user, TimeSpan? lifetime = null)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var secret = _configuration?["Jwt:Key"] ?? "XenChat_Secret_Key_For_Jwt_Auth_2026_Min_32_Chars!";
+            var key = Encoding.UTF8.GetBytes(secret);
+            var expires = DateTime.UtcNow.Add(lifetime ?? TimeSpan.FromDays(7));
+            var notBefore = expires < DateTime.UtcNow ? expires.AddMinutes(-1) : DateTime.UtcNow;
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim("id", user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim("username", user.Username)
+                }),
+                NotBefore = notBefore,
+                Expires = expires,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        public ClaimsPrincipal? ValidateToken(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+                return null;
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var secret = _configuration?["Jwt:Key"] ?? "XenChat_Secret_Key_For_Jwt_Auth_2026_Min_32_Chars!";
+            var key = Encoding.UTF8.GetBytes(secret);
+
+            try
+            {
+                var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                }, out _);
+
+                return principal;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

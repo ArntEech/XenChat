@@ -75,8 +75,39 @@ namespace XenChat.Controllers
         public IActionResult SendMessage(int receiverId, string message)
         {
             var senderId = HttpContext.Session.GetInt32("UserId");
+
+            var authHeader = Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                var principal = _userService.ValidateToken(token);
+                if (principal == null)
+                {
+                    return Unauthorized(new { success = false, error = "Invalid or expired token" });
+                }
+
+                var idClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                              ?? principal.FindFirst("id")?.Value;
+
+                if (int.TryParse(idClaim, out int tokenUserId))
+                {
+                    var tokenUser = _userService.GetUserById(tokenUserId);
+                    if (tokenUser == null)
+                    {
+                        return Unauthorized(new { success = false, error = "User not found" });
+                    }
+                    senderId = tokenUserId;
+                    HttpContext.Session.SetInt32("UserId", tokenUser.Id);
+                    HttpContext.Session.SetString("Username", tokenUser.Username);
+                }
+                else
+                {
+                    return Unauthorized(new { success = false, error = "Invalid token payload" });
+                }
+            }
+
             if (senderId == null)
-                return Json(new { success = false, error = "Not logged in" });
+                return Unauthorized(new { success = false, error = "Not logged in" });
 
             if (receiverId == senderId.Value)
                 return Json(new { success = false, error = "Cannot message yourself" });

@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using XenChat.Data;
+using XenChat.Models;
 using XenChat.Services;
 
 namespace XenChat.Controllers
@@ -7,11 +9,13 @@ namespace XenChat.Controllers
     {
         private readonly UserService _userService;
         private readonly MessageService _messageService;
+        private readonly XenChatDbContext _db;
 
-        public HomeController(UserService userService, MessageService messageService)
+        public HomeController(UserService userService, MessageService messageService, XenChatDbContext db)
         {
             _userService = userService;
             _messageService = messageService;
+            _db = db;
         }
 
         public IActionResult Index()
@@ -46,6 +50,13 @@ namespace XenChat.Controllers
                 ViewBag.UnreadCounts[user.Id] = unreadCount;
             }
 
+            var cutoff = DateTime.Now.AddHours(-24);
+            var activeStatuses = _db.Statuses
+                .Where(s => s.CreatedAt >= cutoff)
+                .OrderByDescending(s => s.CreatedAt)
+                .ToList();
+            ViewBag.Statuses = activeStatuses;
+
             return View(users);
         }
 
@@ -63,6 +74,11 @@ namespace XenChat.Controllers
             return View();
         }
 
+        public IActionResult Privacy()
+        {
+            return View();
+        }
+
         public IActionResult Profile()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -77,6 +93,120 @@ namespace XenChat.Controllers
             }
 
             return View(user);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Profile(string username, string? profileInfo, IFormFile? avatarFile)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            var user = _userService.GetUserById(userId.Value);
+            if (user == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                TempData["Error"] = "Username cannot be empty";
+                return RedirectToAction("Profile");
+            }
+
+            var trimmedUsername = username.Trim();
+            var existingUser = _userService.GetAllUsers()
+                .FirstOrDefault(u => u.Id != user.Id && u.Username.Equals(trimmedUsername, StringComparison.OrdinalIgnoreCase));
+            if (existingUser != null)
+            {
+                TempData["Error"] = "Username is already taken";
+                return RedirectToAction("Profile");
+            }
+
+            if (avatarFile != null && avatarFile.Length > 0)
+            {
+                var ext = Path.GetExtension(avatarFile.FileName).ToLowerInvariant();
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                if (!allowedExtensions.Contains(ext) || (avatarFile.ContentType != null && !avatarFile.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)))
+                {
+                    TempData["Error"] = "Only image files (.jpg, .jpeg, .png, .gif, .webp) are allowed.";
+                    return RedirectToAction("Profile");
+                }
+
+                var avatarFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "avatars");
+                if (!Directory.Exists(avatarFolder))
+                {
+                    Directory.CreateDirectory(avatarFolder);
+                }
+
+                var fileName = $"{Guid.NewGuid()}{ext}";
+                var filePath = Path.Combine(avatarFolder, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await avatarFile.CopyToAsync(stream);
+                }
+
+                user.Avatar = fileName;
+            }
+
+            user.Username = trimmedUsername;
+            user.ProfileInfo = profileInfo?.Trim() ?? "";
+
+            _db.SaveChanges();
+
+            HttpContext.Session.SetString("Username", user.Username);
+            TempData["Success"] = "Profile updated successfully!";
+
+            return RedirectToAction("Profile");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateStatus(IFormFile statusImage, string? caption)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            var user = _userService.GetUserById(userId.Value);
+            if (user == null)
+                return RedirectToAction("Login", "Account");
+
+            if (statusImage != null && statusImage.Length > 0)
+            {
+                var ext = Path.GetExtension(statusImage.FileName).ToLowerInvariant();
+                var allowed = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                if (allowed.Contains(ext))
+                {
+                    var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "status");
+                    if (!Directory.Exists(folder))
+                    {
+                        Directory.CreateDirectory(folder);
+                    }
+
+                    var fileName = $"{Guid.NewGuid()}{ext}";
+                    var filePath = Path.Combine(folder, fileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await statusImage.CopyToAsync(stream);
+                    }
+
+                    var status = new Status
+                    {
+                        UserId = user.Id,
+                        Username = user.Username,
+                        UserAvatar = user.Avatar,
+                        MediaUrl = $"/images/status/{fileName}",
+                        Caption = caption?.Trim(),
+                        CreatedAt = DateTime.Now
+                    };
+
+                    _db.Statuses.Add(status);
+                    _db.SaveChanges();
+                }
+            }
+
+            return RedirectToAction("Index");
         }
     }
 }

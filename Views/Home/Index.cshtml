@@ -6,6 +6,7 @@
     var unreadCounts = ViewBag.UnreadCounts as Dictionary<int, int>;
     var lastMessages = ViewBag.LastMessages as Dictionary<int, string>;
     var lastMessageTimes = ViewBag.LastMessageTimes as Dictionary<int, string>;
+    var statuses = ViewBag.Statuses as List<XenChat.Models.Status> ?? new List<XenChat.Models.Status>();
 }
 
 <div class="chat-list-panel">
@@ -48,7 +49,7 @@
             <h2 class="section-title">Updates</h2>
         </div>
         <div class="updates-carousel">
-            <div class="update-item">
+            <div class="update-item" id="addStatusBtn" style="cursor: pointer;" title="Add Status">
                 <div class="add-avatar">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19" />
@@ -57,15 +58,14 @@
                 </div>
                 <span class="update-name">Add</span>
             </div>
-            @if (Model != null)
+            @if (statuses != null && statuses.Any())
             {
-                foreach (var user in Model.Take(6))
+                foreach (var status in statuses)
                 {
-                    <a href="@Url.Action("Index", "Chat", new { userId = user.Id })" class="update-item" style="text-decoration:none; color:inherit;">
-                        <img src="@user.AvatarPath" alt="@user.Username" class="avatar-image update-carousel-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                        <div class="avatar-circle update-carousel-avatar" style="display: none;">@user.Initial</div>
-                        <span class="update-name">@user.Username</span>
-                    </a>
+                    <div class="update-item status-item" data-media="@status.MediaUrl" data-user="@status.Username" data-caption="@(status.Caption ?? "")" data-time="@status.CreatedAt.ToString("HH:mm")" style="cursor: pointer;" title="@status.Username">
+                        <img src="@status.MediaUrl" alt="@status.Username" class="avatar-image update-carousel-avatar" style="border: 2px solid #ee4c49;" onerror="this.src='/images/logo.png';" />
+                        <span class="update-name">@status.Username</span>
+                    </div>
                 }
             }
         </div>
@@ -253,4 +253,126 @@
     });
 
     connection.start().catch(err => console.error("SignalR error:", err));
+
+    // Status Upload & Viewer Handlers
+    const addStatusBtn = document.getElementById('addStatusBtn');
+    const statusFileInput = document.getElementById('statusFileInput');
+    const statusUploadModal = document.getElementById('statusUploadModal');
+    const uploadPreviewImg = document.getElementById('uploadPreviewImg');
+    const closeUploadModalBtn = document.getElementById('closeUploadModalBtn');
+
+    if (addStatusBtn && statusFileInput) {
+        addStatusBtn.addEventListener('click', () => {
+            statusFileInput.click();
+        });
+
+        statusFileInput.addEventListener('change', function () {
+            const file = this.files && this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    uploadPreviewImg.src = e.target.result;
+                    statusUploadModal.style.display = 'flex';
+                    const captionInput = document.getElementById('statusCaptionInput');
+                    if (captionInput) captionInput.focus();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (closeUploadModalBtn && statusUploadModal) {
+        closeUploadModalBtn.addEventListener('click', () => {
+            statusUploadModal.style.display = 'none';
+            statusFileInput.value = '';
+        });
+
+        statusUploadModal.addEventListener('click', (e) => {
+            if (e.target === statusUploadModal) {
+                statusUploadModal.style.display = 'none';
+                statusFileInput.value = '';
+            }
+        });
+    }
+
+    // Status Viewer
+    const statusViewerModal = document.getElementById('statusViewerModal');
+    const viewerImage = document.getElementById('viewerImage');
+    const viewerUsername = document.getElementById('viewerUsername');
+    const viewerTime = document.getElementById('viewerTime');
+    const viewerCaption = document.getElementById('viewerCaption');
+    const closeViewerModalBtn = document.getElementById('closeViewerModalBtn');
+
+    document.querySelectorAll('.status-item').forEach(item => {
+        item.addEventListener('click', function () {
+            const media = this.getAttribute('data-media');
+            const user = this.getAttribute('data-user');
+            const caption = this.getAttribute('data-caption');
+            const time = this.getAttribute('data-time');
+
+            if (viewerImage) viewerImage.src = media;
+            if (viewerUsername) viewerUsername.textContent = user;
+            if (viewerTime) viewerTime.textContent = time;
+
+            if (viewerCaption) {
+                if (caption && caption.trim().length > 0) {
+                    viewerCaption.textContent = caption;
+                    viewerCaption.style.display = 'block';
+                } else {
+                    viewerCaption.style.display = 'none';
+                }
+            }
+
+            if (statusViewerModal) statusViewerModal.style.display = 'flex';
+        });
+    });
+
+    if (closeViewerModalBtn && statusViewerModal) {
+        closeViewerModalBtn.addEventListener('click', () => {
+            statusViewerModal.style.display = 'none';
+        });
+
+        statusViewerModal.addEventListener('click', (e) => {
+            if (e.target === statusViewerModal) {
+                statusViewerModal.style.display = 'none';
+            }
+        });
+    }
 </script>
+
+<!-- Status Upload Modal -->
+<div id="statusUploadModal" class="status-modal" style="display: none;">
+    <div class="status-modal-content">
+        <div class="status-modal-header">
+            <h3>New Status</h3>
+            <button type="button" id="closeUploadModalBtn" class="status-close-btn">&times;</button>
+        </div>
+        <form method="post" asp-action="CreateStatus" asp-controller="Home" enctype="multipart/form-data" id="statusUploadForm">
+            <div class="status-preview-box">
+                <img id="uploadPreviewImg" src="" alt="Preview" />
+            </div>
+            <input type="file" id="statusFileInput" name="statusImage" accept="image/*" required style="display: none;" />
+            <div class="status-caption-row">
+                <input type="text" name="caption" id="statusCaptionInput" placeholder="Add a caption..." autocomplete="off" />
+                <button type="submit" class="primary-button" style="width: auto; padding: 0 20px; height: 40px;">Send</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Status Viewer Modal -->
+<div id="statusViewerModal" class="status-modal" style="display: none;">
+    <div class="status-modal-content viewer">
+        <div class="status-modal-header">
+            <div class="status-user-info">
+                <strong id="viewerUsername" style="color: #fff; font-size: 15px;"></strong>
+                <span id="viewerTime" style="font-size: 12px; color: #888; margin-left: 8px;"></span>
+            </div>
+            <button type="button" id="closeViewerModalBtn" class="status-close-btn">&times;</button>
+        </div>
+        <div class="status-viewer-media">
+            <img id="viewerImage" src="" alt="Status" />
+        </div>
+        <p id="viewerCaption" class="status-viewer-caption" style="display: none;"></p>
+    </div>
+</div>

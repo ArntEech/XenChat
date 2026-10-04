@@ -30,8 +30,15 @@ namespace XenChat.Controllers
         [HttpPost]
         public IActionResult Login(string email, string password)
         {
+            var isJsonRequest = Request.Headers["Accept"].ToString().Contains("application/json") ||
+                                Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
+                if (isJsonRequest)
+                {
+                    return Json(new { success = false, error = "Please enter both email and password" });
+                }
                 ViewBag.Error = "Please enter both email and password";
                 return View();
             }
@@ -49,11 +56,23 @@ namespace XenChat.Controllers
                 System.Diagnostics.Debug.WriteLine($"[Login] SUCCESS → {user.Username}");
                 HttpContext.Session.SetInt32("UserId", user.Id);
                 HttpContext.Session.SetString("Username", user.Username);
-                return RedirectToAction("Index", "Home");
+                var token = _userService.GenerateToken(user);
+
+                if (isJsonRequest)
+                {
+                    return Json(new { success = true, token, username = user.Username, userId = user.Id });
+                }
+
+                ViewBag.Token = token;
+                return View();
             }
 
             System.Diagnostics.Debug.WriteLine("[Login] FAILED — no match");
             System.Diagnostics.Debug.WriteLine("====================================================");
+            if (isJsonRequest)
+            {
+                return Json(new { success = false, error = "Invalid email or password" });
+            }
             ViewBag.Error = "Invalid email or password";
             return View();
         }
@@ -242,10 +261,52 @@ namespace XenChat.Controllers
         [HttpGet]
         public IActionResult AccountCreated() => View();
 
+        [HttpPost]
+        public IActionResult RestoreSession()
+        {
+            string? token = null;
+            var authHeader = Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                token = authHeader.Substring("Bearer ".Length).Trim();
+            }
+            else if (Request.HasFormContentType && Request.Form.ContainsKey("token"))
+            {
+                token = Request.Form["token"];
+            }
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return Unauthorized(new { success = false, error = "No token provided" });
+            }
+
+            var principal = _userService.ValidateToken(token);
+            if (principal == null)
+            {
+                return Unauthorized(new { success = false, error = "Invalid or expired token" });
+            }
+
+            var idClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                          ?? principal.FindFirst("id")?.Value;
+
+            if (int.TryParse(idClaim, out int userId))
+            {
+                var user = _userService.GetUserById(userId);
+                if (user != null)
+                {
+                    HttpContext.Session.SetInt32("UserId", user.Id);
+                    HttpContext.Session.SetString("Username", user.Username);
+                    return Ok(new { success = true, userId = user.Id, username = user.Username });
+                }
+            }
+
+            return Unauthorized(new { success = false, error = "User not found" });
+        }
+
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
-            return RedirectToAction("Login");
+            return RedirectToAction("Login", new { logout = "true" });
         }
     }
 }

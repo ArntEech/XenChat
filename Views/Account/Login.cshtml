@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Login";
     Layout = null;
 }
@@ -79,5 +79,101 @@
             </form>
         </section>
     </main>
+
+    @if (ViewBag.Token != null)
+    {
+        <script>
+            localStorage.setItem('xenchat_token', '@ViewBag.Token');
+            window.location.href = '@Url.Action("Index", "Home")';
+        </script>
+    }
+
+    <script>
+        (function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isLogout = urlParams.get('logout') === 'true';
+
+            if (isLogout) {
+                localStorage.removeItem('xenchat_token');
+                if (window.history.replaceState) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            } else {
+                const token = localStorage.getItem('xenchat_token');
+                if (token) {
+                    fetch('@Url.Action("RestoreSession", "Account")', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(res => {
+                        if (res.ok) {
+                            return res.json().then(data => {
+                                if (data && data.success) {
+                                    window.location.href = '@Url.Action("Index", "Home")';
+                                } else {
+                                    localStorage.removeItem('xenchat_token');
+                                }
+                            });
+                        } else {
+                            localStorage.removeItem('xenchat_token');
+                        }
+                    })
+                    .catch(() => {
+                        localStorage.removeItem('xenchat_token');
+                    });
+                }
+            }
+
+            const form = document.querySelector('.auth-form');
+            if (form) {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    const emailInput = form.querySelector('input[name="email"]');
+                    const passwordInput = form.querySelector('input[name="password"]');
+                    const email = emailInput ? emailInput.value.trim() : '';
+                    const password = passwordInput ? passwordInput.value : '';
+
+                    const formData = new FormData();
+                    formData.append('email', email);
+                    formData.append('password', password);
+
+                    try {
+                        const response = await fetch('@Url.Action("Login", "Account")', {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
+
+                        const data = await response.json();
+                        if (data && data.success && data.token) {
+                            localStorage.setItem('xenchat_token', data.token);
+                            window.location.href = '@Url.Action("Index", "Home")';
+                        } else {
+                            let errorDiv = document.querySelector('.auth-error');
+                            if (!errorDiv) {
+                                errorDiv = document.createElement('div');
+                                errorDiv.className = 'auth-error';
+                                const brand = document.querySelector('.brand');
+                                if (brand) {
+                                    brand.insertAdjacentElement('afterend', errorDiv);
+                                } else {
+                                    form.prepend(errorDiv);
+                                }
+                            }
+                            errorDiv.textContent = data.error || 'Invalid email or password';
+                        }
+                    } catch (err) {
+                        form.submit();
+                    }
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

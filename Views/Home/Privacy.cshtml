@@ -1,6 +1,42 @@
-﻿@{
+@{
     ViewData["Title"] = "Privacy Policy";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="privacy-container" style="flex: 1; padding: 40px; background-color: #1B1D1F; color: #FFFFFF; overflow-y: auto; font-family: 'Poppins', sans-serif;">
+    <div style="max-width: 800px; margin: 0 auto; background: #303236; padding: 36px; border-radius: 12px; border: 1px solid #414247;">
+        <h1 style="font-size: 28px; font-weight: 600; margin-bottom: 8px; color: #FFFFFF;">Privacy Policy</h1>
+        <p style="color: #A0A0A0; font-size: 14px; margin-bottom: 28px;">Last updated: October 2026</p>
+
+        <section style="margin-bottom: 24px;">
+            <h2 style="font-size: 18px; font-weight: 600; color: #ee4c49; margin-bottom: 10px;">1. Information We Collect</h2>
+            <p style="font-size: 14px; line-height: 1.6; color: #CCCCCC;">
+                XenChat collects basic account information required to provide the messaging service, including your username, email address, profile information, and uploaded avatar.
+            </p>
+        </section>
+
+        <section style="margin-bottom: 24px;">
+            <h2 style="font-size: 18px; font-weight: 600; color: #ee4c49; margin-bottom: 10px;">2. Message Privacy &amp; Data Security</h2>
+            <p style="font-size: 14px; line-height: 1.6; color: #CCCCCC;">
+                Your conversations are private. XenChat stores messages and media securely in our local database solely for delivery between conversation participants. We do not sell your personal data or chat contents to any third parties.
+            </p>
+        </section>
+
+        <section style="margin-bottom: 24px;">
+            <h2 style="font-size: 18px; font-weight: 600; color: #ee4c49; margin-bottom: 10px;">3. Status Updates</h2>
+            <p style="font-size: 14px; line-height: 1.6; color: #CCCCCC;">
+                Status media posted by users is visible to all registered contacts on the platform and automatically expires after 24 hours.
+            </p>
+        </section>
+
+        <section style="margin-bottom: 24px;">
+            <h2 style="font-size: 18px; font-weight: 600; color: #ee4c49; margin-bottom: 10px;">4. Contact &amp; Inquiries</h2>
+            <p style="font-size: 14px; line-height: 1.6; color: #CCCCCC;">
+                If you have questions regarding your privacy rights or account data, please reach out to our team at <a href="mailto:support@xenchat.local" style="color: #ee4c49; text-decoration: underline;">support@xenchat.local</a>.
+            </p>
+        </section>
+
+        <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #414247;">
+            <a href="@Url.Action("Profile", "Home")" class="primary-button" style="display: inline-block; padding: 10px 24px; border-radius: 20px; background: #ee4c49; color: #FFFFFF; text-decoration: none; font-size: 14px;">Back to Profile</a>
+        </div>
+    </div>
+</div>
