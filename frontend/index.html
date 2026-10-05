@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>XenChat — Modern Real-Time Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Manrope:wght@400;500&family=Montserrat:wght@600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/site.css" />
+</head>
+<body class="chat-body">
+    <div class="chat-layout">
+        <!-- 1. Left Vertical Icon Rail -->
+        <nav class="chat-rail" aria-label="Primary Navigation">
+            <div class="rail-top">
+                <a href="index.html" class="rail-logo" title="XenChat">
+                    <img src="images/logo.png" alt="XenChat Logo" onerror="this.style.display='none';" />
+                </a>
+
+                <div class="rail-nav-group">
+                    <button type="button" class="rail-btn active" id="railChatsBtn" title="Chats">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <span class="rail-btn-label">Chats</span>
+                    </button>
+
+                    <button type="button" class="rail-btn" id="railGroupsBtn" title="Group Chats">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <span class="rail-btn-label">Groups</span>
+                    </button>
+
+                    <button type="button" class="rail-btn" id="railStatusesBtn" title="24h Stories / Status">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span class="rail-btn-label">Status</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="rail-bottom">
+                <button type="button" class="rail-btn" id="backendSettingsBtn" title="Backend Server Settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span class="rail-btn-label">Server</span>
+                </button>
+
+                <a href="profile.html" class="rail-btn" title="Settings &amp; Profile">
+                    <div class="rail-avatar-chip">
+                        <img id="railUserAvatar" src="images/avatars/user.png" alt="Profile" />
+                    </div>
+                    <span class="rail-btn-label">Profile</span>
+                </a>
+
+                <button type="button" class="rail-btn" id="logoutBtn" title="Log Out">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span class="rail-btn-label">Logout</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- 2. Chat List Panel (Left Panel) -->
+        <div class="chat-list-panel chat-list-view" id="chatListPanel">
+            <div class="chat-list-header">
+                <a href="index.html" class="brand-container" style="text-decoration: none; color: inherit;" title="Chats">
+                    <h1 class="brand-title">Chats</h1>
+                </a>
+                <div class="header-actions">
+                    <button type="button" class="icon-btn" id="headerNewGroupBtn" title="New Group">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                    <button type="button" class="icon-btn" id="searchToggleBtn" title="Search">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                    <a href="profile.html" class="icon-btn" title="Settings">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="19" cy="12" r="1"></circle>
+                            <circle cx="5" cy="12" r="1"></circle>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-bar-container" id="searchBarContainer" style="display: none; padding: 10px 16px;">
+                <input type="text" id="contactSearchInput" placeholder="Search contacts... (⌘K)" style="width:100%; padding:8px 14px; border-radius:8px; border:1px solid #33333e; background:#23232a; color:#f4f4f5; font-size:14px; outline:none;" />
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <button class="filter-pill active" data-filter="chats">
+                    Chats <span class="badge" id="chatsBadge">0</span>
+                </button>
+                <button class="filter-pill" data-filter="groups">
+                    Groups <span class="badge" id="groupsBadge">0</span>
+                </button>
+                <button class="filter-pill" data-filter="unread">
+                    Unread <span class="badge" id="unreadBadge" style="display: none;">0</span>
+                </button>
+                <button class="filter-pill" data-filter="favorites" id="favFilterBtn">
+                    Favorites <span class="badge" id="favBadge" style="display: none;">0</span>
+                </button>
+            </div>
+
+            <!-- 24h Status / Stories Horizontal Bar -->
+            <div class="status-stories-container" id="statusStoriesBar" style="padding: 12px 16px; border-bottom: 1px solid #23232a; display: flex; align-items: center; gap: 12px; overflow-x: auto;">
+                <div class="status-story-item my-status" id="addStatusBtn" style="cursor: pointer; text-align: center; flex-shrink: 0;">
+                    <div style="position: relative; width: 48px; height: 48px; margin: 0 auto;">
+                        <img id="myStatusAvatar" src="images/avatars/user.png" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;" />
+                        <span style="position: absolute; bottom: 0; right: 0; background: #ee4c49; color: #fff; width: 16px; height: 16px; border-radius: 50%; font-size: 13px; display: flex; align-items: center; justify-content: center; line-height: 1;">+</span>
+                    </div>
+                    <span style="font-size: 11px; color: #a1a1aa; margin-top: 4px; display: block;">You</span>
+                </div>
+                <div id="contactStatusesList" style="display: flex; gap: 12px;"></div>
+            </div>
+
+            <!-- Chat List Items -->
+            <div class="chat-list" id="chatList">
+                <div class="empty-state" style="padding: 40px 16px; text-align: center; color: #888;">
+                    <p>Loading conversations...</p>
+                </div>
+            </div>
+
+            <!-- Dedicated Groups List Container -->
+            <div class="group-list-container" id="groupListContainer" style="display: none;">
+                <div id="groupList"></div>
+            </div>
+        </div>
+
+        <!-- 3. Conversation Panel (Right Panel) -->
+        <div class="conversation-panel chat-list-view" id="conversationPanel">
+            <!-- Active Conversation Header -->
+            <div class="conversation-header" id="conversationHeader" style="display: none;">
+                <div class="conversation-user">
+                    <button type="button" class="chat-back-btn" id="chatBackBtn" title="Back to chats">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                    </button>
+                    <img id="chatHeaderAvatarImg" src="images/avatars/user.png" alt="Avatar" class="avatar-image avatar-large" />
+                    <div class="avatar-circle large" id="chatHeaderAvatarFallback" style="display: none;">?</div>
+                    <div class="conversation-user-info">
+                        <h3 id="chatHeaderTitle">Contact Name</h3>
+                        <div class="status-indicator-wrap">
+                            <span class="status-dot" id="chatHeaderStatusDot"></span>
+                            <span class="typing-status" id="chatHeaderStatus">Offline</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="conversation-actions">
+                    <button type="button" class="pin-action-btn" id="togglePinBtn" title="Pin chat">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6l1 1 1-1v-6H18v-2l-2-2z"></path>
+                        </svg>
+                    </button>
+
+                    <button type="button" class="favorite-action-btn" id="toggleFavoriteBtn" title="Add to Favorites">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </button>
+
+                    <button type="button" class="icon-btn" id="startVoiceCallBtn" title="Start Voice Call">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                    </button>
+
+                    <button type="button" class="icon-btn" id="startVideoCallBtn" title="Start Video Call">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                        </svg>
+                    </button>
+
+                    <a href="profile.html" class="icon-btn" title="Settings &amp; Options">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="19" cy="12" r="1"></circle>
+                            <circle cx="5" cy="12" r="1"></circle>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Messages Stream Area -->
+            <div class="messages-container" id="messagesContainer" style="background-color: #121214 !important; background-image: none !important;">
+                <div class="empty-conversation-notice" id="emptyNotice" style="text-align: center; margin: auto; color: #888;">
+                    <div style="font-size: 40px; margin-bottom: 12px;">💬</div>
+                    <h3>Select a chat to start messaging</h3>
+                    <p style="font-size: 13px; color: #666;">Choose a contact or message yourself to get started.</p>
+                </div>
+            </div>
+
+            <!-- Message Input Area -->
+            <form id="messageForm" class="message-input-form" style="display: none; position: relative;" autocomplete="off">
+                <button type="button" class="emoji-btn" id="emojiToggleBtn" title="Insert Emoji">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                        <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                        <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                    </svg>
+                </button>
+
+                <input type="text" id="messageInput" placeholder="Type a message..." required autocomplete="off" />
+
+                <button type="button" class="attach-btn" id="attachImageBtn" title="Send Photo">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                </button>
+                <input type="file" id="chatImageInput" accept="image/*" style="display: none;" />
+
+                <button type="submit" class="send-btn" id="sendBtn" title="Send">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+
+                <!-- Emoji Picker Popup -->
+                <div id="emojiPickerPopup" class="emoji-picker-popup">
+                    <div class="emoji-picker-header">
+                        <span style="font-weight: 500; color: #fff;">Smileys &amp; Emojis</span>
+                        <span id="closeEmojiPickerBtn" style="cursor: pointer; font-size: 18px; line-height: 1;">&times;</span>
+                    </div>
+                    <div class="emoji-grid" id="emojiGrid"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modals & Overlays -->
+
+    <!-- 1. Chat Image Send Modal -->
+    <div id="chatImageModal" class="chat-image-modal" style="display: none;">
+        <div class="chat-image-modal-content">
+            <div class="status-modal-header">
+                <h3>Send Photo</h3>
+                <button type="button" id="closeChatImageModalBtn" class="status-close-btn">&times;</button>
+            </div>
+            <div class="chat-image-preview-area">
+                <img id="chatImagePreview" src="" alt="Selected Photo" />
+            </div>
+            <div class="status-caption-row">
+                <input type="text" id="chatImageCaptionInput" placeholder="Add a caption..." autocomplete="off" />
+                <button type="button" id="sendChatImageBtn" class="primary-button" style="width: auto; padding: 0 20px; height: 40px;">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Status Upload Modal -->
+    <div id="statusUploadModal" class="chat-image-modal" style="display: none;">
+        <div class="chat-image-modal-content">
+            <div class="status-modal-header">
+                <h3>Post 24h Story</h3>
+                <button type="button" id="closeStatusModalBtn" class="status-close-btn">&times;</button>
+            </div>
+            <div class="chat-image-preview-area">
+                <img id="statusUploadPreview" src="" alt="Status Photo" />
+            </div>
+            <div class="status-caption-row">
+                <input type="text" id="statusCaptionInput" placeholder="Add a caption to your story..." autocomplete="off" />
+                <button type="button" id="submitStatusBtn" class="primary-button" style="width: auto; padding: 0 20px; height: 40px;">Post</button>
+            </div>
+            <input type="file" id="statusFileInput" accept="image/*" style="display: none;" />
+        </div>
+    </div>
+
+    <!-- 3. WebRTC Incoming Call Modal -->
+    <div id="incomingCallModal" class="call-modal-overlay" style="display: none;">
+        <div class="call-modal-card">
+            <div class="call-modal-top-bar">
+                <div class="call-type-badge incoming">
+                    <span class="call-pulse-dot green"></span>
+                    <span id="incomingCallTypeBadge">Incoming Call</span>
+                </div>
+            </div>
+            <div class="call-avatar-stage">
+                <div class="call-ripple-ring ring-1 ring-green"></div>
+                <div class="call-ripple-ring ring-2 ring-green"></div>
+                <div class="call-ripple-ring ring-3 ring-green"></div>
+                <div class="call-avatar-wrapper">
+                    <div class="call-avatar" id="incomingCallAvatar">?</div>
+                </div>
+            </div>
+            <div class="call-meta-section">
+                <h3 class="call-user-name" id="incomingCallerName">Caller</h3>
+                <div class="call-status-pill">
+                    <span class="call-status-pulse-dot green"></span>
+                    <span class="call-status-label" id="incomingCallTypeLabel">Incoming call...</span>
+                </div>
+            </div>
+            <div class="call-controls-dock">
+                <div class="call-control-item">
+                    <button type="button" class="call-action-btn call-btn-accept" id="btnAcceptCall" title="Accept Call">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                    </button>
+                    <span class="call-control-label">Accept</span>
+                </div>
+                <div class="call-control-item">
+                    <button type="button" class="call-action-btn call-btn-end" id="btnDeclineCall" title="Decline Call">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                    <span class="call-control-label">Decline</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. WebRTC Active Call Overlay Screen -->
+    <div id="activeCallOverlay" class="active-call-overlay" style="display: none;">
+        <div class="active-call-inner">
+            <div class="active-call-header">
+                <span class="active-call-dot"></span>
+                <span id="activeCallHeaderTitle">Active Call</span>
+                <span class="active-call-timer" id="callDurationTimer">00:00</span>
+            </div>
+            <div class="active-call-video-stage" id="callVideoStage">
+                <video id="remoteVideo" autoplay playsinline></video>
+                <video id="localVideo" autoplay playsinline muted></video>
+                <div class="audio-only-avatar-stage" id="audioCallAvatarStage" style="display: none;">
+                    <div class="audio-call-avatar" id="audioCallPartnerAvatar">?</div>
+                    <h3 id="audioCallPartnerName">User</h3>
+                    <p>In Call...</p>
+                </div>
+            </div>
+            <div class="active-call-toolbar">
+                <button type="button" class="call-action-btn" id="btnToggleMute" title="Mute/Unmute Mic">🎤</button>
+                <button type="button" class="call-action-btn" id="btnToggleCamera" title="Toggle Camera">📹</button>
+                <button type="button" class="call-action-btn call-btn-end" id="btnHangUp" title="End Call">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Backend Server Settings Modal -->
+    <div id="backendSettingsModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: #1e1e24; border: 1px solid #33333e; border-radius: 12px; padding: 24px; max-width: 440px; width: 90%; color: #f4f4f5;">
+            <h3 style="margin-top: 0; margin-bottom: 8px;">Backend API Settings</h3>
+            <p style="font-size: 13px; color: #a1a1aa; margin-bottom: 16px;">Set your deployed ASP.NET Core backend server URL (e.g. Render / Railway / Fly.io / localhost):</p>
+            <input type="url" id="customApiUrlInput" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #444; background: #121214; color: #fff; font-size: 14px; margin-bottom: 16px; outline: none;" placeholder="https://your-backend.onrender.com" />
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" id="closeBackendSettingsBtn" style="background: #2a2a32; border: none; color: #ccc; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Cancel</button>
+                <button type="button" id="saveBackendSettingsBtn" style="background: #e11d48; border: none; color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">Save &amp; Reload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Remote Audio Element for Audio Calls -->
+    <audio id="remoteAudio" autoplay playsinline></audio>
+
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/chat.js"></script>
+</body>
+</html>

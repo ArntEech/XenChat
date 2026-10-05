@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Verify Code — XenChat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Manrope:wght@400;500&family=Montserrat:wght@600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/site.css" />
+</head>
+<body class="auth-body">
+    <main class="auth-shell">
+        <aside class="auth-art" aria-hidden="true">
+            <img src="images/sn_bg.png" alt="" />
+        </aside>
+
+        <section class="auth-main">
+            <form class="verify-card" id="verifyForm">
+                <div class="brand">
+                    <img src="images/logo.png" alt="XenChat" onerror="this.style.display='none';" />
+                    <span>XenChat</span>
+                </div>
+
+                <div class="verify-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                </div>
+
+                <h1>Enter Code</h1>
+                <p>
+                    We sent a verification code to your email<br />
+                    <strong id="displayEmail"></strong>
+                </p>
+
+                <div id="errorContainer" class="auth-error" style="display: none; margin-top: 16px;"></div>
+
+                <div class="code-inputs" aria-label="Verification code">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required placeholder="–" />
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required placeholder="–" />
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required placeholder="–" />
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required placeholder="–" />
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required placeholder="–" />
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" required placeholder="–" />
+                </div>
+
+                <button class="primary-button" id="submitBtn" type="submit">Verify &amp; Continue</button>
+
+                <div class="resend">
+                    <p>
+                        Didn’t receive code?
+                        <button type="button" id="resendBtn">Resend Code</button>
+                    </p>
+                    <p id="timerRow">You can resend code in <span id="timer">59</span>s</p>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;" aria-hidden="true">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const email = params.get('email');
+            if (!email) {
+                window.location.href = 'signup.html';
+                return;
+            }
+
+            document.getElementById('displayEmail').textContent = email;
+
+            const inputs = document.querySelectorAll('.code-inputs input');
+            const form = document.getElementById('verifyForm');
+            const errorContainer = document.getElementById('errorContainer');
+            const submitBtn = document.getElementById('submitBtn');
+            const overlay = document.getElementById('loadingOverlay');
+            const resendBtn = document.getElementById('resendBtn');
+            const timerSpan = document.getElementById('timer');
+            const timerRow = document.getElementById('timerRow');
+
+            if (inputs.length > 0) inputs[0].focus();
+
+            // Code Inputs Navigation
+            inputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    if (val.length === 1 && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !input.value && index > 0) {
+                        inputs[index - 1].focus();
+                    }
+                });
+
+                input.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const text = (e.clipboardData || window.clipboardData).getData('text').trim();
+                    if (/^\d{6}$/.test(text)) {
+                        text.split('').forEach((char, idx) => {
+                            if (inputs[idx]) inputs[idx].value = char;
+                        });
+                        inputs[inputs.length - 1].focus();
+                    }
+                });
+            });
+
+            // Resend Timer
+            let countdown = 59;
+            resendBtn.disabled = true;
+            resendBtn.style.opacity = '0.5';
+
+            const timerInterval = setInterval(() => {
+                countdown--;
+                if (timerSpan) timerSpan.textContent = countdown;
+                if (countdown <= 0) {
+                    clearInterval(timerInterval);
+                    resendBtn.disabled = false;
+                    resendBtn.style.opacity = '1';
+                    if (timerRow) timerRow.style.display = 'none';
+                }
+            }, 1000);
+
+            resendBtn.addEventListener('click', async () => {
+                resendBtn.disabled = true;
+                resendBtn.textContent = 'Sending...';
+
+                try {
+                    const res = await AUTH.resendOtp(email);
+                    if (res && res.success) {
+                        alert('New verification code sent to your email.');
+                        countdown = 59;
+                        if (timerRow) timerRow.style.display = 'block';
+                        if (timerSpan) timerSpan.textContent = countdown;
+                    } else {
+                        alert(res.error || 'Failed to resend code.');
+                    }
+                } catch (err) {
+                    alert('Could not connect to server.');
+                } finally {
+                    resendBtn.textContent = 'Resend Code';
+                }
+            });
+
+            // Submit Form
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errorContainer.style.display = 'none';
+
+                let code = '';
+                inputs.forEach(i => code += i.value.trim());
+
+                if (code.length !== 6) {
+                    errorContainer.textContent = 'Please enter all 6 digits.';
+                    errorContainer.style.display = 'block';
+                    return;
+                }
+
+                overlay.style.display = 'flex';
+                submitBtn.disabled = true;
+
+                try {
+                    const res = await AUTH.verifyOtp(email, code);
+                    if (res && res.success) {
+                        // Successfully verified and automatically logged in!
+                        window.location.href = 'index.html';
+                    } else {
+                        overlay.style.display = 'none';
+                        submitBtn.disabled = false;
+                        errorContainer.textContent = res.error || 'Invalid verification code.';
+                        errorContainer.style.display = 'block';
+                    }
+                } catch (err) {
+                    overlay.style.display = 'none';
+                    submitBtn.disabled = false;
+                    errorContainer.textContent = 'Could not connect to server.';
+                    errorContainer.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

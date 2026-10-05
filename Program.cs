@@ -98,6 +98,40 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
+// CORS Configuration for Separated Frontend Deployment
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        var rawOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS")
+            ?? Environment.GetEnvironmentVariable("FRONTEND_URL");
+
+        if (string.IsNullOrWhiteSpace(rawOrigins) || rawOrigins.Trim() == "*")
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
+        else
+        {
+            var origins = rawOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            policy.WithOrigins(origins)
+                  .SetIsOriginAllowed(origin =>
+                  {
+                      if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                      {
+                          if (uri.Host == "localhost" || uri.Host == "127.0.0.1") return true;
+                      }
+                      return origins.Contains(origin, StringComparer.OrdinalIgnoreCase);
+                  })
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
+    });
+});
+
 // MVC + SignalR + Session
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
@@ -199,6 +233,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseCors("AllowFrontend");
 app.UseSession();
 app.UseAuthorization();
 

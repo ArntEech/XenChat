@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Login — XenChat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Manrope:wght@400;500&family=Montserrat:wght@600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/site.css" />
+</head>
+<body class="auth-body">
+    <main class="auth-shell">
+        <aside class="auth-art" aria-hidden="true">
+            <img src="images/sn_bg.png" alt="" />
+        </aside>
+
+        <section class="auth-main">
+            <form class="auth-form" id="loginForm" autocomplete="off">
+
+                <div class="brand">
+                    <img src="images/logo.png" alt="XenChat" onerror="this.style.display='none';" />
+                    <span>XenChat</span>
+                </div>
+
+                <div id="errorContainer" class="auth-error" style="display: none;"></div>
+                <div id="successContainer" class="auth-success" style="display: none;"></div>
+
+                <label>
+                    <span>Email</span>
+                    <input type="email"
+                           id="emailInput"
+                           name="email"
+                           required
+                           autocomplete="off"
+                           placeholder="Enter email" />
+                </label>
+
+                <label>
+                    <span>Password</span>
+                    <input type="password"
+                           id="passwordInput"
+                           name="password"
+                           required
+                           minlength="6"
+                           autocomplete="current-password"
+                           placeholder="Enter password" />
+                </label>
+
+                <button class="primary-button" id="submitBtn" type="submit">Log In</button>
+
+                <div class="or">
+                    <span></span>
+                    OR
+                    <span></span>
+                </div>
+
+                <div style="text-align: center; margin: 4px 0 12px 0;">
+                    <button type="button" id="apiConfigBtn" style="background: none; border: none; color: #71717a; font-size: 12px; cursor: pointer; text-decoration: underline;">
+                        ⚙️ Backend Server Settings
+                    </button>
+                </div>
+
+                <p class="auth-switch">
+                    Don’t have an account?
+                    <a href="signup.html">Sign Up</a>
+                </p>
+            </form>
+        </section>
+    </main>
+
+    <!-- Backend API Config Modal -->
+    <div id="configModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: #1e1e24; border: 1px solid #33333e; border-radius: 12px; padding: 24px; max-width: 420px; width: 90%; color: #f4f4f5;">
+            <h3 style="margin-top: 0; margin-bottom: 8px;">Backend API URL</h3>
+            <p style="font-size: 13px; color: #a1a1aa; margin-bottom: 16px;">Specify the URL of your deployed ASP.NET Core backend (Render, Railway, Fly.io, etc.):</p>
+            <input type="url" id="apiUrlInput" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #444; background: #121214; color: #fff; font-size: 14px; margin-bottom: 16px; outline: none;" placeholder="https://your-backend.onrender.com" />
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" id="closeConfigBtn" style="background: #2a2a32; border: none; color: #ccc; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Cancel</button>
+                <button type="button" id="saveConfigBtn" style="background: #e11d48; border: none; color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">Save &amp; Reload</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check if already authenticated
+            await AUTH.redirectIfAuthenticated();
+
+            const form = document.getElementById('loginForm');
+            const emailInput = document.getElementById('emailInput');
+            const passwordInput = document.getElementById('passwordInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const errorContainer = document.getElementById('errorContainer');
+            const successContainer = document.getElementById('successContainer');
+
+            // Show success message if redirected from signup/verify
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('registered') === 'true') {
+                successContainer.textContent = 'Account created successfully! Please log in.';
+                successContainer.style.display = 'block';
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errorContainer.style.display = 'none';
+
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                if (!email || !password) return;
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Logging in...';
+
+                try {
+                    const res = await AUTH.login(email, password);
+                    if (res && res.success) {
+                        window.location.href = 'index.html';
+                    } else {
+                        errorContainer.textContent = res.error || 'Invalid email or password.';
+                        errorContainer.style.display = 'block';
+                    }
+                } catch (err) {
+                    errorContainer.textContent = 'Could not connect to server. Check backend URL.';
+                    errorContainer.style.display = 'block';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Log In';
+                }
+            });
+
+            // Config Modal
+            const configBtn = document.getElementById('apiConfigBtn');
+            const configModal = document.getElementById('configModal');
+            const apiUrlInput = document.getElementById('apiUrlInput');
+            const closeConfigBtn = document.getElementById('closeConfigBtn');
+            const saveConfigBtn = document.getElementById('saveConfigBtn');
+
+            configBtn.addEventListener('click', () => {
+                apiUrlInput.value = CONFIG.API_BASE_URL;
+                configModal.style.display = 'flex';
+            });
+
+            closeConfigBtn.addEventListener('click', () => {
+                configModal.style.display = 'none';
+            });
+
+            saveConfigBtn.addEventListener('click', () => {
+                const val = apiUrlInput.value.trim();
+                if (val) {
+                    CONFIG.setApiUrl(val);
+                    window.location.reload();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

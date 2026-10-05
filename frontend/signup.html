@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Sign Up — XenChat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Manrope:wght@400;500&family=Montserrat:wght@600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/site.css" />
+</head>
+<body class="auth-body">
+    <main class="auth-shell">
+        <aside class="auth-art" aria-hidden="true">
+            <img src="images/sn_bg.png" alt="" />
+        </aside>
+
+        <section class="auth-main">
+            <form class="auth-form" id="signupForm" autocomplete="off">
+
+                <div class="brand">
+                    <img src="images/logo.png" alt="XenChat" onerror="this.style.display='none';" />
+                    <span>XenChat</span>
+                </div>
+
+                <div id="errorContainer" class="auth-error" style="display: none;"></div>
+
+                <label>
+                    <span>Username</span>
+                    <input type="text"
+                           id="usernameInput"
+                           name="username"
+                           required
+                           autocomplete="off"
+                           placeholder="Enter your username" />
+                </label>
+
+                <label>
+                    <span>Email</span>
+                    <input type="email"
+                           id="emailInput"
+                           name="email"
+                           required
+                           autocomplete="off"
+                           placeholder="Enter email" />
+                </label>
+
+                <label>
+                    <span>Password</span>
+                    <input type="password"
+                           id="passwordInput"
+                           name="password"
+                           required
+                           minlength="6"
+                           autocomplete="new-password"
+                           placeholder="Enter password" />
+                </label>
+
+                <label>
+                    <span>Confirm Password</span>
+                    <input type="password"
+                           id="confirmPasswordInput"
+                           name="confirmPassword"
+                           required
+                           minlength="6"
+                           autocomplete="new-password"
+                           placeholder="Confirm password" />
+                </label>
+
+                <button class="primary-button" id="submitBtn" type="submit">Sign Up</button>
+
+                <p class="auth-switch" style="margin-top: 20px;">
+                    Already have an account?
+                    <a href="login.html">Log In</a>
+                </p>
+            </form>
+        </section>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await AUTH.redirectIfAuthenticated();
+
+            const form = document.getElementById('signupForm');
+            const usernameInput = document.getElementById('usernameInput');
+            const emailInput = document.getElementById('emailInput');
+            const passwordInput = document.getElementById('passwordInput');
+            const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const errorContainer = document.getElementById('errorContainer');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errorContainer.style.display = 'none';
+
+                const username = usernameInput.value.trim();
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+
+                if (!username || !email || !password || !confirmPassword) {
+                    errorContainer.textContent = 'All fields are required.';
+                    errorContainer.style.display = 'block';
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    errorContainer.textContent = 'Passwords do not match.';
+                    errorContainer.style.display = 'block';
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Creating account...';
+
+                try {
+                    const res = await AUTH.signup(username, email, password, confirmPassword);
+                    if (res && res.success) {
+                        window.location.href = `verify-otp.html?email=${encodeURIComponent(email)}`;
+                    } else {
+                        errorContainer.textContent = res.error || 'Failed to create account.';
+                        errorContainer.style.display = 'block';
+                    }
+                } catch (err) {
+                    errorContainer.textContent = 'An error occurred while connecting to the server.';
+                    errorContainer.style.display = 'block';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Sign Up';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
