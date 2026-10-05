@@ -80,11 +80,23 @@ builder.Services.AddDbContext<XenChatDbContext>(options =>
     options.UseNpgsql(pgConnectionString));
 
 // Services
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<MessageService>();
 builder.Services.AddSingleton<PendingSignupStore>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddSingleton<CloudinaryService>();
+builder.Services.AddSingleton<GoogleAuthService>();
+
+// Configure Forwarded Headers for reverse proxies (Render, Cloudflare, etc.)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
+                               Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto |
+                               Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedHost;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // MVC + SignalR + Session
 builder.Services.AddControllersWithViews();
@@ -169,6 +181,8 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine($"[Database] Initialization error: {ex.Message}");
     }
 }
+
+app.UseForwardedHeaders();
 
 if (!app.Environment.IsDevelopment())
 {

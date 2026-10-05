@@ -33,6 +33,11 @@
                     <div class="auth-error">@ViewBag.Error</div>
                 }
 
+                @if (TempData["Error"] != null)
+                {
+                    <div class="auth-error">@TempData["Error"]</div>
+                }
+
                 <label>
                     <span>UserName</span>
                     <input type="text"
@@ -79,12 +84,12 @@
                     <span></span>
                 </div>
 
-                <button class="google-button" type="button" disabled title="Google signup is currently unavailable" style="opacity: 0.55; cursor: not-allowed;">
+                <a href="@Url.Action("GoogleLogin", "Account")" class="google-button" style="text-decoration: none;" title="Continue with Google">
                     <span class="google-icon">
-                        <img src="~/images/google.png" alt="" onerror="this.style.display='none';" />
+                        <img src="~/images/google.png" alt="Google" onerror="this.style.display='none';" />
                     </span>
-                    Continue with Google (Unavailable)
-                </button>
+                    Continue with Google
+                </a>
 
                 <p class="auth-switch">
                     Already have an account?

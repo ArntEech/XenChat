@@ -13,8 +13,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Manrope:wght@400;500&family=Montserrat:wght@600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @if (!string.IsNullOrEmpty(ViewBag.GoogleClientId as string))
+    {
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+    }
 </head>
 <body class="auth-body">
+    @if (!string.IsNullOrEmpty(ViewBag.GoogleClientId as string))
+    {
+        <div id="g_id_onload"
+             data-client_id="@ViewBag.GoogleClientId"
+             data-login_uri="@Url.Action("GoogleCallback", "Account")"
+             data-auto_prompt="false">
+        </div>
+    }
     <main class="auth-shell">
         <aside class="auth-art" aria-hidden="true">
             <img src="~/images/sn_bg.png" alt="" />
@@ -31,6 +43,11 @@
                 @if (ViewBag.Error != null)
                 {
                     <div class="auth-error">@ViewBag.Error</div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="auth-error">@TempData["Error"]</div>
                 }
 
                 @if (TempData["SignupSuccess"] != null)
@@ -65,12 +82,12 @@
                     <span></span>
                 </div>
 
-                <button class="google-button" type="button" disabled title="Google login is currently unavailable" style="opacity: 0.55; cursor: not-allowed;">
+                <a href="@Url.Action("GoogleLogin", "Account", new { returnUrl = Context.Request.Query["ReturnUrl"].ToString() })" class="google-button" style="text-decoration: none;" title="Continue with Google">
                     <span class="google-icon">
-                        <img src="~/images/google.png" alt="" onerror="this.style.display='none';" />
+                        <img src="~/images/google.png" alt="Google" onerror="this.style.display='none';" />
                     </span>
-                    Continue with Google (Unavailable)
-                </button>
+                    Continue with Google
+                </a>
 
                 <p class="auth-switch">
                     Don’t Have an account?

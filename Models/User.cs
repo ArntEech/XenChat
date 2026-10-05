@@ -11,9 +11,11 @@ namespace XenChat.Models
 
         public string AvatarPath => string.IsNullOrWhiteSpace(Avatar)
             ? "/images/avatars/user.png"
-            : (Avatar.StartsWith("/")
+            : (Avatar.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || Avatar.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || Avatar.StartsWith("//")
                 ? Avatar
-                : (Avatar.StartsWith("images/") ? "/" + Avatar : $"/images/avatars/{Avatar}"));
+                : (Avatar.StartsWith("/")
+                    ? Avatar
+                    : (Avatar.StartsWith("images/") ? "/" + Avatar : $"/images/avatars/{Avatar}")));
         public string Initial => string.IsNullOrEmpty(Username) ? "?" : Username.Substring(0, 1).ToUpper();
     }
 }

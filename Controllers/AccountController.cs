@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using XenChat.Data;
 using XenChat.Models;
 using XenChat.Services;
 
@@ -9,20 +10,28 @@ namespace XenChat.Controllers
         private readonly UserService _userService;
         private readonly PendingSignupStore _pendingStore;
         private readonly EmailService _emailService;
+        private readonly GoogleAuthService _googleAuthService;
+        private readonly XenChatDbContext _db;
 
         public AccountController(
             UserService userService,
             PendingSignupStore pendingStore,
-            EmailService emailService)
+            EmailService emailService,
+            GoogleAuthService googleAuthService,
+            XenChatDbContext db)
         {
             _userService = userService;
             _pendingStore = pendingStore;
             _emailService = emailService;
+            _googleAuthService = googleAuthService;
+            _db = db;
         }
 
         [HttpGet]
         public IActionResult Login(string? logout)
         {
+            ViewBag.GoogleClientId = _googleAuthService.ClientId;
+
             if (logout == "true")
             {
                 HttpContext.Session.Clear();
@@ -88,7 +97,11 @@ namespace XenChat.Controllers
         }
 
         [HttpGet]
-        public IActionResult Signup() => View();
+        public IActionResult Signup()
+        {
+            ViewBag.GoogleClientId = _googleAuthService.ClientId;
+            return View();
+        }
 
         [HttpPost]
         public async Task<IActionResult> Signup(string username, string email, string password, string confirmPassword)
@@ -311,6 +324,149 @@ namespace XenChat.Controllers
             }
 
             return Unauthorized(new { success = false, error = "User not found" });
+        }
+
+        [HttpGet("/auth/google")]
+        [HttpGet("/Account/GoogleLogin")]
+        public IActionResult GoogleLogin(string? returnUrl)
+        {
+            if (!_googleAuthService.IsConfigured)
+            {
+                TempData["Error"] = "Google OAuth is not configured yet. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env or environment variables.";
+                return RedirectToAction("Login");
+            }
+
+            var state = Guid.NewGuid().ToString("N");
+            HttpContext.Session.SetString("GoogleAuthState", state);
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                HttpContext.Session.SetString("GoogleAuthReturnUrl", returnUrl);
+            }
+
+            var redirectUri = _googleAuthService.GetRedirectUri(Request);
+            var authUrl = _googleAuthService.GetAuthorizationUrl(redirectUri, state);
+            return Redirect(authUrl);
+        }
+
+        [HttpGet("/auth/google/callback")]
+        [HttpPost("/auth/google/callback")]
+        public async Task<IActionResult> GoogleCallback(
+            [FromQuery] string? code,
+            [FromQuery] string? state,
+            [FromQuery] string? error,
+            [FromForm] string? credential,
+            [FromQuery] string? returnUrl)
+        {
+            if (!string.IsNullOrEmpty(error))
+            {
+                TempData["Error"] = $"Google sign-in was cancelled or denied ({error}).";
+                return RedirectToAction("Login");
+            }
+
+            GoogleUserInfo? userInfo = null;
+
+            // 1. Google Identity Services (One Tap) credential response
+            if (!string.IsNullOrEmpty(credential))
+            {
+                userInfo = await _googleAuthService.ValidateCredentialAsync(credential);
+            }
+            // 2. Standard OAuth 2.0 authorization code flow
+            else if (!string.IsNullOrEmpty(code))
+            {
+                var savedState = HttpContext.Session.GetString("GoogleAuthState");
+                HttpContext.Session.Remove("GoogleAuthState");
+
+                if (!string.IsNullOrEmpty(savedState) && !string.Equals(savedState, state, StringComparison.Ordinal))
+                {
+                    TempData["Error"] = "Invalid Google OAuth state. Please try logging in again.";
+                    return RedirectToAction("Login");
+                }
+
+                var redirectUri = _googleAuthService.GetRedirectUri(Request);
+                userInfo = await _googleAuthService.ExchangeCodeForUserInfoAsync(code, redirectUri);
+            }
+
+            if (userInfo == null || string.IsNullOrWhiteSpace(userInfo.Email))
+            {
+                TempData["Error"] = "Could not authenticate with Google. Please check your credentials and try again.";
+                return RedirectToAction("Login");
+            }
+
+            var normalizedEmail = userInfo.Email.Trim().ToLowerInvariant();
+            var existingUser = _db.Users.FirstOrDefault(u => u.Email.ToLower() == normalizedEmail);
+
+            User user;
+            if (existingUser != null)
+            {
+                user = existingUser;
+
+                // If user doesn't have an avatar yet or has default, set Google picture
+                if ((string.IsNullOrWhiteSpace(user.Avatar) || user.Avatar == "user.png") && !string.IsNullOrWhiteSpace(userInfo.Picture))
+                {
+                    user.Avatar = userInfo.Picture;
+                    _db.SaveChanges();
+                }
+            }
+            else
+            {
+                // New user signing up with Google OAuth
+                string baseUsername = !string.IsNullOrWhiteSpace(userInfo.GivenName)
+                    ? userInfo.GivenName.Trim().ToLowerInvariant()
+                    : (!string.IsNullOrWhiteSpace(userInfo.Name)
+                        ? userInfo.Name.Replace(" ", "").Trim().ToLowerInvariant()
+                        : normalizedEmail.Split('@')[0].ToLowerInvariant());
+
+                baseUsername = System.Text.RegularExpressions.Regex.Replace(baseUsername, @"[^a-z0-9]", "");
+                if (string.IsNullOrWhiteSpace(baseUsername))
+                {
+                    baseUsername = "user";
+                }
+
+                string uniqueUsername = baseUsername;
+                int counter = 1;
+                while (_db.Users.Any(u => u.Username.ToLower() == uniqueUsername.ToLower()))
+                {
+                    uniqueUsername = $"{baseUsername}{counter++}";
+                }
+
+                var randomPassword = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+
+                user = new User
+                {
+                    Username = uniqueUsername,
+                    Email = normalizedEmail,
+                    Password = randomPassword,
+                    ProfileInfo = "Hey! I am using XenChat.",
+                    Avatar = !string.IsNullOrWhiteSpace(userInfo.Picture) ? userInfo.Picture : "user.png"
+                };
+
+                _userService.CreateUser(user);
+            }
+
+            // Set session
+            HttpContext.Session.SetInt32("UserId", user.Id);
+            HttpContext.Session.SetString("Username", user.Username);
+
+            // Generate JWT token
+            var token = _userService.GenerateToken(user);
+
+            var targetUrl = returnUrl;
+            if (string.IsNullOrEmpty(targetUrl))
+            {
+                targetUrl = HttpContext.Session.GetString("GoogleAuthReturnUrl");
+                HttpContext.Session.Remove("GoogleAuthReturnUrl");
+            }
+
+            if (string.IsNullOrEmpty(targetUrl) || !Url.IsLocalUrl(targetUrl))
+            {
+                targetUrl = Url.Action("Index", "Home") ?? "/";
+            }
+
+            ViewBag.Token = token;
+            ViewBag.TargetUrl = targetUrl;
+            ViewBag.Username = user.Username;
+
+            return View("GoogleSuccess");
         }
 
         public IActionResult Logout()
