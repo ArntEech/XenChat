@@ -1348,15 +1348,17 @@ body {
 
 .auth-shell {
     display: flex;
-    width: 100vw;
+    width: 100%;
+    height: 100vh;
     height: 100dvh;
+    min-height: 100dvh;
     overflow: hidden;
     background: linear-gradient(180deg, #313337 41.5%, rgba(238, 76, 73, 0.32) 100%), #313337;
 }
 
 .auth-art {
     flex: 0 0 17.92%;
-    height: 100dvh;
+    height: 100%;
     overflow: hidden;
     border-radius: 0 64px 64px 0;
 }
@@ -1375,7 +1377,8 @@ body {
     justify-content: center;
     min-width: 0;
     padding: 24px 48px;
-    overflow: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .auth-form {
@@ -1607,11 +1610,11 @@ body {
 
 .code-inputs {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     width: 100%;
     box-sizing: border-box;
     margin: 12px 0;
-    padding: 8px;
+    padding: 8px 6px;
     border-radius: 32px;
     background: #2d2e31;
     justify-content: center;
@@ -1619,15 +1622,15 @@ body {
 
     .code-inputs input {
         min-width: 0;
-        width: 44px;
-        height: 44px;
+        width: clamp(32px, 11vw, 44px);
+        height: clamp(38px, 12vw, 44px);
         border: 0;
         outline: 0;
         color: #fff;
         background: transparent;
         text-align: center;
         font-family: 'Poppins', sans-serif;
-        font-size: 22px;
+        font-size: clamp(16px, 5vw, 22px);
         font-weight: 500;
         border-radius: 12px;
         transition: background 0.15s, box-shadow 0.15s;
@@ -2506,6 +2509,30 @@ body {
 
     .auth-main {
         padding: 24px 16px;
+    }
+
+    .privacy-container {
+        padding: 16px 12px !important;
+    }
+
+    .privacy-container > div {
+        padding: 20px 14px !important;
+    }
+
+    .updates-container {
+        padding: 16px 12px !important;
+    }
+
+    .updates-container h2 {
+        font-size: 20px !important;
+    }
+
+    .placeholder-page {
+        padding: 16px 12px !important;
+    }
+
+    .add-status-page {
+        padding: 16px 12px !important;
     }
 
     .profile-page {

@@ -482,6 +482,8 @@
         display: flex;
         width: 100%;
         height: 100vh;
+        height: 100dvh;
+        min-height: 100dvh;
         overflow: hidden;
         background-color: #0f0f11;
         color: #f4f4f5;
@@ -1049,8 +1051,8 @@
     /* Responsive */
     @@media (max-width: 768px) {
         .settings-sidebar {
-            width: 72px;
-            flex: 0 0 72px;
+            width: 64px;
+            flex: 0 0 64px;
         }
         .settings-sidebar .settings-title,
         .settings-nav-item span,
@@ -1077,8 +1079,63 @@
         }
         .settings-header,
         .settings-scroll-body {
-            padding-left: 20px;
-            padding-right: 20px;
+            padding-left: 18px;
+            padding-right: 18px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .settings-sidebar {
+            width: 52px;
+            flex: 0 0 52px;
+        }
+        .settings-sidebar-header {
+            padding: 12px 4px;
+        }
+        .settings-nav-item {
+            padding: 10px 4px;
+        }
+        .settings-logout-btn {
+            padding: 10px 4px;
+        }
+        .settings-header {
+            height: auto;
+            min-height: 56px;
+            padding: 12px 14px;
+        }
+        .settings-header h2 {
+            font-size: 17px;
+        }
+        .settings-scroll-body {
+            padding: 14px 12px 32px;
+        }
+        .settings-card {
+            padding: 16px 12px;
+        }
+        .settings-avatar-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .settings-input,
+        .settings-select,
+        .settings-textarea {
+            font-size: 16px;
+        }
+        .settings-info-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+    }
+
+    @@media (max-width: 360px) {
+        .settings-sidebar {
+            width: 48px;
+            flex: 0 0 48px;
+        }
+        .settings-scroll-body {
+            padding: 12px 8px 24px;
         }
     }
 </style>

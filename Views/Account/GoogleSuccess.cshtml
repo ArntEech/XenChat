@@ -8,7 +8,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Signing in — XenChat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,6 +23,8 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            min-height: 100dvh;
+            padding: 16px;
         }
         .loading-card {
             background: #23232a;
@@ -31,8 +33,13 @@
             padding: 40px 32px;
             text-align: center;
             max-width: 380px;
-            width: 90%;
+            width: 100%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        @@media (max-width: 480px) {
+            .loading-card {
+                padding: 30px 18px;
+            }
         }
         .spinner {
             width: 48px;
