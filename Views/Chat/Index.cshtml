@@ -740,10 +740,12 @@
         if (groupListContainer) groupListContainer.style.display = 'flex';
 
         renderGroupsList();
-        if (!activeGroupChatId && sampleGroups.length > 0) {
-            selectGroup(sampleGroups[0].id);
-        } else if (activeGroupChatId) {
-            selectGroup(activeGroupChatId);
+        if (window.innerWidth >= 768) {
+            if (!activeGroupChatId && sampleGroups.length > 0) {
+                selectGroup(sampleGroups[0].id);
+            } else if (activeGroupChatId) {
+                selectGroup(activeGroupChatId);
+            }
         }
     }
 

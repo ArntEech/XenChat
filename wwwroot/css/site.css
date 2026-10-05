@@ -13,7 +13,10 @@ body {
     background-color: #121214;
     color: #FFFFFF;
     height: 100vh;
+    height: 100dvh;
+    min-height: 100dvh;
     overflow: hidden;
+    -webkit-text-size-adjust: 100%;
 }
 
 /* ============================================================
@@ -22,6 +25,9 @@ body {
 .app-container {
     display: flex;
     height: 100vh;
+    height: 100dvh;
+    min-height: 100dvh;
+    width: 100%;
     overflow: hidden;
     background-color: #121214;
 }
@@ -29,6 +35,8 @@ body {
 .main-content {
     flex: 1;
     display: flex;
+    width: 100%;
+    min-width: 0;
     overflow: hidden;
     background-color: #121214;
 }
@@ -444,12 +452,15 @@ body {
    ============================================================ */
 .filter-tabs {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     gap: 8px;
     padding: 12px 20px;
     background-color: #1a1a1e;
     border-bottom: 1px solid #23232a;
-    overflow-x: hidden;
     flex-shrink: 0;
 }
 
@@ -598,6 +609,7 @@ body {
     justify-content: space-between;
     align-items: baseline;
     margin-bottom: 3px;
+    min-width: 0;
 }
 
     .chat-info-top h3 {
@@ -609,6 +621,8 @@ body {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        flex: 1;
+        min-width: 0;
     }
 
 .chat-time {
@@ -616,6 +630,7 @@ body {
     color: #858585;
     flex-shrink: 0;
     margin-left: 8px;
+    white-space: nowrap;
 }
 
 .chat-info-bottom {
@@ -624,6 +639,7 @@ body {
     justify-content: space-between;
     gap: 8px;
     min-height: 18px;
+    min-width: 0;
 }
 
 .last-message-preview {
@@ -635,6 +651,7 @@ body {
     text-overflow: ellipsis;
     line-height: 1.3;
     margin: 0;
+    min-width: 0;
 }
 
 .unread-count-badge {
@@ -889,6 +906,7 @@ body {
     justify-content: space-between;
     align-items: baseline;
     margin-bottom: 3px;
+    min-width: 0;
 }
 
 .group-info-top h3 {
@@ -899,6 +917,8 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
 }
 
 .group-member-count {
@@ -928,8 +948,10 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
     background-color: rgba(0, 0, 0, 0.75);
     backdrop-filter: blur(4px);
     display: flex;
@@ -2103,8 +2125,10 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.85);
     display: flex;
     align-items: center;
@@ -2224,23 +2248,12 @@ body {
 /* ============================================================
    RESPONSIVE
    ============================================================ */
-@media (max-width: 1024px) {
-    .chat-list-panel {
-        width: 360px;
-    }
-
-    .profile-page {
-        width: 360px;
-        flex-basis: 360px;
-    }
-}
-
 .chat-back-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     color: #fcf6f5;
     background: transparent;
@@ -2249,39 +2262,242 @@ body {
     transition: background 0.18s;
 }
 
-.chat-back-btn:hover {
+.chat-back-btn:hover,
+.chat-back-btn:active {
     background: rgba(255, 255, 255, 0.08);
 }
 
-@media (max-width: 768px) {
+.conversation-header .chat-back-btn {
+    display: none;
+    margin-right: 4px;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
     .sidebar {
-        width: 60px;
+        width: 72px;
     }
 
-    /* Mobile Chat Navigation: show list on Home/Index, show conversation on Chat/Index */
+    .chat-list-panel {
+        width: 340px;
+    }
+
+    .profile-page {
+        width: 340px;
+        flex-basis: 340px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .chat-list-panel {
+        width: 440px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .sidebar {
+        display: none !important;
+    }
+
+    .main-content {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
     .chat-list-view {
         width: 100% !important;
+        max-width: 100% !important;
         flex: 1 !important;
+        border-right: none !important;
     }
+
     .chat-list-view + .conversation-panel {
         display: none !important;
+    }
+
+    .app-container.mobile-conversation-active .chat-list-view {
+        display: none !important;
+    }
+
+    .app-container.mobile-conversation-active .chat-list-view + .conversation-panel {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 1 !important;
+        border-left: none !important;
     }
 
     .chat-list-panel.chat-conversation-view {
         display: none !important;
     }
+
     .conversation-panel.chat-conversation-view {
         display: flex !important;
         width: 100% !important;
+        max-width: 100% !important;
         flex: 1 !important;
+        border-left: none !important;
+    }
+
+    .conversation-header {
+        height: auto;
+        min-height: 58px;
+        padding: 8px 12px;
+        padding-top: max(8px, env(safe-area-inset-top));
+    }
+
+    .conversation-header .chat-back-btn {
+        display: inline-flex !important;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+    }
+
+    .conversation-user {
+        margin-right: 8px;
+        gap: 8px;
+    }
+
+    .conversation-user-info {
+        margin-left: 4px;
+    }
+
+    .conversation-user-info h3 {
+        font-size: 15px;
+    }
+
+    .typing-status {
+        font-size: 11px;
+    }
+
+    .conversation-actions {
+        gap: 4px;
+    }
+
+    .conversation-actions .icon-btn,
+    .conversation-actions .favorite-action-btn {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+    }
+
+    .chat-list-header {
+        height: auto;
+        min-height: 60px;
+        padding: 8px 14px;
+        padding-top: max(8px, env(safe-area-inset-top));
     }
 
     .brand-title {
-        font-size: 24px;
+        font-size: 22px;
+    }
+
+    .header-actions {
+        gap: 4px;
+    }
+
+    .header-actions .icon-btn {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .filter-tabs {
+        padding: 10px 14px;
+        gap: 6px;
+    }
+
+    .filter-pill {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .chat-item,
+    .group-item {
+        padding: 12px 14px;
+        min-height: 64px;
+    }
+
+    .chat-avatar-wrapper {
+        width: 46px;
+        height: 46px;
+        min-width: 46px;
+    }
+
+    .chat-avatar,
+    .chat-avatar-fallback {
+        width: 46px;
+        height: 46px;
+    }
+
+    .chat-info,
+    .group-info {
+        margin-left: 10px;
+    }
+
+    .messages-container {
+        padding: 14px 12px;
+        gap: 8px;
+        flex: 1 1 0%;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
     }
 
     .message-bubble {
-        max-width: 75%;
+        max-width: 82%;
+        padding: 9px 12px;
+    }
+
+    .message-bubble p {
+        font-size: 14px;
+    }
+
+    .message-input-form {
+        padding: 8px 10px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .message-input-form input[type="text"] {
+        padding: 10px 14px;
+        font-size: 16px;
+    }
+
+    #contactSearchInput,
+    .group-form-input {
+        font-size: 16px;
+    }
+
+    .emoji-btn,
+    .attach-btn {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+    }
+
+    .send-btn {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+    }
+
+    .emoji-picker-popup {
+        width: calc(100% - 20px);
+        max-width: 340px;
+        left: 10px;
+        right: 10px;
+        bottom: 64px;
+    }
+
+    .group-modal-card {
+        width: calc(100% - 24px);
+        max-width: 400px;
+    }
+
+    .chat-image-modal-content {
+        width: calc(100% - 24px);
     }
 
     .auth-art {
@@ -2289,37 +2505,81 @@ body {
     }
 
     .auth-main {
-        padding: 24px;
+        padding: 24px 16px;
     }
 
     .profile-page {
-        width: auto;
+        width: 100%;
         flex: 1;
         border-left: 0;
     }
 
     .profile-header {
-        padding-inline: 24px;
+        padding-inline: 16px;
     }
 }
 
-@media (max-width: 480px) {
-    .sidebar {
-        width: 50px;
+@media (max-width: 360px) {
+    .chat-list-header {
+        padding: 6px 10px;
     }
 
-    .chat-list-panel {
-        width: 100%;
-        flex: 1;
+    .brand-title {
+        font-size: 20px;
     }
 
-    .messages-container,
-    .message-input-form {
-        padding: 12px;
+    .header-actions {
+        gap: 2px;
+    }
+
+    .header-actions .icon-btn {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+    }
+
+    .chat-item,
+    .group-item {
+        padding: 10px 8px;
+    }
+
+    .conversation-header {
+        padding: 6px 8px;
+    }
+
+    .conversation-user {
+        gap: 6px;
+        margin-right: 4px;
+    }
+
+    .conversation-header .chat-back-btn {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+    }
+
+    .conversation-actions {
+        gap: 2px;
+    }
+
+    .conversation-actions .icon-btn {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+    }
+
+    .conversation-actions .favorite-action-btn {
+        display: none !important;
     }
 
     .message-bubble {
-        max-width: 85%;
+        max-width: 88%;
+    }
+
+    .message-input-form {
+        padding: 6px 6px;
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+        gap: 4px;
     }
 }
 
@@ -2540,8 +2800,10 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.85);
     display: flex;
     align-items: center;
@@ -2611,8 +2873,10 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.82);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);

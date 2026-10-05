@@ -167,6 +167,12 @@
     <div id="groupWorkspaceSection" class="chat-conversation-view" style="display: none; height: 100%; flex-direction: column;">
         <div class="conversation-header">
             <div class="conversation-user">
+                <a href="javascript:void(0)" class="chat-back-btn" id="groupBackBtn" title="Back to groups">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </a>
                 <div class="group-avatar" id="groupHeaderAvatar" style="width: 40px; height: 40px; border-radius: 12px; margin-right: 12px;">DT</div>
                 <div class="conversation-user-info">
                     <h3 id="groupHeaderTitle">Design Team</h3>
@@ -344,6 +350,15 @@
         if (urlParams.get('view') === 'groups') {
             switchToGroupsView();
         }
+
+        const groupBackBtn = document.getElementById('groupBackBtn');
+        if (groupBackBtn) {
+            groupBackBtn.addEventListener('click', () => {
+                document.querySelector('.app-container')?.classList.remove('mobile-conversation-active');
+                activeGroupChatId = null;
+                document.querySelectorAll('.group-item').forEach(el => el.classList.remove('active'));
+            });
+        }
     });
 
     function escapeHtml(text) {
@@ -403,6 +418,7 @@
         const groupSec = document.getElementById('groupWorkspaceSection');
         if (emptySec) emptySec.style.display = 'none';
         if (groupSec) groupSec.style.display = 'flex';
+        document.querySelector('.app-container')?.classList.add('mobile-conversation-active');
 
         // Header update
         const avatar = document.getElementById('groupHeaderAvatar');
@@ -483,10 +499,12 @@
         if (groupListContainer) groupListContainer.style.display = 'flex';
 
         renderGroupsList();
-        if (!activeGroupChatId && sampleGroups.length > 0) {
-            selectGroup(sampleGroups[0].id);
-        } else if (activeGroupChatId) {
-            selectGroup(activeGroupChatId);
+        if (window.innerWidth >= 768) {
+            if (!activeGroupChatId && sampleGroups.length > 0) {
+                selectGroup(sampleGroups[0].id);
+            } else if (activeGroupChatId) {
+                selectGroup(activeGroupChatId);
+            }
         }
     }
 
@@ -510,6 +528,7 @@
         if (emptySec) emptySec.style.display = 'flex';
         if (groupSec) groupSec.style.display = 'none';
 
+        document.querySelector('.app-container')?.classList.remove('mobile-conversation-active');
         activeGroupChatId = null;
         applyFilters();
     }
