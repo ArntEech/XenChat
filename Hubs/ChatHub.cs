@@ -71,7 +71,24 @@ namespace XenChat.Hubs
 
         public async Task SendMessage(int senderId, int receiverId, string message, string senderName, int messageId = 0)
         {
-            await Clients.All.SendAsync("ReceiveMessage", senderId, receiverId, message, senderName, DateTime.Now.ToString("HH:mm"), messageId);
+            var targetConnections = new HashSet<string>();
+            if (_onlineUsers.TryGetValue(senderId, out var sConns))
+            {
+                lock (sConns) { targetConnections.UnionWith(sConns); }
+            }
+            if (_onlineUsers.TryGetValue(receiverId, out var rConns))
+            {
+                lock (rConns) { targetConnections.UnionWith(rConns); }
+            }
+
+            if (targetConnections.Count > 0)
+            {
+                await Clients.Clients(targetConnections.ToList()).SendAsync("ReceiveMessage", senderId, receiverId, message, senderName, DateTime.Now.ToString("HH:mm"), messageId);
+            }
+            else
+            {
+                await Clients.All.SendAsync("ReceiveMessage", senderId, receiverId, message, senderName, DateTime.Now.ToString("HH:mm"), messageId);
+            }
         }
 
         public async Task DeleteMessage(int messageId, int senderId, int receiverId)

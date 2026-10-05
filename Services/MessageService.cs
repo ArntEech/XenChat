@@ -19,6 +19,14 @@ namespace XenChat.Services
 
         public List<Message> GetConversation(int user1Id, int user2Id)
         {
+            if (user1Id == user2Id)
+            {
+                return _db.Messages
+                    .Where(m => m.SenderId == user1Id && m.ReceiverId == user1Id)
+                    .OrderBy(m => m.Timestamp)
+                    .ToList();
+            }
+
             return _db.Messages
                 .Where(m => (m.SenderId == user1Id && m.ReceiverId == user2Id) ||
                             (m.SenderId == user2Id && m.ReceiverId == user1Id))
@@ -35,12 +43,12 @@ namespace XenChat.Services
 
         public string GetLastMessage(int user1Id, int user2Id)
         {
-            var msg = _db.Messages
-                .Where(m => (m.SenderId == user1Id && m.ReceiverId == user2Id) ||
-                            (m.SenderId == user2Id && m.ReceiverId == user1Id))
-                .OrderByDescending(m => m.Timestamp)
-                .FirstOrDefault();
+            var query = (user1Id == user2Id)
+                ? _db.Messages.Where(m => m.SenderId == user1Id && m.ReceiverId == user1Id)
+                : _db.Messages.Where(m => (m.SenderId == user1Id && m.ReceiverId == user2Id) ||
+                                          (m.SenderId == user2Id && m.ReceiverId == user1Id));
 
+            var msg = query.OrderByDescending(m => m.Timestamp).FirstOrDefault();
             return msg?.Content ?? "No messages yet";
         }
 

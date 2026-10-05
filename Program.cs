@@ -151,6 +151,12 @@ using (var scope = app.Services.CreateScope())
                 ""UserId"" INTEGER NOT NULL,
                 ""FavoriteUserId"" INTEGER NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS ""PinnedChats"" (
+                ""Id"" SERIAL PRIMARY KEY,
+                ""UserId"" INTEGER NOT NULL,
+                ""PinnedUserId"" INTEGER NOT NULL
+            );
         ");
 
         if (!db.Users.Any())

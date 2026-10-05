@@ -33,23 +33,40 @@ namespace XenChat.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            var users = _userService.GetAllUsers().Where(u => u.Id != userId.Value).ToList();
+            var allUsers = _userService.GetAllUsers();
+            var pinnedUserIds = _db.PinnedChats
+                .Where(p => p.UserId == userId.Value)
+                .Select(p => p.PinnedUserId)
+                .ToHashSet();
+            pinnedUserIds.Add(userId.Value); // The user's chat is automatically pinned at the top
+
+            var otherUsers = allUsers.Where(u => u.Id != userId.Value).ToList();
+            var displayUsers = new List<User> { currentUser };
+            displayUsers.AddRange(otherUsers.OrderByDescending(u => pinnedUserIds.Contains(u.Id)));
 
             ViewBag.CurrentUser = currentUser;
+            ViewBag.PinnedUserIds = pinnedUserIds;
             ViewBag.LastMessages = new Dictionary<int, string>();
             ViewBag.LastMessageTimes = new Dictionary<int, string>();
             ViewBag.UnreadCounts = new Dictionary<int, int>();
 
-            foreach (var user in users)
+            foreach (var user in displayUsers)
             {
                 var messages = _messageService.GetConversation(userId.Value, user.Id);
                 var lastMessage = messages.LastOrDefault();
 
-                ViewBag.LastMessages[user.Id] = lastMessage?.Content ?? "No messages yet";
+                if (user.Id == userId.Value)
+                {
+                    ViewBag.LastMessages[user.Id] = lastMessage?.Content ?? "Message yourself";
+                    ViewBag.UnreadCounts[user.Id] = 0;
+                }
+                else
+                {
+                    ViewBag.LastMessages[user.Id] = lastMessage?.Content ?? "No messages yet";
+                    var unreadCount = messages.Count(m => m.SenderId == user.Id && m.ReceiverId == userId.Value && !m.IsRead);
+                    ViewBag.UnreadCounts[user.Id] = unreadCount;
+                }
                 ViewBag.LastMessageTimes[user.Id] = lastMessage?.Timestamp.ToString("HH:mm") ?? "";
-
-                var unreadCount = messages.Count(m => m.SenderId == user.Id && m.ReceiverId == userId.Value && !m.IsRead);
-                ViewBag.UnreadCounts[user.Id] = unreadCount;
             }
 
             var cutoff = DateTime.Now.AddHours(-24);
@@ -65,7 +82,7 @@ namespace XenChat.Controllers
                 .ToHashSet();
             ViewBag.FavoriteUserIds = favoriteUserIds;
 
-            return View(users);
+            return View(displayUsers);
         }
 
         [HttpPost]

@@ -1,15 +1,18 @@
 @model List<XenChat.Models.Message>
 @{
     ViewData["Title"] = "Chat";
-    var currentUserId = ViewBag.CurrentUserId;
-    var currentUser = ViewBag.CurrentUser;
-    var otherUser = ViewBag.OtherUser;
+    var currentUserId = ViewBag.CurrentUserId as int? ?? (int?)Context.Session.GetInt32("UserId");
+    var currentUser = ViewBag.CurrentUser as XenChat.Models.User;
+    var otherUser = ViewBag.OtherUser as XenChat.Models.User;
     var allUsers = ViewData["AllUsers"] as List<XenChat.Models.User>;
     var lastMessages = ViewBag.LastMessages as Dictionary<int, string>;
     var lastMessageTimes = ViewBag.LastMessageTimes as Dictionary<int, string>;
     var unreadCounts = ViewBag.UnreadCounts as Dictionary<int, int>;
     var isFavorite = (ViewBag.IsFavorite as bool?) ?? false;
     var favoriteUserIds = ViewBag.FavoriteUserIds as HashSet<int> ?? new HashSet<int>();
+    var pinnedUserIds = ViewBag.PinnedUserIds as HashSet<int> ?? new HashSet<int>();
+    var isPinned = (ViewBag.IsPinned as bool?) ?? false;
+    var isSelfChat = (otherUser != null && currentUserId.HasValue && otherUser.Id == currentUserId.Value);
 }
 
 <div class="chat-list-panel chat-conversation-view">
@@ -72,11 +75,14 @@
         {
             foreach (var user in allUsers)
             {
+                var isUserSelf = (currentUserId.HasValue && user.Id == currentUserId.Value);
+                var isUserPinned = isUserSelf || pinnedUserIds.Contains(user.Id);
                 <a href="@Url.Action("Index", "Chat", new { userId = user.Id })"
-                       class="chat-item @(user.Id == otherUser.Id ? "active" : "")"
+                       class="chat-item @(user.Id == otherUser.Id ? "active" : "") @(isUserPinned ? "pinned-chat" : "")"
                        data-username="@user.Username.ToLower()"
                        data-user-id="@user.Id"
-                       data-favorite="@(favoriteUserIds.Contains(user.Id) ? "true" : "false")">
+                       data-favorite="@(favoriteUserIds.Contains(user.Id) ? "true" : "false")"
+                       data-pinned="@(isUserPinned ? "true" : "false")">
                     <div class="chat-avatar-wrapper">
                         @if (!string.IsNullOrWhiteSpace(user.Avatar) && user.Avatar != "user.png")
                         {
@@ -91,13 +97,29 @@
                     </div>
                     <div class="chat-info">
                         <div class="chat-info-top">
-                            <h3>@user.Username</h3>
-                            <span class="chat-time">
-                                @if (lastMessageTimes != null && lastMessageTimes.ContainsKey(user.Id))
+                            <h3>
+                                @user.Username
+                                @if (isUserSelf)
                                 {
-                                    @lastMessageTimes[user.Id]
+                                    <span class="self-tag">(You)</span>
                                 }
-                            </span>
+                            </h3>
+                            <div class="chat-meta-right">
+                                <span class="chat-time">
+                                    @if (lastMessageTimes != null && lastMessageTimes.ContainsKey(user.Id))
+                                    {
+                                        @lastMessageTimes[user.Id]
+                                    }
+                                </span>
+                                @if (isUserPinned)
+                                {
+                                    <span class="pinned-indicator" title="Pinned chat">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6l1 1 1-1v-6H18v-2l-2-2z"/>
+                                        </svg>
+                                    </span>
+                                }
+                            </div>
                         </div>
                         <div class="chat-info-bottom">
                             <p class="last-message-preview">
@@ -115,10 +137,10 @@
                                 }
                                 else
                                 {
-                                    @:No messages yet
+                                    @(isUserSelf ? "Message yourself" : "No messages yet")
                                 }
                             </p>
-                            @if (unreadCounts != null && unreadCounts.ContainsKey(user.Id) && unreadCounts[user.Id] > 0 && user.Id != otherUser?.Id)
+                            @if (!isUserSelf && unreadCounts != null && unreadCounts.ContainsKey(user.Id) && unreadCounts[user.Id] > 0 && user.Id != otherUser?.Id)
                             {
                                 <span class="unread-count-badge">@unreadCounts[user.Id]</span>
                             }
@@ -164,6 +186,11 @@
             </div>
         </div>
         <div class="conversation-actions">
+            <button type="button" class="pin-action-btn @(isPinned || isSelfChat ? "active" : "")" id="togglePinBtn" title="@(isSelfChat ? "Pinned (Self-Chat)" : (isPinned ? "Unpin chat" : "Pin chat"))" data-target-id="@otherUser.Id" @(isSelfChat ? "disabled style=\"cursor:default;opacity:0.8;\"" : "")>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="@(isPinned || isSelfChat ? "#f59e0b" : "none")" stroke="@(isPinned || isSelfChat ? "#f59e0b" : "currentColor")" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6l1 1 1-1v-6H18v-2l-2-2z"/>
+                </svg>
+            </button>
             <button type="button" class="favorite-action-btn @(isFavorite ? "active" : "")" id="toggleFavoriteBtn" title="@(isFavorite ? "Remove from Favorites" : "Add to Favorites")" data-target-id="@otherUser.Id">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="@(isFavorite ? "#e11d48" : "none")" stroke="@(isFavorite ? "#e11d48" : "currentColor")" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
@@ -685,6 +712,8 @@
         }
         // Keep visibility hidden so the action button coordinates never shift
         if (favBtn) favBtn.style.visibility = 'hidden';
+        const pinBtn = document.getElementById('togglePinBtn');
+        if (pinBtn) pinBtn.style.visibility = 'hidden';
 
         renderGroupMessages(group);
     }
@@ -805,6 +834,8 @@
         if (title) title.textContent = initialDirectChatState.username;
         if (status) status.textContent = 'Online';
         if (favBtn) favBtn.style.visibility = 'visible';
+        const pinBtn = document.getElementById('togglePinBtn');
+        if (pinBtn) pinBtn.style.visibility = 'visible';
         if (container && initialDirectChatState.html) {
             container.innerHTML = initialDirectChatState.html;
             container.scrollTop = container.scrollHeight;
@@ -975,6 +1006,11 @@
         .build();
 
     connection.on("ReceiveMessage", (senderId, receiverId, message, senderName, timestamp, messageId) => {
+        // Prevent duplicate append if message with this ID is already in the DOM
+        if (messageId && document.querySelector(`.message[data-message-id="${messageId}"]`)) {
+            return;
+        }
+
         // If message is between the currently open conversation
         if ((senderId === currentUserId && receiverId === otherUserId) ||
             (senderId === otherUserId && receiverId === currentUserId)) {
@@ -1065,7 +1101,7 @@
                 if (preview) preview.textContent = message.includes('[img]') ? '📷 Photo' : message;
                 if (time) time.textContent = timestamp;
 
-                if (receiverId === currentUserId && senderId !== otherUserId) {
+                if (receiverId === currentUserId && senderId !== otherUserId && senderId !== currentUserId) {
                     let badge = item.querySelector('.unread-count-badge');
                     if (!badge) {
                         badge = document.createElement('span');
@@ -1162,15 +1198,17 @@
         }
     });
 
-    // Message Form Submit
+    // Message Form Submit with duplicate submission prevention
+    let isSubmittingMessage = false;
     document.getElementById("messageForm").addEventListener("submit", async (e) => {
         e.preventDefault();
+        if (isSubmittingMessage) return;
 
         const messageInput = document.getElementById("messageInput");
         const message = messageInput.value.trim();
+        if (!message) return;
 
         if (activeGroupChatId) {
-            if (!message) return;
             sendGroupMessage(activeGroupChatId, message);
             messageInput.value = '';
             messageInput.focus();
@@ -1178,47 +1216,48 @@
         }
 
         const receiverId = document.getElementById("receiverId").value;
+        const sendBtn = document.getElementById("sendBtn");
 
-        if (message) {
-            try {
-                const token = localStorage.getItem("xenchat_token");
-                const headers = {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                };
-                if (token) {
-                    headers['Authorization'] = 'Bearer ' + token;
-                }
+        isSubmittingMessage = true;
+        if (sendBtn) sendBtn.disabled = true;
 
-                const response = await fetch('/Chat/SendMessage', {
-                    method: 'POST',
-                    headers: headers,
-                    body: `receiverId=${receiverId}&message=${encodeURIComponent(message)}`
-                });
-
-                if (response.status === 401) {
-                    localStorage.removeItem("xenchat_token");
-                    window.location.href = '/Account/Login';
-                    return;
-                }
-
-                const result = await response.json();
-                if (result.success) {
-                    await connection.invoke("SendMessage", currentUserId, parseInt(receiverId), message, "@currentUser.Username", result.messageId || 0);
-                    messageInput.value = '';
-                    messageInput.focus();
-                } else {
-                    console.error("Server error:", result.error);
-                }
-            } catch (error) {
-                console.error("Error sending message:", error);
+        try {
+            const token = localStorage.getItem("xenchat_token");
+            const headers = {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            };
+            if (token) {
+                headers['Authorization'] = 'Bearer ' + token;
             }
-        }
-    });
 
-    document.getElementById("messageInput").addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            document.getElementById("messageForm").dispatchEvent(new Event("submit"));
+            messageInput.value = '';
+
+            const response = await fetch('/Chat/SendMessage', {
+                method: 'POST',
+                headers: headers,
+                body: `receiverId=${receiverId}&message=${encodeURIComponent(message)}`
+            });
+
+            if (response.status === 401) {
+                localStorage.removeItem("xenchat_token");
+                window.location.href = '/Account/Login';
+                return;
+            }
+
+            const result = await response.json();
+            if (result.success) {
+                await connection.invoke("SendMessage", currentUserId, parseInt(receiverId), message, "@(currentUser?.Username ?? "User")", result.messageId || 0);
+            } else {
+                console.error("Server error:", result.error);
+                messageInput.value = message;
+            }
+        } catch (error) {
+            console.error("Error sending message:", error);
+            messageInput.value = message;
+        } finally {
+            isSubmittingMessage = false;
+            if (sendBtn) sendBtn.disabled = false;
+            messageInput.focus();
         }
     });
 
@@ -1358,7 +1397,7 @@
 
                 const data = await res.json();
                 if (data.success) {
-                    await connection.invoke("SendMessage", currentUserId, otherUserId, data.content, "@currentUser.Username", data.messageId || 0);
+                    await connection.invoke("SendMessage", currentUserId, otherUserId, data.content, "@(currentUser?.Username ?? "User")", data.messageId || 0);
                     closeChatImageModal();
                 } else {
                     alert(data.error || "Failed to send photo");
@@ -1495,6 +1534,80 @@
                 }
             } catch (err) {
                 console.error('Error toggling favorite:', err);
+            }
+        });
+    }
+
+    // Toggle Pin button
+    const pinBtn = document.getElementById('togglePinBtn');
+    if (pinBtn) {
+        pinBtn.addEventListener('click', async function () {
+            if (this.disabled) return;
+            const targetId = this.getAttribute('data-target-id');
+            if (!targetId) return;
+
+            try {
+                const token = localStorage.getItem('xenchat_token');
+                const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                const res = await fetch('/Chat/TogglePin', {
+                    method: 'POST',
+                    headers: headers,
+                    body: 'targetUserId=' + targetId
+                });
+
+                if (res.status === 401) {
+                    localStorage.removeItem('xenchat_token');
+                    window.location.href = '/Account/Login';
+                    return;
+                }
+
+                const data = await res.json();
+                if (data.success) {
+                    const isPinned = data.isPinned;
+                    const svg = this.querySelector('svg');
+                    if (isPinned) {
+                        this.classList.add('active');
+                        this.title = 'Unpin chat';
+                        if (svg) {
+                            svg.setAttribute('fill', '#f59e0b');
+                            svg.setAttribute('stroke', '#f59e0b');
+                        }
+                    } else {
+                        this.classList.remove('active');
+                        this.title = 'Pin chat';
+                        if (svg) {
+                            svg.setAttribute('fill', 'none');
+                            svg.setAttribute('stroke', 'currentColor');
+                        }
+                    }
+
+                    // Update sidebar item
+                    const sidebarItem = document.querySelector(`.chat-item[data-user-id="${targetId}"]`);
+                    if (sidebarItem) {
+                        sidebarItem.setAttribute('data-pinned', isPinned ? 'true' : 'false');
+                        if (isPinned) {
+                            sidebarItem.classList.add('pinned-chat');
+                            let metaRight = sidebarItem.querySelector('.chat-meta-right');
+                            if (metaRight && !metaRight.querySelector('.pinned-indicator')) {
+                                const pinSpan = document.createElement('span');
+                                pinSpan.className = 'pinned-indicator';
+                                pinSpan.title = 'Pinned chat';
+                                pinSpan.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6l1 1 1-1v-6H18v-2l-2-2z"/></svg>';
+                                metaRight.appendChild(pinSpan);
+                            }
+                        } else {
+                            sidebarItem.classList.remove('pinned-chat');
+                            const pinSpan = sidebarItem.querySelector('.pinned-indicator');
+                            if (pinSpan) pinSpan.remove();
+                        }
+                    }
+                } else {
+                    alert(data.error || 'Failed to update pinned status');
+                }
+            } catch (err) {
+                console.error('Error toggling pin:', err);
             }
         });
     }

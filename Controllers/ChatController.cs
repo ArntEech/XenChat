@@ -24,9 +24,6 @@ namespace XenChat.Controllers
             if (currentUserId == null)
                 return RedirectToAction("Login", "Account");
 
-            if (userId == currentUserId.Value)
-                return RedirectToAction("Index", "Home");
-
             var currentUser = _userService.GetUserById(currentUserId.Value);
             if (currentUser == null)
             {
@@ -38,31 +35,49 @@ namespace XenChat.Controllers
             if (otherUser == null)
                 return RedirectToAction("Index", "Home");
 
-            // Mark incoming messages from otherUser as read
+            // Mark incoming messages as read
             _messageService.MarkConversationAsRead(userId, currentUserId.Value);
 
             var messages = _messageService.GetConversation(currentUserId.Value, userId);
-            var allUsers = _userService.GetAllUsers().Where(u => u.Id != currentUserId.Value).ToList();
+            var allUsers = _userService.GetAllUsers();
+
+            var pinnedUserIds = _db.PinnedChats
+                .Where(p => p.UserId == currentUserId.Value)
+                .Select(p => p.PinnedUserId)
+                .ToHashSet();
+            pinnedUserIds.Add(currentUserId.Value); // Self-chat is ALWAYS pinned!
+
+            var otherUsers = allUsers.Where(u => u.Id != currentUserId.Value).ToList();
+            var displayUsers = new List<User> { currentUser };
+            displayUsers.AddRange(otherUsers.OrderByDescending(u => pinnedUserIds.Contains(u.Id)));
 
             ViewBag.CurrentUserId = currentUserId.Value;
             ViewBag.CurrentUser = currentUser;
             ViewBag.OtherUser = otherUser;
+            ViewBag.PinnedUserIds = pinnedUserIds;
+            ViewBag.IsPinned = pinnedUserIds.Contains(userId);
 
             var lastMessages = new Dictionary<int, string>();
             var lastMessageTimes = new Dictionary<int, string>();
             var unreadCounts = new Dictionary<int, int>();
 
-            foreach (var user in allUsers)
+            foreach (var user in displayUsers)
             {
                 var userMessages = _messageService.GetConversation(currentUserId.Value, user.Id);
                 var lastMessage = userMessages.LastOrDefault();
 
-                lastMessages[user.Id] = lastMessage?.Content ?? "No messages yet";
+                if (user.Id == currentUserId.Value)
+                {
+                    lastMessages[user.Id] = lastMessage?.Content ?? "Message yourself";
+                    unreadCounts[user.Id] = 0;
+                }
+                else
+                {
+                    lastMessages[user.Id] = lastMessage?.Content ?? "No messages yet";
+                    var unreadCount = userMessages.Count(m => m.SenderId == user.Id && m.ReceiverId == currentUserId.Value && !m.IsRead);
+                    unreadCounts[user.Id] = unreadCount;
+                }
                 lastMessageTimes[user.Id] = lastMessage?.Timestamp.ToString("HH:mm") ?? "";
-
-                // Only count unread messages sent by this user to current user
-                var unreadCount = userMessages.Count(m => m.SenderId == user.Id && m.ReceiverId == currentUserId.Value && !m.IsRead);
-                unreadCounts[user.Id] = unreadCount;
             }
 
             ViewBag.LastMessages = lastMessages;
@@ -76,7 +91,7 @@ namespace XenChat.Controllers
             ViewBag.FavoriteUserIds = favoriteUserIds;
             ViewBag.IsFavorite = favoriteUserIds.Contains(userId);
 
-            ViewData["AllUsers"] = allUsers;
+            ViewData["AllUsers"] = displayUsers;
 
             return View(messages);
         }
@@ -118,9 +133,6 @@ namespace XenChat.Controllers
 
             if (senderId == null)
                 return Unauthorized(new { success = false, error = "Not logged in" });
-
-            if (receiverId == senderId.Value)
-                return Json(new { success = false, error = "Cannot message yourself" });
 
             if (string.IsNullOrWhiteSpace(message))
                 return Json(new { success = false, error = "Empty message" });
@@ -170,9 +182,6 @@ namespace XenChat.Controllers
 
             if (senderId == null)
                 return Unauthorized(new { success = false, error = "Not logged in" });
-
-            if (receiverId == senderId.Value)
-                return Json(new { success = false, error = "Cannot message yourself" });
 
             if (imageFile == null || imageFile.Length == 0)
                 return Json(new { success = false, error = "No image provided" });
@@ -321,6 +330,67 @@ namespace XenChat.Controllers
 
             var count = _db.Favorites.Count(f => f.UserId == senderId.Value);
             return Json(new { success = true, isFavorite, count });
+        }
+
+        [HttpPost]
+        public IActionResult TogglePin(int targetUserId)
+        {
+            var senderId = HttpContext.Session.GetInt32("UserId");
+
+            var authHeader = Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                var principal = _userService.ValidateToken(token);
+                if (principal != null)
+                {
+                    var idClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                                  ?? principal.FindFirst("id")?.Value;
+                    if (int.TryParse(idClaim, out int tokenUserId))
+                    {
+                        var tokenUser = _userService.GetUserById(tokenUserId);
+                        if (tokenUser != null)
+                        {
+                            senderId = tokenUserId;
+                            HttpContext.Session.SetInt32("UserId", tokenUser.Id);
+                            HttpContext.Session.SetString("Username", tokenUser.Username);
+                        }
+                    }
+                }
+            }
+
+            if (senderId == null)
+                return Unauthorized(new { success = false, error = "Not logged in" });
+
+            // User's own chat is permanently pinned
+            if (targetUserId == senderId.Value)
+            {
+                return Json(new { success = true, isPinned = true, message = "Your personal chat is permanently pinned." });
+            }
+
+            var targetUser = _userService.GetUserById(targetUserId);
+            if (targetUser == null)
+                return Json(new { success = false, error = "User not found" });
+
+            var existing = _db.PinnedChats.FirstOrDefault(p => p.UserId == senderId.Value && p.PinnedUserId == targetUserId);
+            bool isPinned;
+            if (existing != null)
+            {
+                _db.PinnedChats.Remove(existing);
+                isPinned = false;
+            }
+            else
+            {
+                _db.PinnedChats.Add(new PinnedChat
+                {
+                    UserId = senderId.Value,
+                    PinnedUserId = targetUserId
+                });
+                isPinned = true;
+            }
+
+            _db.SaveChanges();
+            return Json(new { success = true, isPinned });
         }
     }
 }

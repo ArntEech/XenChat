@@ -14,6 +14,7 @@ namespace XenChat.Data
         public DbSet<Message> Messages { get; set; }
         public DbSet<Status> Statuses { get; set; }
         public DbSet<Favorite> Favorites { get; set; }
+        public DbSet<PinnedChat> PinnedChats { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

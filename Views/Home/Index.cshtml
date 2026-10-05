@@ -8,6 +8,7 @@
     var lastMessageTimes = ViewBag.LastMessageTimes as Dictionary<int, string>;
     var statuses = ViewBag.Statuses as List<XenChat.Models.Status> ?? new List<XenChat.Models.Status>();
     var favoriteUserIds = ViewBag.FavoriteUserIds as HashSet<int> ?? new HashSet<int>();
+    var pinnedUserIds = ViewBag.PinnedUserIds as HashSet<int> ?? new HashSet<int>();
 }
 
 <div class="chat-list-panel chat-list-view">
@@ -72,7 +73,14 @@
         {
             @foreach (var user in Model)
             {
-                <a href="@Url.Action("Index", "Chat", new { userId = user.Id })" class="chat-item" data-username="@user.Username.ToLower()" data-user-id="@user.Id" data-favorite="@(favoriteUserIds.Contains(user.Id) ? "true" : "false")">
+                var isSelf = (currentUserId.HasValue && user.Id == currentUserId.Value);
+                var isPinned = isSelf || pinnedUserIds.Contains(user.Id);
+                <a href="@Url.Action("Index", "Chat", new { userId = user.Id })"
+                   class="chat-item @(isPinned ? "pinned-chat" : "")"
+                   data-username="@user.Username.ToLower()"
+                   data-user-id="@user.Id"
+                   data-favorite="@(favoriteUserIds.Contains(user.Id) ? "true" : "false")"
+                   data-pinned="@(isPinned ? "true" : "false")">
                     <div class="chat-avatar-wrapper">
                         @if (!string.IsNullOrWhiteSpace(user.Avatar) && user.Avatar != "user.png")
                         {
@@ -87,13 +95,29 @@
                     </div>
                     <div class="chat-info">
                         <div class="chat-info-top">
-                            <h3>@user.Username</h3>
-                            <span class="chat-time">
-                                @if (lastMessageTimes != null && lastMessageTimes.ContainsKey(user.Id))
+                            <h3>
+                                @user.Username
+                                @if (isSelf)
                                 {
-                                    @lastMessageTimes[user.Id]
+                                    <span class="self-tag">(You)</span>
                                 }
-                            </span>
+                            </h3>
+                            <div class="chat-meta-right">
+                                <span class="chat-time">
+                                    @if (lastMessageTimes != null && lastMessageTimes.ContainsKey(user.Id))
+                                    {
+                                        @lastMessageTimes[user.Id]
+                                    }
+                                </span>
+                                @if (isPinned)
+                                {
+                                    <span class="pinned-indicator" title="Pinned chat">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6l1 1 1-1v-6H18v-2l-2-2z"/>
+                                        </svg>
+                                    </span>
+                                }
+                            </div>
                         </div>
                         <div class="chat-info-bottom">
                             <p class="last-message-preview">
@@ -111,10 +135,10 @@
                                 }
                                 else
                                 {
-                                    @:No messages yet
+                                    @(isSelf ? "Message yourself" : "No messages yet")
                                 }
                             </p>
-                            @if (unreadCounts != null && unreadCounts.ContainsKey(user.Id) && unreadCounts[user.Id] > 0)
+                            @if (!isSelf && unreadCounts != null && unreadCounts.ContainsKey(user.Id) && unreadCounts[user.Id] > 0)
                             {
                                 <span class="unread-count-badge">@unreadCounts[user.Id]</span>
                             }
@@ -750,7 +774,7 @@
                     if (preview) preview.textContent = message.includes('[img]') ? '📷 Photo' : message;
                     if (time) time.textContent = timestamp;
 
-                    if (receiverId === currentUserId) {
+                    if (receiverId === currentUserId && senderId !== currentUserId) {
                         let badge = item.querySelector('.unread-count-badge');
                         if (!badge) {
                             badge = document.createElement('span');

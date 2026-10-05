@@ -633,6 +633,61 @@ body {
     white-space: nowrap;
 }
 
+.chat-meta-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.pinned-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #f59e0b;
+    line-height: 1;
+}
+
+.self-tag {
+    font-size: 11px;
+    font-weight: 500;
+    color: #e11d48;
+    background: rgba(225, 29, 72, 0.14);
+    padding: 1px 6px;
+    border-radius: 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.chat-item.pinned-chat {
+    border-left: 3px solid #f59e0b;
+}
+
+.pin-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #a1a1aa;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.pin-action-btn:hover {
+    background: #23232a;
+    color: #f59e0b;
+}
+
+.pin-action-btn.active {
+    color: #f59e0b;
+}
+
 .chat-info-bottom {
     display: flex;
     align-items: center;
@@ -2377,7 +2432,8 @@ body {
     }
 
     .conversation-actions .icon-btn,
-    .conversation-actions .favorite-action-btn {
+    .conversation-actions .favorite-action-btn,
+    .conversation-actions .pin-action-btn {
         width: 40px;
         height: 40px;
         min-width: 40px;
