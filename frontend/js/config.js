@@ -18,8 +18,8 @@
             return 'http://localhost:5000';
         }
 
-        // 4. Default production backend on Render (Replace with your backend URL)
-        return 'https://xenchat-backend.onrender.com';
+        // 4. Default production backend on Render
+        return 'https://xenchat-i4ek.onrender.com';
     })();
 
     const CONFIG = {
