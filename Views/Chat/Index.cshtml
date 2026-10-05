@@ -600,6 +600,17 @@
         if (urlParams.get('view') === 'groups') {
             switchToGroupsView();
         }
+
+        const brandLink = document.querySelector('.chat-list-header .brand-container');
+        if (brandLink) {
+            brandLink.addEventListener('click', (e) => {
+                const groupListContainer = document.getElementById('groupListContainer');
+                if ((groupListContainer && groupListContainer.style.display !== 'none') || activeGroupChatId) {
+                    e.preventDefault();
+                    switchToChatsView('chats');
+                }
+            });
+        }
     });
 
     function escapeHtml(text) {
@@ -739,6 +750,7 @@
         if (chatList) chatList.style.display = 'none';
         if (groupListContainer) groupListContainer.style.display = 'flex';
 
+        currentFilter = 'groups';
         renderGroupsList();
         if (window.innerWidth >= 768) {
             if (!activeGroupChatId && sampleGroups.length > 0) {
@@ -749,23 +761,28 @@
         }
     }
 
-    function switchToChatsView() {
+    function switchToChatsView(targetFilter = 'chats') {
         const railChats = document.getElementById('railChatsBtn');
         const railGroups = document.getElementById('railGroupsBtn');
         if (railChats) railChats.classList.add('active');
         if (railGroups) railGroups.classList.remove('active');
 
         document.querySelectorAll('.filter-pill').forEach(p => {
-            p.classList.toggle('active', p.getAttribute('data-filter') === 'chats');
+            p.classList.toggle('active', p.getAttribute('data-filter') === targetFilter);
         });
 
         const chatList = document.getElementById('chatList');
         const groupListContainer = document.getElementById('groupListContainer');
-        if (chatList) chatList.style.display = 'block';
+        if (chatList) chatList.style.display = '';
         if (groupListContainer) groupListContainer.style.display = 'none';
 
         restoreDirectChat();
+        currentFilter = targetFilter;
         applyFilters();
+
+        if (window.history.replaceState && window.location.search.includes('view=groups')) {
+            window.history.replaceState({}, document.title, window.location.pathname + window.location.search.replace(/[?&]view=groups/, ''));
+        }
     }
 
     function restoreDirectChat() {
@@ -888,7 +905,7 @@
     if (railChats) {
         railChats.addEventListener('click', (e) => {
             e.preventDefault();
-            switchToChatsView();
+            switchToChatsView('chats');
         });
     }
 
@@ -908,13 +925,7 @@
             if (filter === 'groups') {
                 switchToGroupsView();
             } else {
-                if (activeGroupChatId) {
-                    switchToChatsView();
-                }
-                filterPills.forEach(p => p.classList.remove('active'));
-                this.classList.add('active');
-                currentFilter = filter;
-                applyFilters();
+                switchToChatsView(filter);
             }
         });
     });
