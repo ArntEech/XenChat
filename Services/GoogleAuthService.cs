@@ -33,19 +33,22 @@ namespace XenChat.Services
             _logger = logger;
         }
 
-        public string ClientId =>
-            _config["Google:ClientId"]
-            ?? Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")
-            ?? _config["Authentication:Google:ClientId"]
-            ?? Environment.GetEnvironmentVariable("Authentication__Google__ClientId")
-            ?? string.Empty;
+        private string GetSetting(params string[] keys)
+        {
+            foreach (var key in keys)
+            {
+                var envVal = Environment.GetEnvironmentVariable(key);
+                if (!string.IsNullOrWhiteSpace(envVal)) return envVal.Trim();
 
-        public string ClientSecret =>
-            _config["Google:ClientSecret"]
-            ?? Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET")
-            ?? _config["Authentication:Google:ClientSecret"]
-            ?? Environment.GetEnvironmentVariable("Authentication__Google__ClientSecret")
-            ?? string.Empty;
+                var configVal = _config[key];
+                if (!string.IsNullOrWhiteSpace(configVal)) return configVal.Trim();
+            }
+            return string.Empty;
+        }
+
+        public string ClientId => GetSetting("GOOGLE_CLIENT_ID", "Google:ClientId", "Authentication:Google:ClientId", "Authentication__Google__ClientId");
+
+        public string ClientSecret => GetSetting("GOOGLE_CLIENT_SECRET", "Google:ClientSecret", "Authentication:Google:ClientSecret", "Authentication__Google__ClientSecret");
 
         public bool IsConfigured => !string.IsNullOrWhiteSpace(ClientId) && !string.IsNullOrWhiteSpace(ClientSecret);
 
@@ -56,8 +59,7 @@ namespace XenChat.Services
         public string GetRedirectUri(HttpRequest request)
         {
             // 1. Check explicit override in config or environment
-            var explicitRedirect = _config["Google:RedirectUri"]
-                ?? Environment.GetEnvironmentVariable("GOOGLE_REDIRECT_URI");
+            var explicitRedirect = GetSetting("GOOGLE_REDIRECT_URI", "Google:RedirectUri", "Authentication:Google:RedirectUri");
 
             if (!string.IsNullOrWhiteSpace(explicitRedirect))
             {

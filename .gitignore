@@ -1,4 +1,12 @@
-.vs/ 
-bin/ 
-obj/ 
+.vs/
+.vscode/
+bin/
+obj/
+
+# Environment files and secrets
 .env
+.env.*
+.env.local
+.env.development.local
+.env.production.local
+!.env.example

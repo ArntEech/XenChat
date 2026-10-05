@@ -20,12 +20,12 @@ namespace XenChat.Services
             _logger.LogInformation("[EmailService] Verification code for {Email} is: {Otp}", toEmail, otp);
             Console.WriteLine($"[EmailService] Verification code for {toEmail} is: {otp}");
 
-            var host = _config["EmailSettings:SmtpHost"];
-            var portStr = _config["EmailSettings:SmtpPort"];
-            var port = string.IsNullOrEmpty(portStr) ? 587 : int.Parse(portStr);
-            var senderName = _config["EmailSettings:SenderName"] ?? "XenChat";
-            var senderEmail = _config["EmailSettings:SenderEmail"] ?? "";
-            var senderPassword = _config["EmailSettings:SenderPassword"] ?? "";
+            var host = !string.IsNullOrWhiteSpace(_config["EmailSettings:SmtpHost"]) ? _config["EmailSettings:SmtpHost"] : (Environment.GetEnvironmentVariable("EmailSettings__SmtpHost") ?? "smtp.gmail.com");
+            var portStr = !string.IsNullOrWhiteSpace(_config["EmailSettings:SmtpPort"]) ? _config["EmailSettings:SmtpPort"] : Environment.GetEnvironmentVariable("EmailSettings__SmtpPort");
+            var port = string.IsNullOrEmpty(portStr) ? 587 : int.Parse(portStr!);
+            var senderName = !string.IsNullOrWhiteSpace(_config["EmailSettings:SenderName"]) ? _config["EmailSettings:SenderName"] : (Environment.GetEnvironmentVariable("EmailSettings__SenderName") ?? "XenChat");
+            var senderEmail = !string.IsNullOrWhiteSpace(_config["EmailSettings:SenderEmail"]) ? _config["EmailSettings:SenderEmail"] : (Environment.GetEnvironmentVariable("EmailSettings__SenderEmail") ?? "");
+            var senderPassword = !string.IsNullOrWhiteSpace(_config["EmailSettings:SenderPassword"]) ? _config["EmailSettings:SenderPassword"] : (Environment.GetEnvironmentVariable("EmailSettings__SenderPassword") ?? "");
 
             if (string.IsNullOrWhiteSpace(senderEmail) || string.IsNullOrWhiteSpace(senderPassword))
             {
